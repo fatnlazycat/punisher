@@ -1,0 +1,45 @@
+<resources>
+    <!-- Base application theme & specific sub-themes for it. -->
+    <style name="AppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/colorBackground</item>
+        <item name="android:buttonStyle">@style/GreenButton</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="GreenButton" parent="@android:style/Widget.Button">
+        <item name="android:background">@drawable/selector_green_button</item>
+        <item name="android:textColor">@color/colorBackground</item>
+        <item name="android:layout_marginLeft">@dimen/activity_horizontal_margin</item>
+        <item name="android:layout_marginRight">@dimen/activity_horizontal_margin</item>
+        <item name="android:padding">@dimen/element_horizontal_padding</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+    </style>
+
+    <style name="borderlessButton" parent="@android:style/Widget.Holo.Button.Borderless">
+        <item name="android:textColor">@color/borderlessButtonText</item>
+    </style>
+    
+    <style name="EditTextStyle" parent="@android:style/Widget.EditText">
+        <item name="android:background">@android:color/white</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:padding">@dimen/element_horizontal_padding</item>
+    </style>
+
+    <style name="AppToolBar" parent="ThemeOverlay.AppCompat.ActionBar">
+        <!--item name="app:popupTheme">@style/ThemeOverlay.AppCompat.Light</item-->
+        <item name="android:displayOptions"></item>
+        <item name="android:background">@color/colorPrimary</item>
+    </style>
+
+    <!--special theme for activities having no navigation drawer, hence
+        android:layout_gravity=center_horizontal is allowed-->
+    <style name="AppThemeWithoutDrawer" parent="@style/AppTheme">
+        <item name="android:layout_gravity">center_horizontal</item>
+    </style>
+
+</resources>

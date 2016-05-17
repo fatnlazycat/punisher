@@ -1,0 +1,55 @@
+<resources>
+    <string name="app_name">Punisher</string>
+
+    <!--GUI strings-->
+    <string name="go_on">Далі</string>
+    <string name="email">Email</string>
+    <string name="passw">Пароль</string>
+    <string name="forgot_passw"><u>Забули пароль?</u></string>
+    <string name="login">УВІЙТИ</string>
+    <string name="facebook_login">УВІЙТИ ЧЕРЕЗ ФЕЙСБУК</string>
+    <string name="sign_up"><u>Створити профіль</u></string>
+    <string name="title_activity_sign_up">Реєстрація</string>
+    <string name="add_photo_video">Додати фото, відео</string>
+    <string name="punish">ПОКАРАТИ</string>
+    <string name="save">ЗБЕРЕГТИ ЗАЯВКУ</string>
+    <string name="takePhoto">Додати фото</string>
+    <string name="takeVideo">Додати відео</string>
+    <string name="or">АБО</string>
+    <string name="forgot_how">Забули, як користуватися додатком?</string>
+    <string name="instruction">Інструкція</string>
+    <string name="register">ЗАРЕЄСТРУВАТИСЯ</string>
+    <string name="surname">Прізвище</string>
+    <string name="name">Ім’я</string>
+    <string name="second_name">По батькові</string>
+    <string name="phone">Tелефон</string>
+
+    <!--needed to show extra digit icon with the number of claims-->
+    <string name="menu_item_claims">Заявки</string>
+
+    <!--technical-->
+    <string name="drawer_open">drawer open</string>
+    <string name="drawer_close">drawer close</string>
+
+    <!--texts-->
+    <string name="violation_header">Успіх розгляду вашого звернення залежить від точності наданої інформації</string>
+    <string name="about_1">За допомогою цього додатку Ви можете легко притягнути до відповідальності чиновників чи інших посадових осіб, які неналежно виконують свої службові обов’язки. Просто зафіксуйте цей факт, а ми зробимо все інше.</string>
+    <string name="about_2">Проект реалізує громадська організація «Фундація.101» за підтримки People\'s Project.</string>
+    <string name="personal_data_agree">Даю згоду на обробку та зберігання моїх персональних даних</string>
+
+    <!-- violation disclaimers, should be present even if empty do avoid NullPointException-->
+    <string name="bribery_disclaimer">Це скарга виключно на посадову особу органу влади. На відео має бути чітко зафіксовано сам інцидент та обличчя особи, яка вимагала з Вас кошти</string>
+    <string name="rudeness_disclaimer">Це скарга на хамство виключно з боку державного службовця або обслуговуючого персоналу у сферах надання послуг чи продажу товарів. Якщо Вам нагрубіянив сусід — не варто відправляти заявку, адже Вам буде відмовлено у розгляді. На відео має бути чітко зафіксований сам інцидент та обличчя особи, яка образила.</string>
+    <string name="expiryDate_disclaimer">Чітко зафіксуйте на фото факт того, що термін дійсно вийшов. Наприклад, термін придатності і дату виготовлення товару або позначення, до якої дати необхідно вжити товар. Поточні дата та час фіксуються автоматично</string>
+    <string name="smoking_disclaimer">УВАГА! Ви надсилаєте скаргу саме на заклад громадського харчування, який дозволяє курити у своїх приміщеннях. Якщо ви хочете покарати саме курця — прямо зараз зателефонуйте на номер телефону 102 та  викличте наряд поліції.</string>
+    <string name="disorder_disclaimer"></string>
+    <string name="roadPit_disclaimer"></string>
+    <string name="parking_disclaimer"></string>
+    
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_bribery">ViolationActivity</string>
+    <string name="title_activity_about">AboutActivity</string>
+    <string name="do_punish">Покарати за порушення</string>
+    <string name="about_header">Про додаток</string>
+</resources>

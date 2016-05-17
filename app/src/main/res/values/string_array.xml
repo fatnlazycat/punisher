@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="tutorialStringArray">
+        <item>
+            За допомогою цього додатку Ви можете сфотографувати або зняти відео майже будь-якого порушення Ваших прав
+            та відправити цю інформацію команді професійних юристів громадської організації «Фундація.101».
+        </item>
+        <item>
+            Ми опрацюємо заявку та надішлемо  звернення до відповідного органу державної влади або приватної структури,
+            які будуть зобов’язані це порушення усунути. Після отримання відповіді Ви зможете переглянути її
+            у додатку на своєму смартфоні. І це абсолютно безкоштовно! :)
+        </item>
+        <item>
+            Просимо Вас зареєструватися та вказати максимально точно свої персональні дані.
+            Це необхідно для того, аби ми розуміли, що Ви реальна людина та надана інформація відповідає дійсності.
+            Можливо, ми з Вами будемо періодично зв’язуватись, щоб підтвердити надану інформацію або уточнити деталі.
+        </item>
+        <item>
+            Ваші особисті дані будуть доступні лише обмеженому колу співробітників ГО «Фундація.101»
+            та не будуть фігурувати у зверненнях до органів влади чи приватних структур.
+        </item>
+        <item>
+            Коли повідомляєте про порушення, надавайте якомога більш точну інформацію.
+            Від цього залежить якість опрацювання Вашої заявки. Тепер Ви знаєте все, і можете переходити до реєстрації! :)
+        </item>
+    </string-array>
+
+    <string-array name="violations">
+        <item>Вимагання хабара</item>
+        <item>Хамство</item>
+        <item>Продаж простроченого товару</item>
+        <item>Порушення правил паркування</item>
+        <item>Куріння в закладах харчування</item>
+        <item>Яма на дорозі</item>
+        <item>Порушення благоустрою</item>
+    </string-array>
+
+    <string-array name="violationTypes">
+        <item>bribery</item>
+        <item>rudeness</item>
+        <item>expiryDate</item>
+        <item>parking</item>
+        <item>smoking</item>
+        <item>roadPit</item>
+        <item>disorder</item>
+    </string-array>
+
+    <string-array name="violationUsesCamera">
+        <item>true</item>
+        <item>true</item>
+        <item>false</item>
+        <item>false</item>
+        <item>true</item>
+        <item>false</item>
+        <item>false</item>
+    </string-array>
+
+    <string-array name="drawerMenuItems">
+        <item>Покарати за порушення</item>
+        <item>Заявки</item>
+        <item>Про додаток</item>
+        <item>Новини</item>
+        <item>Зворотній зв`язок</item>
+        <item>Редагувати профіль</item>
+        <item>Вийти</item>
+    </string-array>
+
+    <string-array name="briberyRequisites">
+        <item>bribery_name</item>
+        <item>П.І.Б. ХАБАРНИКА</item>
+        <item>Не обов’язково, але бажано заповнити</item>
+        <item>Вкажіть місце інциденту</item>
+
+        <item>bribery_position</item>
+        <item>ПОСАДА ХАБАРНИКА</item>
+        <item>Не обов’язково, але бажано заповнити</item>
+        <item>Вкажіть посаду</item>
+
+        <item>bribery_authority</item>
+        <item>НАЗВА ОРГАНУ ВЛАДИ</item>
+        <item>Напис на вивісці</item>
+        <item>Вкажіть напіс на вивісці</item>
+
+        <item>bribery_address</item>
+        <item>АДРЕСА</item>
+        <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
+        <item>Вкажіть місце інциденту</item>
+
+        <item>bribery_description</item>
+        <item>ЩО СТАЛОСЬ?</item>
+        <item>Коротко описати обставини, за яких стався інцидент</item>
+        <item>Детально вкажіть обставини</item>
+    </string-array>
+
+    <string-array name="rudenessRequisites">
+        <item>rudeness_name</item>
+        <item>П.І.Б. ТОГО, ХТО ВАС ОБРАЗИВ</item>
+        <item>Не обов’язково, але бажано заповнити</item>
+        <item>Вкажіть місце інциденту</item>
+
+        <item>rudeness_position</item>
+        <item>ПОСАДА ТОГО, ХТО ВАС ОБРАЗИВ</item>
+        <item>Не обов’язково, але бажано заповнити</item>
+        <item>Вкажіть посаду</item>
+
+        <item>rudeness_authority</item>
+        <item>НАЗВА ОРГАНУ ВЛАДИ АБО ПРИВАТНОГО ЗАКЛАДУ</item>
+        <item>Напис на вивісці</item>
+        <item>Вкажіть напіс на вивісці</item>
+
+        <item>rudeness_address</item>
+        <item>АДРЕСА</item>
+        <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
+        <item>Вкажіть місце інциденту</item>
+
+        <item>rudeness_company</item>
+        <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>
+        <item>Виключно для приватних закладів; подивитись в кутку споживача</item>
+        <item>Виключно для приватних закладів</item>
+
+        <item>rudeness_description</item>
+        <item>ЩО СТАЛОСЬ?</item>
+        <item>Коротко описати обставини, за яких стався інцидент</item>
+        <item>Детально вкажіть обставини</item>
+    </string-array>
+
+    <string-array name="parkingRequisites">
+        <item>parking_address</item>
+        <item>АДРЕСА</item>
+        <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
+        <item>Вкажіть місце інциденту</item>
+
+        <item>parking_number</item>
+        <item>НОМЕР АВТОМОБІЛЯ</item>
+        <item></item>
+        <item>Номер автомобіля</item>
+
+        <item>parking_description</item>
+        <item>ОПИС ПОРУШЕННЯ</item>
+        <item>Якомога точніше: паркування на газоні, тротуарі, пішоходному переході тощо</item>
+        <item>Наприклад: Паркування на газоні</item>
+    </string-array>
+
+    <string-array name="roadPitRequisites">
+        <item>roadpit_address</item>
+        <item>АДРЕСА</item>
+        <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
+        <item>Вкажіть місце інциденту</item>
+
+        <item>roadpit_place</item>
+        <item>НАЙБЛИЖЧИЙ ОРІЄНТИР</item>
+        <item>Заклад, зупинка, будинок, кіоск тощо</item>
+        <item>Вкажіть найближчий орієнтір</item>
+
+        <item>roadpit_description</item>
+        <item>ОПИС ЯМИ</item>
+        <item>Якомога детальніше: розмір, де знаходиться, чим саме заважає тощо</item>
+        <item>Детально вкажіть характеристики</item>
+    </string-array>
+
+    <string-array name="disorderRequisites">
+        <item>disorder_address</item>
+        <item>АДРЕСА</item>
+        <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
+        <item>Вкажіть місце інциденту</item>
+
+        <item>disorder_place</item>
+        <item>НАЙБЛИЖЧИЙ ОРІЄНТИР</item>
+        <item>Заклад, зупинка, будинок, кіоск тощо</item>
+        <item>Вкажіть найближчий орієнтір</item>
+
+        <item>disorder_description</item>
+        <item>ОПИС ПОРУШЕННЯ</item>
+        <item>Якомога детальніше: сміття на вулиці, відсутність урни біля кіоску тощо</item>
+        <item>Детально вкажіть обставини</item>
+    </string-array>
+
+    <string-array name="smokingRequisites">
+        <item>smoking_address</item>
+        <item>АДРЕСА</item>
+        <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
+        <item>Вкажіть місце інциденту</item>
+
+        <item>smoking_name</item>
+        <item>НАЗВА ЗАКЛАДУ</item>
+        <item>Напис на вивісці</item>
+        <item>Вкажіть напіс на вивісці</item>
+
+        <item>smoking_company</item>
+        <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>
+        <item>Юридична особа або підприємець; подивитись в кутку споживача</item>
+        <item>Юридична особа або підприємець</item>
+
+        <item>smoking_description</item>
+        <item>ОПИС ПОРУШЕННЯ</item>
+        <item>Якомога детальніше: в якому залі, що курили (сигарети, електронні сигарети, кальян тощо)</item>
+        <item>Детально вкажіть обставини</item>
+    </string-array>
+
+    <string-array name="expiryDateRequisites">
+        <item>expirydate_address</item>
+        <item>АДРЕСА</item>
+        <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
+        <item>Вкажіть місце інциденту</item>
+
+        <item>expirydate_name</item>
+        <item>НАЗВА ЗАКЛАДУ</item>
+        <item>Напис на вивісці</item>
+        <item>Вкажіть напіс на вивісці</item>
+
+        <item>expirydate_company</item>
+        <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>
+        <item>Юридична особа або підприємець; подивитись в кутку споживача</item>
+        <item>Юридична особа або підприємець</item>
+
+        <item>expirydate_merchandise</item>
+        <item>НАЗВА ТОВАРУ</item>
+        <item></item>
+        <item>Вкажіть назву товару</item>
+
+        <item>expirydate_producer</item>
+        <item>НАЗВА ВИРОБНИКА ТОВАРУ</item>
+        <item>Юридична особа або підприємець</item>
+        <item>Юридична особа або підприємець</item>
+    </string-array>
+
+</resources>

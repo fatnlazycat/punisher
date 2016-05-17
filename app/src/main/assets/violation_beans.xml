@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+
+    <bean id="bribery" class="com.example.dnk.punisher.activity.violation.ViolationActivity"/>
+    <bean id="multiply" class="com.dnk.myfirstspring.OperationMultiply" />
+    <bean id="add" class="com.dnk.myfirstspring.OperationAdd" />
+
+    <bean id="violation0" class="com.example.dnk.punisher.Violation">
+        <property name="name" value="Вимагання хабара"/>
+        <property name="handlingActivity" ref="bribery"/>
+        <property name="usesCamera" value="true"/>
+    </bean>
+
+    <bean id="violation1" class="com.example.dnk.punisher.Violation">
+        <property name="name" value="Хамство"/>
+        <property name="handlingActivity" ref="bribery"/>
+        <property name="usesCamera" value="true"/>
+    </bean>
+
+    <bean id="violation2" class="com.example.dnk.punisher.Violation">
+        <property name="name" value="Продаж простроченого товару"/>
+        <property name="handlingActivity" ref="bribery"/>
+        <property name="usesCamera" value="true"/>
+    </bean>
+
+    <bean id="violation3" class="com.example.dnk.punisher.Violation">
+        <property name="name" value="Порушення правил паркування"/>
+        <property name="handlingActivity" ref="bribery"/>
+        <property name="usesCamera" value="true"/>
+    </bean>
+
+    <bean id="violation4" class="com.example.dnk.punisher.Violation">
+        <property name="name" value="Куріння в закладах харчування"/>
+        <property name="handlingActivity" ref="bribery"/>
+        <property name="usesCamera" value="true"/>
+    </bean>
+
+    <bean id="violation5" class="com.example.dnk.punisher.Violation">
+        <property name="name" value="Яма на дорозі"/>
+        <property name="handlingActivity" ref="bribery"/>
+        <property name="usesCamera" value="true"/>
+    </bean>
+
+    <bean id="violation6" class="com.example.dnk.punisher.Violation">
+        <property name="name" value="Порушення благоустрою"/>
+        <property name="handlingActivity" ref="bribery"/>
+        <property name="usesCamera" value="true"/>
+    </bean>
+</beans>
