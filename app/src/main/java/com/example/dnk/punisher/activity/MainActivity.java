@@ -21,6 +21,8 @@ import com.example.dnk.punisher.fragment.MainFragment;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import layout.ProfileFragment;
+
 public class MainActivity extends AppCompatActivity {
     private static final String USER_NAME_PREFERENCE = "userName";
 
@@ -49,11 +51,17 @@ public class MainActivity extends AppCompatActivity {
                     case 2 : startActivity(new Intent(parent.getContext(), ListOfRequestsActivity.class)); break;
                     case 3 : {
                         toolbar.setTitle(R.string.about_header);
-                        ft = fManager.beginTransaction();
-                        ft.add(R.id.frameLayoutMain, new AboutFragment()).commit();
+                        fManager.beginTransaction().detach(fManager.findFragmentByTag("current_fragment")).commit();
+                        fManager.beginTransaction().add(R.id.frameLayoutMain, new AboutFragment(), "current_fragment").commit();
                         break;
                     }
                     case 4 : startActivity(new Intent(parent.getContext(), NewsActivity.class)); break;
+                    case 6 : {
+                        toolbar.setTitle(R.string.profile_header);
+                        fManager.beginTransaction().detach(fManager.findFragmentByTag("current_fragment")).commit();
+                        fManager.beginTransaction().add(R.id.frameLayoutMain, new ProfileFragment(), "current_fragment").commit();
+                        break;
+                    }
                 }
             }
         });
@@ -67,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
         //getSupportActionBar().setHomeButtonEnabled(false);
 
         ft = fManager.beginTransaction();
-        ft.add(R.id.frameLayoutMain, new MainFragment()).commit();
+        ft.add(R.id.frameLayoutMain, new MainFragment(), "current_fragment").commit();
     }
 
 

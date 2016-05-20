@@ -34,6 +34,7 @@
         <!--item name="app:popupTheme">@style/ThemeOverlay.AppCompat.Light</item-->
         <item name="android:displayOptions"></item>
         <item name="android:background">@color/colorPrimary</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
     </style>
 
     <!--special theme for activities having no navigation drawer, hence

@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Punisher</string>
+    <string name="facebook_app_id"></string>
 
     <!--GUI strings-->
     <string name="go_on">Далі</string>
@@ -38,18 +39,28 @@
     <string name="personal_data_agree">Даю згоду на обробку та зберігання моїх персональних даних</string>
 
     <!-- violation disclaimers, should be present even if empty do avoid NullPointException-->
-    <string name="bribery_disclaimer">Це скарга виключно на посадову особу органу влади. На відео має бути чітко зафіксовано сам інцидент та обличчя особи, яка вимагала з Вас кошти</string>
-    <string name="rudeness_disclaimer">Це скарга на хамство виключно з боку державного службовця або обслуговуючого персоналу у сферах надання послуг чи продажу товарів. Якщо Вам нагрубіянив сусід — не варто відправляти заявку, адже Вам буде відмовлено у розгляді. На відео має бути чітко зафіксований сам інцидент та обличчя особи, яка образила.</string>
-    <string name="expiryDate_disclaimer">Чітко зафіксуйте на фото факт того, що термін дійсно вийшов. Наприклад, термін придатності і дату виготовлення товару або позначення, до якої дати необхідно вжити товар. Поточні дата та час фіксуються автоматично</string>
-    <string name="smoking_disclaimer">УВАГА! Ви надсилаєте скаргу саме на заклад громадського харчування, який дозволяє курити у своїх приміщеннях. Якщо ви хочете покарати саме курця — прямо зараз зателефонуйте на номер телефону 102 та  викличте наряд поліції.</string>
-    <string name="disorder_disclaimer"></string>
-    <string name="roadPit_disclaimer"></string>
-    <string name="parking_disclaimer"></string>
-    
+    <string name="Bribe_disclaimer">Це скарга виключно на посадову особу органу влади. На відео має бути чітко зафіксовано сам інцидент та обличчя особи, яка вимагала з Вас кошти</string>
+    <string name="Insult_disclaimer">Це скарга на хамство виключно з боку державного службовця або обслуговуючого персоналу у сферах надання послуг чи продажу товарів. Якщо Вам нагрубіянив сусід — не варто відправляти заявку, адже Вам буде відмовлено у розгляді. На відео має бути чітко зафіксований сам інцидент та обличчя особи, яка образила.</string>
+    <string name="SaleOfGood_disclaimer">Чітко зафіксуйте на фото факт того, що термін дійсно вийшов. Наприклад, термін придатності і дату виготовлення товару або позначення, до якої дати необхідно вжити товар. Поточні дата та час фіксуються автоматично</string>
+    <string name="NoSmoking_disclaimer">УВАГА! Ви надсилаєте скаргу саме на заклад громадського харчування, який дозволяє курити у своїх приміщеннях. Якщо ви хочете покарати саме курця — прямо зараз зателефонуйте на номер телефону 102 та  викличте наряд поліції.</string>
+    <string name="Damage_disclaimer"></string>
+    <string name="PitRoad_disclaimer"></string>
+    <string name="WrongParking_disclaimer"></string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_bribery">ViolationActivity</string>
     <string name="title_activity_about">AboutActivity</string>
     <string name="do_punish">Покарати за порушення</string>
     <string name="about_header">Про додаток</string>
+    <string name="title_activity_forgot_password">ForgotPasswordActivity</string>
+    <string name="change_password">ЗМІНИТИ ПАРОЛЬ</string>
+    <string name="text_forgot_password">Забули пароль? Введіть свій email і ми відправимо посилання для його відновлення.</string>
+    <string name="title_activity_forgot_password2">ForgotPassword2Activity</string>
+    <string name="check_email">ПЕРЕВІРИТИ EMAIL</string>
+    <string name="text_forgot_password2">Перевірте свій email. Ми надіслали інструкцію для відновлення пароля.</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="profile_header">Профіль</string>
 </resources>

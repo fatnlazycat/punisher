@@ -1,9 +1,11 @@
 package com.example.dnk.punisher.activity;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.Activity;
+import android.preference.PreferenceManager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -11,14 +13,14 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.example.dnk.punisher.Constants;
+import com.example.dnk.punisher.Globals;
 import com.example.dnk.punisher.PunisherUser;
 import com.example.dnk.punisher.R;
 import com.example.dnk.punisher.RequestMaker;
 
-import org.w3c.dom.Text;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,9 +28,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -45,8 +45,11 @@ public class SignUpActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
+        //getSupportActionBar().setDisplayShowTitleEnabled(true);
+        //getSupportActionBar().setHomeButtonEnabled(true);
 
         textViewSignUpErrorMessage = (TextView)findViewById(R.id.textViewSignUpErrorMessage);
 
@@ -82,6 +85,20 @@ public class SignUpActivity extends AppCompatActivity {
         return result;
     }
 
+
+    public void saveUser(PunisherUser user){
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(Globals.USER_EMAIL, user.email);
+        editor.putString(Globals.USER_PASSWORD, user.password);
+        editor.putString(Globals.USER_SURNAME, user.surname);
+        editor.putString(Globals.USER_NAME, user.name);
+        editor.putString(Globals.USER_SECOND_NAME, user.secondName);
+        editor.putString(Globals.USER_PHONE, user.phone);
+        editor.putInt(Globals.USER_ID, user.id);
+        boolean b = editor.commit();
+    }
+
     class SignUpSender extends AsyncTask<PunisherUser, Void, String> {
 
         Context context;
@@ -96,7 +113,7 @@ public class SignUpActivity extends AppCompatActivity {
             StringBuffer response = new StringBuffer();
 
             try {
-                HttpURLConnection urlConnection = (HttpURLConnection) new URL(Constants.SERVER_URL
+                HttpURLConnection urlConnection = (HttpURLConnection) new URL(Globals.SERVER_URL
                         + "api/v1/users").openConnection();
                 urlConnection.setRequestMethod("POST");
                 urlConnection.setDoOutput(true);
@@ -135,10 +152,17 @@ public class SignUpActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            //Toast.makeText(context, s, Toast.LENGTH_LONG).show();
             textViewSignUpErrorMessage.setVisibility(View.VISIBLE);
             textViewSignUpErrorMessage.setText(s);
+            try {
+                JSONObject json = new JSONObject(s);
+                newUser.id = json.getInt("id");
+                saveUser(newUser);
+            } catch (JSONException e) {
+                Log.e("Punisher-JSON", e.getMessage());
+            }
         }
+
     }
 }
 

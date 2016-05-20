@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans>
 
-    <bean id="bribery" class="com.example.dnk.punisher.activity.violation.ViolationActivity"/>
+    <bean id="bribery" class="com.example.dnk.punisher.activity.ViolationActivity"/>
     <bean id="multiply" class="com.dnk.myfirstspring.OperationMultiply" />
     <bean id="add" class="com.dnk.myfirstspring.OperationAdd" />
 

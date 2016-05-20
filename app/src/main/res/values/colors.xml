@@ -2,7 +2,7 @@
 <resources>
     <color name="colorPrimary">#5a7332</color>
     <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorAccent">#212121</color>
     <color name="colorBackground">#d8d8d8</color>
     <color name="borderlessButtonText">#3e434a</color>
     <color name="facebook_color">#4566a3</color>

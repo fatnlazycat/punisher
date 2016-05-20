@@ -37,6 +37,8 @@ public class DBOpenHelper extends SQLiteOpenHelper {
                 + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + "type TEXT,"
                 + "time_stamp TEXT,"
+                + "longitude REAL,"
+                + "latitude REAL,"
                 + dataTableStructure
                 + ");");
         db.execSQL("CREATE TABLE "

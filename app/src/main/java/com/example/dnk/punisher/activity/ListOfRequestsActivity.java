@@ -9,10 +9,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.example.dnk.punisher.Constants;
+import com.example.dnk.punisher.Globals;
 import com.example.dnk.punisher.DBOpenHelper;
 import com.example.dnk.punisher.R;
-import com.example.dnk.punisher.activity.violation.ViolationActivity;
 import com.example.dnk.punisher.adapter.RequestListAdapter;
 
 public class ListOfRequestsActivity  extends AppCompatActivity {
@@ -48,8 +47,8 @@ public class ListOfRequestsActivity  extends AppCompatActivity {
         int id = cursor.getInt(0); //"_id" is the first column in the db
 
         Intent intent = new Intent(this, ViolationActivity.class)
-                .putExtra(Constants.CREATE_MODE, false)
-                .putExtra(Constants.ITEM_ID, id - 1); //because the list items are 1-based, not 0-based
+                .putExtra(Globals.CREATE_MODE, false)
+                .putExtra(Globals.ITEM_ID, id - 1); //because the list items are 1-based, not 0-based
         startActivity(intent);
     }
 }

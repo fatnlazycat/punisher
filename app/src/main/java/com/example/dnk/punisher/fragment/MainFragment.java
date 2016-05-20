@@ -3,17 +3,16 @@ package com.example.dnk.punisher.fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
-import com.example.dnk.punisher.Constants;
+import com.example.dnk.punisher.Globals;
 import com.example.dnk.punisher.R;
 import com.example.dnk.punisher.Violation;
-import com.example.dnk.punisher.activity.violation.ViolationActivity;
+import com.example.dnk.punisher.activity.ViolationActivity;
 import com.example.dnk.punisher.adapter.ViolationsAdapter;
 
 import java.util.ArrayList;
@@ -46,8 +45,8 @@ public class MainFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //Activity toStart = ViolationsAdapter.content.get(position).getHandlingActivity();
                 Intent intent = new Intent(parent.getContext(), ViolationActivity.class)
-                        .putExtra(Constants.CREATE_MODE, true)
-                        .putExtra(Constants.VIOLATION, ViolationsAdapter.content.get(position));
+                        .putExtra(Globals.CREATE_MODE, true)
+                        .putExtra(Globals.VIOLATION, ViolationsAdapter.content.get(position));
                 startActivity(intent);
             }
         });

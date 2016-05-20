@@ -21,7 +21,7 @@
         </item>
         <item>
             Коли повідомляєте про порушення, надавайте якомога більш точну інформацію.
-            Від цього залежить якість опрацювання Вашої заявки. Тепер Ви знаєте все, і можете переходити до реєстрації! :)
+            Від цього залежить якість опрацювання Вашої заявки. \nТепер Ви знаєте все, і можете переходити до реєстрації! :)
         </item>
     </string-array>
 
@@ -36,13 +36,13 @@
     </string-array>
 
     <string-array name="violationTypes">
-        <item>bribery</item>
-        <item>rudeness</item>
-        <item>expiryDate</item>
-        <item>parking</item>
-        <item>smoking</item>
-        <item>roadPit</item>
-        <item>disorder</item>
+        <item>Bribe</item>
+        <item>Insult</item>
+        <item>SaleOfGood</item>
+        <item>WrongParking</item>
+        <item>NoSmoking</item>
+        <item>PitRoad</item>
+        <item>Damage</item>
     </string-array>
 
     <string-array name="violationUsesCamera">
@@ -65,139 +65,139 @@
         <item>Вийти</item>
     </string-array>
 
-    <string-array name="briberyRequisites">
-        <item>bribery_name</item>
+    <string-array name="BribeRequisites">
+        <item>Bribe_name</item>
         <item>П.І.Б. ХАБАРНИКА</item>
         <item>Не обов’язково, але бажано заповнити</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>bribery_position</item>
+        <item>Bribe_position</item>
         <item>ПОСАДА ХАБАРНИКА</item>
         <item>Не обов’язково, але бажано заповнити</item>
         <item>Вкажіть посаду</item>
 
-        <item>bribery_authority</item>
+        <item>Bribe_authority</item>
         <item>НАЗВА ОРГАНУ ВЛАДИ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
 
-        <item>bribery_address</item>
+        <item>Bribe_address</item>
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>bribery_description</item>
+        <item>Bribe_description</item>
         <item>ЩО СТАЛОСЬ?</item>
         <item>Коротко описати обставини, за яких стався інцидент</item>
         <item>Детально вкажіть обставини</item>
     </string-array>
 
-    <string-array name="rudenessRequisites">
-        <item>rudeness_name</item>
+    <string-array name="InsultRequisites">
+        <item>Insult_name</item>
         <item>П.І.Б. ТОГО, ХТО ВАС ОБРАЗИВ</item>
         <item>Не обов’язково, але бажано заповнити</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>rudeness_position</item>
+        <item>Insult_position</item>
         <item>ПОСАДА ТОГО, ХТО ВАС ОБРАЗИВ</item>
         <item>Не обов’язково, але бажано заповнити</item>
         <item>Вкажіть посаду</item>
 
-        <item>rudeness_authority</item>
+        <item>Insult_authority</item>
         <item>НАЗВА ОРГАНУ ВЛАДИ АБО ПРИВАТНОГО ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
 
-        <item>rudeness_address</item>
+        <item>Insult_address</item>
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>rudeness_company</item>
+        <item>Insult_company</item>
         <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>
         <item>Виключно для приватних закладів; подивитись в кутку споживача</item>
         <item>Виключно для приватних закладів</item>
 
-        <item>rudeness_description</item>
+        <item>Insult_description</item>
         <item>ЩО СТАЛОСЬ?</item>
         <item>Коротко описати обставини, за яких стався інцидент</item>
         <item>Детально вкажіть обставини</item>
     </string-array>
 
-    <string-array name="parkingRequisites">
-        <item>parking_address</item>
+    <string-array name="WrongParkingRequisites">
+        <item>WrongParking_address</item>
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>parking_number</item>
+        <item>WrongParking_number</item>
         <item>НОМЕР АВТОМОБІЛЯ</item>
         <item></item>
         <item>Номер автомобіля</item>
 
-        <item>parking_description</item>
+        <item>WrongParking_description</item>
         <item>ОПИС ПОРУШЕННЯ</item>
         <item>Якомога точніше: паркування на газоні, тротуарі, пішоходному переході тощо</item>
         <item>Наприклад: Паркування на газоні</item>
     </string-array>
 
-    <string-array name="roadPitRequisites">
-        <item>roadpit_address</item>
+    <string-array name="PitRoadRequisites">
+        <item>PitRoad_address</item>
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>roadpit_place</item>
+        <item>PitRoad_place</item>
         <item>НАЙБЛИЖЧИЙ ОРІЄНТИР</item>
         <item>Заклад, зупинка, будинок, кіоск тощо</item>
         <item>Вкажіть найближчий орієнтір</item>
 
-        <item>roadpit_description</item>
+        <item>PitRoad_description</item>
         <item>ОПИС ЯМИ</item>
         <item>Якомога детальніше: розмір, де знаходиться, чим саме заважає тощо</item>
         <item>Детально вкажіть характеристики</item>
     </string-array>
 
-    <string-array name="disorderRequisites">
-        <item>disorder_address</item>
+    <string-array name="DamageRequisites">
+        <item>Damage_address</item>
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>disorder_place</item>
+        <item>Damage_place</item>
         <item>НАЙБЛИЖЧИЙ ОРІЄНТИР</item>
         <item>Заклад, зупинка, будинок, кіоск тощо</item>
         <item>Вкажіть найближчий орієнтір</item>
 
-        <item>disorder_description</item>
+        <item>Damage_description</item>
         <item>ОПИС ПОРУШЕННЯ</item>
         <item>Якомога детальніше: сміття на вулиці, відсутність урни біля кіоску тощо</item>
         <item>Детально вкажіть обставини</item>
     </string-array>
 
-    <string-array name="smokingRequisites">
-        <item>smoking_address</item>
+    <string-array name="NoSmokingRequisites">
+        <item>NoSmoking_address</item>
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>smoking_name</item>
+        <item>NoSmoking_name</item>
         <item>НАЗВА ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
 
-        <item>smoking_company</item>
+        <item>NoSmoking_company</item>
         <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>
         <item>Юридична особа або підприємець; подивитись в кутку споживача</item>
         <item>Юридична особа або підприємець</item>
 
-        <item>smoking_description</item>
+        <item>NoSmoking_description</item>
         <item>ОПИС ПОРУШЕННЯ</item>
         <item>Якомога детальніше: в якому залі, що курили (сигарети, електронні сигарети, кальян тощо)</item>
         <item>Детально вкажіть обставини</item>
     </string-array>
 
-    <string-array name="expiryDateRequisites">
+    <string-array name="SaleOfGoodRequisites">
         <item>expirydate_address</item>
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>

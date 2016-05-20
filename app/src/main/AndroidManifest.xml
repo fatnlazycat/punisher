@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
 
     <application
         android:allowBackup="true"
@@ -32,7 +34,7 @@
             android:name=".activity.MainActivity"
             android:label="@string/title_activity_main" />
         <activity
-            android:name=".activity.violation.ViolationActivity"
+            android:name=".activity.ViolationActivity"
             android:label="@string/title_activity_bribery"
             android:parentActivityName=".activity.MainActivity">
             <meta-data
@@ -48,6 +50,22 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.dnk.punisher.activity.LoginActivity" />
+        </activity>
+        <activity
+            android:name=".activity.ForgotPasswordActivity"
+            android:label="@string/title_activity_forgot_password"
+            android:parentActivityName=".activity.LoginActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.dnk.punisher.activity.LoginActivity" />
+        </activity>
+        <activity
+            android:name=".activity.ForgotPassword2Activity"
+            android:label="@string/title_activity_forgot_password2"
+            android:parentActivityName=".activity.ForgotPasswordActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.dnk.punisher.activity.ForgotPasswordActivity" />
         </activity>
     </application>
 

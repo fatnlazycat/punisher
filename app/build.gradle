@@ -34,8 +34,10 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.3.0'
     compile 'org.jsoup:jsoup:1.9.1'
     compile 'com.android.support:support-v4:23.3.0'
+    compile 'com.facebook.android:facebook-android-sdk:4.11.0'
 }
 repositories {
+    mavenCentral()
     maven {
         url 'https://repo.spring.io/libs-milestone'
     }

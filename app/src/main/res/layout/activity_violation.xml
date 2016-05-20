@@ -13,7 +13,7 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
-        tools:context=".activity.violation.ViolationActivity">
+        tools:context=".activity.ViolationActivity">
 
         <TextView
             android:layout_width="match_parent"
@@ -67,14 +67,22 @@
             android:numColumns="4"/>
 
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/punish"
             android:id="@+id/punishButton"
-            style="@style/GreenButton"/>
+            style="@style/GreenButton"
+            android:onClick="punish"/>
+
+        <ProgressBar
+            style="@android:style/Widget.ProgressBar.Large.Inverse"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:id="@+id/progressBarPunish" />
 
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/save"
             android:id="@+id/saveButton"
