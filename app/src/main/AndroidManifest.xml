@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.dnk.punisher">
+    package="org.foundation101.thepunisher">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/no_avatar"
@@ -16,50 +16,49 @@
         android:theme="@style/AppTheme">
         <meta-data android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id"/>
-        <activity android:name=".activity.StartActivity"
+        <activity android:name="org.foundation101.thepunisher.activity.StartActivity"
             android:theme="@style/AppThemeWithoutDrawer">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activity.TutorialActivity"
+        <activity android:name="org.foundation101.thepunisher.activity.TutorialActivity"
             android:theme="@style/AppThemeWithoutDrawer" />
-        <activity android:name=".activity.LoginActivity"
+        <activity android:name="org.foundation101.thepunisher.activity.LoginActivity"
             android:theme="@style/AppThemeWithoutDrawer" />
-        <activity android:name=".activity.MainActivity"
+        <activity android:name="org.foundation101.thepunisher.activity.MainActivity"
             android:label="@string/title_activity_main" />
-        <activity android:name=".activity.ViolationActivity"
+        <activity android:name="org.foundation101.thepunisher.activity.ViolationActivity"
             android:label="@string/title_activity_bribery"
-            android:parentActivityName=".activity.MainActivity">
+            android:parentActivityName="org.foundation101.thepunisher.activity.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.dnk.punisher.activity.MainActivity" />
+                android:value="org.foundation101.thepunisher.activity.MainActivity" />
         </activity>
-        <activity android:name=".activity.ListOfRequestsActivity" />
-        <activity android:name=".activity.NewsActivity" />
-        <activity android:name=".activity.SignUpActivity"
+        <activity android:name="org.foundation101.thepunisher.activity.ListOfRequestsActivity" />
+        <activity android:name="org.foundation101.thepunisher.activity.NewsActivity" />
+        <activity android:name="org.foundation101.thepunisher.activity.SignUpActivity"
             android:label="@string/title_activity_sign_up"
-            android:parentActivityName=".activity.LoginActivity">
+            android:parentActivityName="org.foundation101.thepunisher.activity.LoginActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.dnk.punisher.activity.LoginActivity" />
+                android:value="org.foundation101.thepunisher.activity.LoginActivity" />
         </activity>
-        <activity android:name=".activity.ForgotPasswordActivity"
-            android:parentActivityName=".activity.LoginActivity">
+        <activity android:name="org.foundation101.thepunisher.activity.ForgotPasswordActivity"
+            android:parentActivityName="org.foundation101.thepunisher.activity.LoginActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.dnk.punisher.activity.LoginActivity" />
+                android:value="org.foundation101.thepunisher.activity.LoginActivity" />
         </activity>
-        <activity android:name=".activity.ForgotPassword2Activity"
+        <activity android:name="org.foundation101.thepunisher.activity.ForgotPassword2Activity"
             android:label="@string/title_activity_forgot_password2"
-            android:parentActivityName=".activity.ForgotPasswordActivity">
+            android:parentActivityName="org.foundation101.thepunisher.activity.ForgotPasswordActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.dnk.punisher.activity.ForgotPasswordActivity" />
+                android:value="org.foundation101.thepunisher.activity.ForgotPasswordActivity" />
         </activity>
-        <activity android:name=".activity.ShowMediaActivity"
+        <activity android:name="org.foundation101.thepunisher.activity.ShowMediaActivity"
             android:label="@string/title_activity_show_photo"/>
     </application>
 

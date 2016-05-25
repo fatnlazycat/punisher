@@ -13,7 +13,7 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
-        tools:context=".activity.ViolationActivity">
+        tools:context="org.org.dnk.punisher.activity.ViolationActivity">
 
         <TextView
             android:layout_width="match_parent"
@@ -30,7 +30,7 @@
             android:id="@+id/textViewViolationDisclaimer"
             android:background="@android:color/background_light" />
 
-        <com.example.dnk.punisher.view.ExpandedListView
+        <org.org.dnk.punisher.view.ExpandedListView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/listViewRequisites" />
@@ -60,7 +60,7 @@
                 android:onClick="photoVideoPopupMenu"/>
         </LinearLayout>
 
-        <com.example.dnk.punisher.view.ExpandedGridView
+        <org.org.dnk.punisher.view.ExpandedGridView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/evidenceGridView"

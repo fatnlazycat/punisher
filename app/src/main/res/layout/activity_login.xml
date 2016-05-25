@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.dnk.punisher.activity.LoginActivity">
+    tools:context="org.foundation101.thepunisher.activity.LoginActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -76,6 +76,11 @@
                 android:src="@drawable/grey_line"/>
         </LinearLayout>
 
+        <com.facebook.login.widget.LoginButton
+            android:id="@+id/login_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"/>
         <Button
             android:id="@+id/facebookLoginButton"
             android:layout_width="match_parent"

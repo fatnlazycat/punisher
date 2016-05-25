@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".fragment.ProfileFragment">
+    tools:context="org.foundation101.thepunisher.fragment.ProfileFragment">
 
     <LinearLayout
         android:layout_width="match_parent"

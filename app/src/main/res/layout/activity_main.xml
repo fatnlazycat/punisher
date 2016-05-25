@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/drawerLayoutMainActivity"
-    tools:context="com.example.dnk.punisher.activity.MainActivity">
+    tools:context="org.foundation101.thepunisher.activity.MainActivity">
 
     <RelativeLayout
         android:id="@+id/relativeLayoutMainActivity"
