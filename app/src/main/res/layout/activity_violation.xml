@@ -60,11 +60,12 @@
                 android:onClick="photoVideoPopupMenu"/>
         </LinearLayout>
 
-        <GridView
+        <com.example.dnk.punisher.view.ExpandedGridView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/evidenceGridView"
-            android:numColumns="4"/>
+            android:numColumns="4"
+            android:columnWidth="@dimen/thumbnail_size"/>
 
         <Button
             android:layout_width="match_parent"

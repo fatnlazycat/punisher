@@ -32,7 +32,8 @@
         android:layout_height="match_parent"
         android:id="@+id/drawerListView"
         android:background="@android:color/white"
-        android:layout_gravity="start">
+        android:layout_gravity="start"
+        android:divider="@null">
     </ListView>
 
 </android.support.v4.widget.DrawerLayout>

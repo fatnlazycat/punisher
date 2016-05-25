@@ -66,7 +66,7 @@
     </string-array>
 
     <string-array name="BribeRequisites">
-        <item>Bribe_name</item>
+        <item>Bribe_all_name</item>
         <item>П.І.Б. ХАБАРНИКА</item>
         <item>Не обов’язково, але бажано заповнити</item>
         <item>Вкажіть місце інциденту</item>
@@ -76,7 +76,7 @@
         <item>Не обов’язково, але бажано заповнити</item>
         <item>Вкажіть посаду</item>
 
-        <item>Bribe_authority</item>
+        <item>Bribe_name_of_authority</item>
         <item>НАЗВА ОРГАНУ ВЛАДИ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
@@ -93,7 +93,7 @@
     </string-array>
 
     <string-array name="InsultRequisites">
-        <item>Insult_name</item>
+        <item>Insult_all_name</item>
         <item>П.І.Б. ТОГО, ХТО ВАС ОБРАЗИВ</item>
         <item>Не обов’язково, але бажано заповнити</item>
         <item>Вкажіть місце інциденту</item>
@@ -103,7 +103,7 @@
         <item>Не обов’язково, але бажано заповнити</item>
         <item>Вкажіть посаду</item>
 
-        <item>Insult_authority</item>
+        <item>Insult_name_of_authority</item>
         <item>НАЗВА ОРГАНУ ВЛАДИ АБО ПРИВАТНОГО ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
@@ -113,7 +113,7 @@
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>Insult_company</item>
+        <item>Insult_name_of_institution</item>
         <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>
         <item>Виключно для приватних закладів; подивитись в кутку споживача</item>
         <item>Виключно для приватних закладів</item>
@@ -130,7 +130,7 @@
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>WrongParking_number</item>
+        <item>WrongParking_vehicle_number</item>
         <item>НОМЕР АВТОМОБІЛЯ</item>
         <item></item>
         <item>Номер автомобіля</item>
@@ -147,7 +147,7 @@
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>PitRoad_place</item>
+        <item>PitRoad_the_closest_landmark</item>
         <item>НАЙБЛИЖЧИЙ ОРІЄНТИР</item>
         <item>Заклад, зупинка, будинок, кіоск тощо</item>
         <item>Вкажіть найближчий орієнтір</item>
@@ -164,7 +164,7 @@
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>Damage_place</item>
+        <item>Damage_the_closest_landmark</item>
         <item>НАЙБЛИЖЧИЙ ОРІЄНТИР</item>
         <item>Заклад, зупинка, будинок, кіоск тощо</item>
         <item>Вкажіть найближчий орієнтір</item>
@@ -181,12 +181,12 @@
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>NoSmoking_name</item>
+        <item>NoSmoking_name_of_institution</item>
         <item>НАЗВА ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
 
-        <item>NoSmoking_company</item>
+        <item>NoSmoking_name_of_entity</item>
         <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>
         <item>Юридична особа або підприємець; подивитись в кутку споживача</item>
         <item>Юридична особа або підприємець</item>
@@ -198,27 +198,27 @@
     </string-array>
 
     <string-array name="SaleOfGoodRequisites">
-        <item>expirydate_address</item>
+        <item>SaleOfGood_address</item>
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>expirydate_name</item>
+        <item>SaleOfGood_name_of_authority</item>
         <item>НАЗВА ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
 
-        <item>expirydate_company</item>
+        <item>SaleOfGood_name_of_institution</item>
         <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>
         <item>Юридична особа або підприємець; подивитись в кутку споживача</item>
         <item>Юридична особа або підприємець</item>
 
-        <item>expirydate_merchandise</item>
+        <item>SaleOfGood_merchandise</item>
         <item>НАЗВА ТОВАРУ</item>
         <item></item>
         <item>Вкажіть назву товару</item>
 
-        <item>expirydate_producer</item>
+        <item>SaleOfGood_name_of_entity</item>
         <item>НАЗВА ВИРОБНИКА ТОВАРУ</item>
         <item>Юридична особа або підприємець</item>
         <item>Юридична особа або підприємець</item>

@@ -47,12 +47,6 @@ public class DrawerAdapter extends BaseAdapter {
         menuItemText.setText(content[position]);
 
         switch (position) {
-            case 0: {//first line where we need avatar icon
-                ImageView avatarImageView = (ImageView) convertView.findViewById(R.id.avatarImageView);
-                avatarImageView.setImageResource(R.mipmap.no_avatar);
-                menuItemText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 19);
-                break;
-            }
             case 1:
                 menuItemText.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.divider_drawable, 0, 0);
                 break;

@@ -9,4 +9,6 @@
     <color name="darkGreen">#6c8c39</color>
     <color name="darkGrey">#c4cad0</color>
     <color name="error_color">#d0021b</color>
+    <color name="green_button_disabled">#b5b7ba</color>
+    <color name="dark">#272b30</color>
 </resources>

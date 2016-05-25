@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
@@ -20,7 +21,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -30,26 +30,26 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.dnk.punisher.CameraManager;
-import com.example.dnk.punisher.Globals;
 import com.example.dnk.punisher.DBOpenHelper;
+import com.example.dnk.punisher.Globals;
+import com.example.dnk.punisher.MultipartUtility;
 import com.example.dnk.punisher.R;
-import com.example.dnk.punisher.RequestMaker;
 import com.example.dnk.punisher.Violation;
+import com.example.dnk.punisher.ViolationRequisite;
 import com.example.dnk.punisher.adapter.EvidenceAdapter;
 import com.example.dnk.punisher.adapter.RequisitesListAdapter;
-import com.example.dnk.punisher.ViolationRequisite;
+import com.example.dnk.punisher.view.ExpandedGridView;
 import com.example.dnk.punisher.view.ExpandedListView;
 
-import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ViolationActivity extends AppCompatActivity {
 
@@ -60,9 +60,10 @@ public class ViolationActivity extends AppCompatActivity {
     Cursor cursor;
     boolean createMode;
     Integer id;
-    String idString;
-    Violation violation;
+    String idString, time_stamp;
+    Violation violation = new Violation();
     ProgressBar progressBar;
+    Double latitude, longitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +92,9 @@ public class ViolationActivity extends AppCompatActivity {
             String[] selectionArgs = {idString};
             cursor = db.query(table, columns, where, selectionArgs, null, null, null);
             cursor.moveToFirst();
+            latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
+            longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
+            time_stamp = cursor.getString(cursor.getColumnIndex("time_stamp"));
             violation.setType(cursor.getString(cursor.getColumnIndex("type")));
             requisitesAdapter.content = requisitesAdapter.makeContent(violation.type);
             for (int i = 0; i < requisitesAdapter.getCount(); i++) {
@@ -120,7 +124,7 @@ public class ViolationActivity extends AppCompatActivity {
         listViewRequisites = (ExpandedListView) findViewById(R.id.listViewRequisites);
         listViewRequisites.setAdapter(requisitesAdapter);
 
-        GridView evidenceGridView = (GridView) findViewById(R.id.evidenceGridView);
+        ExpandedGridView evidenceGridView = (ExpandedGridView) findViewById(R.id.evidenceGridView);
         evidenceGridView.setAdapter(evidenceAdapter);
 
         progressBar = (ProgressBar)findViewById(R.id.progressBarPunish);
@@ -155,7 +159,11 @@ public class ViolationActivity extends AppCompatActivity {
             rowID = db.insertOrThrow("violations_table", null, cv);
             id = new BigDecimal(rowID).intValue();
         } else {
-            rowID = (long) db.update("violations_table", cv, "_id = ?", new String[]{idString});
+            cv.put("_id", id);
+            cv.put("longitude", longitude);
+            cv.put("latitude", latitude);
+            cv.put("time_stamp", time_stamp);
+            rowID = db.replace("violations_table", null, cv);
         }
         cv.clear();
 
@@ -171,6 +179,11 @@ public class ViolationActivity extends AppCompatActivity {
         }
         db.close();
         createMode = false; //once created the record we switch to edit mode
+
+        //delete the evidence files removed by the user from filesystem
+        for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession){
+            new File(fileToDelete).delete();
+        }
     }
 
     public void photoVideoPopupMenu(View view) {
@@ -286,51 +299,107 @@ public class ViolationActivity extends AppCompatActivity {
             cursor.moveToFirst();
             Double latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
             Double longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
-            String address = cursor.getString(cursor.getColumnIndex(violation.getType() + "_address"));
-            //query to media table
-            table = "violations_table INNER JOIN media_table ON violations_table._id = media_table.id";
-            columns = new String[]{"id", "file_name"};
-            where = "id=?"; //take selectionArgs from previous query
-            cursor = db.query(table, columns, where, selectionArgs, null, null, null);
-            if (cursor.moveToFirst()) {
-                do {
-                    String evidenceFileName = cursor.getString(1); //file names are in the second column of the cursor
-                    evidenceAdapter.content.add(evidenceFileName);
-                } while (cursor.moveToNext());
+            Map<String, String> dbRowData= new HashMap<>();
+            for (int i = 0; i < requisitesAdapter.getCount(); i++) {
+                String columnName = requisitesAdapter.content.get(i).dbTag;
+                String columnValue = cursor.getString(cursor.getColumnIndex(columnName));
+                dbRowData.put(columnName, columnValue==null ? "" : columnValue);
             }
             cursor.close();
             db.close();
             try {
-                HttpURLConnection urlConnection = (HttpURLConnection) new URL(Globals.SERVER_URL
-                        + "/api/v1/complains").openConnection();
-                urlConnection.setRequestMethod("POST");
-                urlConnection.setDoOutput(true);
-                urlConnection.setRequestProperty("Authorization", Globals.token);
-                urlConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                urlConnection.setRequestProperty("Accept-Encoding", "UTF-8");
-                OutputStream os = urlConnection.getOutputStream();
-                String request = new RequestMaker("complain").makeRequest(
-                        "user_id", userId.toString(),
-                        "id_number", idString,
-                        "type", violation.getType(),
-                        "complain_status_id", "6", //null status
-                        "longitude", longitude.toString(),
-                        "latitude", latitude.toString(),
-                        "address", address) + "&complain[media_files][]=file.png";
+                //get resources
+                Resources res = context.getResources();
+                int resId = res.getIdentifier(violation.getType() + "_server", "string", context.getPackageName());
+                String typeServerSuffix = res.getString(resId);
+                //also need to remove trailing 's' from type server suffix
+                String typeServerSuffixNoS = typeServerSuffix.substring(0, typeServerSuffix.length()-1);
 
-                os.write(request.getBytes());
-                os.flush();
-                os.close();
+                String requestUrl = Globals.SERVER_URL + typeServerSuffix;
 
-                int responseCode = urlConnection.getResponseCode();
-                InputStream is;
-                if ((is = urlConnection.getInputStream()) == null) is = urlConnection.getErrorStream();
-                BufferedReader reader = new BufferedReader((new InputStreamReader(is)));
-                String inputLine;
-                while ((inputLine = reader.readLine()) != null) {
-                    response.append(inputLine);
+                //prepare the request parameters
+                ArrayList<String> requestParameters = new ArrayList<>();
+                String[] keysForRequestParameters = new String[0];
+                switch (violation.getType()){
+                    case "WrongParking" : {
+                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
+                                "address", "longitude", "latitude", "vehicle_number"}; break;
+                    }
+                    case "PitRoad" : {
+                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
+                                "address", "longitude", "latitude", "the_closest_landmark", "type"}; break;
+                    }
+                    case "NoSmoking" : {
+                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
+                                "address", "longitude", "latitude", "name_of_institution", "name_of_entity", "type"}; break;
+                    }
+                    case "Damage" : {
+                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
+                                "address", "longitude", "latitude", "the_closest_landmark", "type"}; break;
+                    }
+                    case "SaleOfGood" : {
+                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
+                                "address", "longitude", "latitude", "name_of_authority", "name_of_institution",
+                                "name_of_entity", "type"}; break;
+                    }
+                    case "Insult" : {
+                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
+                                "address", "longitude", "latitude", "description", "all_name", "position",
+                                "name_of_authority", "name_of_institution", "name_of_entity", "type"}; break;
+                    }
+                    case "Bribe" : {
+                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
+                                "address", "longitude", "latitude", "description", "all_name", "position",
+                                "name_of_authority", "type"}; break;
+                    }
                 }
-                reader.close();
+                for (String str : keysForRequestParameters){
+                    requestParameters.add(str);
+                    switch (str) {
+                        case "user_id" : {
+                            requestParameters.add(userId.toString()); break;
+                        }
+                        case "id_number" : {
+                            requestParameters.add(idString); break;
+                        }
+                        case "type" : {
+                            requestParameters.add(violation.getType()); break;
+                        }
+                        case "complain_status_id" : {
+                            requestParameters.add("6"); break;
+                        }
+                        case "longitude" : {
+                            requestParameters.add(longitude.toString()); break;
+                        }
+                        case "latitude" : {
+                            requestParameters.add(latitude.toString()); break;
+                        }
+                        default : {
+                            String adaptedKey = violation.getType() + "_" + str;
+                            requestParameters.add(dbRowData.get(adaptedKey));
+                        }
+                    }
+                }
+
+                MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8");
+                int i=0;
+                String[] requestParametersArray = requestParameters.toArray(new String[0]);
+                while (i < requestParametersArray.length) {
+                    multipart.addFormField(typeServerSuffixNoS +"[" + requestParametersArray[i++] + "]",
+                            requestParametersArray[i++]);
+                }
+                i=0;
+                for (String mediaFileName : evidenceAdapter.content) {
+                    multipart.addFilePart(typeServerSuffixNoS + "[media_files][]", new File(mediaFileName));
+                }
+                List<String> responseList = multipart.finish();
+                Log.e("Punisher", "SERVER REPLIED:");
+                for (String line : responseList) {
+                    Log.e("Punisher", "Upload Files Response:::" + line);
+                    response.append(line);
+                    // get your server response here.
+                }
+
             } catch (IOException e) {
                 Log.e("Punisher error", e.getMessage());
             }

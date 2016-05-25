@@ -3,7 +3,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="layout.ProfileFragment">
+    tools:context=".fragment.ProfileFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/avatarProfileImageView"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/userNameTextView"/>
+    </LinearLayout>
 
     <include layout="@layout/item_violation_requisite"
         android:layout_width="match_parent"
@@ -20,5 +35,20 @@
         android:layout_height="wrap_content"
         android:id="@+id/profile_surname"/>
 
+
+    <include layout="@layout/item_violation_requisite"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/profile_name"/>
+
+    <include layout="@layout/item_violation_requisite"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/profile_second_name"/>
+
+    <include layout="@layout/item_violation_requisite"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/profile_phone"/>
 
 </LinearLayout>

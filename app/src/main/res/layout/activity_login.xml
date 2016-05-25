@@ -3,13 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
     tools:context="com.example.dnk.punisher.activity.LoginActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
         android:orientation="vertical">
 
         <ImageView
@@ -82,7 +82,7 @@
             android:layout_height="wrap_content"
             android:drawableStart="@mipmap/facebook"
             android:text="@string/facebook_login"
-            android:background="@color/facebook_color"
+            android:background="@drawable/selector_facebook_button"
             android:padding="0dp" />
 
         <!--empty view to push the rest down the screen-->
@@ -101,17 +101,9 @@
             android:onClick="signUp"/>
     </LinearLayout>
 
-    <FrameLayout
+    <include layout="@layout/frame_progress_bar"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/frameLayoutProgressLogin"
-        android:visibility="gone"
-        android:onClick="empty">
-        <ProgressBar
-            style="@android:style/Widget.ProgressBar.Large.Inverse"
-            android:layout_width="84dp"
-            android:layout_height="84dp"
-            android:layout_gravity="center_horizontal|center_vertical"
-            android:id="@+id/progressBarLogin" />
-    </FrameLayout>
+        android:id="@+id/frameLayoutProgress"/>
+
 </RelativeLayout>

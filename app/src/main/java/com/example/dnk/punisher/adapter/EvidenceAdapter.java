@@ -1,19 +1,22 @@
 package com.example.dnk.punisher.adapter;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.example.dnk.punisher.CameraManager;
+import com.example.dnk.punisher.Globals;
 import com.example.dnk.punisher.R;
-import com.example.dnk.punisher.Violation;
+import com.example.dnk.punisher.activity.ShowMediaActivity;
 
 import java.util.ArrayList;
 
@@ -22,6 +25,7 @@ import java.util.ArrayList;
  */
 public class EvidenceAdapter extends BaseAdapter {
     public ArrayList<String> content = new ArrayList<>();
+    public ArrayList<String> filesDeletedDuringSession = new ArrayList<>();
 
     @Override
     public int getCount() {
@@ -39,7 +43,7 @@ public class EvidenceAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, final ViewGroup parent) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         if (convertView==null){
             convertView=inflater.inflate(R.layout.item_evidence, parent, false);
@@ -56,7 +60,27 @@ public class EvidenceAdapter extends BaseAdapter {
         }
 
         ImageView imageViewEvidence = (ImageView)convertView.findViewById(R.id.imageViewEvidence);
-        imageViewEvidence.setImageBitmap(thumbnail);
+        imageViewEvidence.setBackground(new BitmapDrawable(parent.getResources(), thumbnail));
+        //imageViewEvidence.setImageBitmap(thumbnail);
+
+        ImageButton imageButtonDeleteEvidence = (ImageButton)convertView.findViewById(R.id.imageButtonDeleteEvidence);
+        imageButtonDeleteEvidence.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                filesDeletedDuringSession.add(content.get(position));
+                content.remove(position);
+                EvidenceAdapter.this.notifyDataSetChanged();
+            }
+        });
+
+        convertView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent newIntent = new Intent(parent.getContext(), ShowMediaActivity.class);
+                newIntent.putExtra(Globals.MEDIA_FILE, content.get(position));
+                parent.getContext().startActivity(newIntent);
+            }
+        });
 
         return convertView;
     }

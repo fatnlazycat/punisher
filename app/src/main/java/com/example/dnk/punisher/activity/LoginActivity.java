@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.example.dnk.punisher.Globals;
 import com.example.dnk.punisher.PunisherUser;
@@ -41,7 +42,7 @@ public class LoginActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgressLogin);
+        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
 
         editTextLoginEmail = (EditText)findViewById(R.id.editTextLoginEmail);
         editTextLoginPassword = (EditText)findViewById(R.id.editTextLoginPassword);
@@ -52,8 +53,8 @@ public class LoginActivity extends Activity {
             editTextLoginPassword.requestFocus();
         }
 
-        //FacebookSdk.sdkInitialize(getApplicationContext());
-        //AppEventsLogger.activateApp(this);
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        AppEventsLogger.activateApp(this);
 
     }
 
@@ -72,11 +73,13 @@ public class LoginActivity extends Activity {
     }
 
     public void empty(View view) {
-        //empty method to catch onClick events
+        //empty method to handle click events
     }
 
     class LoginSender extends AsyncTask<String, Void, String> {
 
+        private static final String RESPONSE_INVALID_PASSWORD = "Invalid pasword";
+        private static final String MESSAGE_INVALID_PASSWORD = "Неправільний email та/або пароль";
         Context context;
 
         public LoginSender(Context context){
@@ -97,15 +100,16 @@ public class LoginActivity extends Activity {
 
             try {
                 HttpURLConnection urlConnection = (HttpURLConnection) new URL(Globals.SERVER_URL
-                        + "api/v1/signin").openConnection();
+                        + "signin").openConnection();
                 urlConnection.setRequestMethod("POST");
                 urlConnection.setDoOutput(true);
                 urlConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
                 urlConnection.setRequestProperty("Accept-Encoding", "UTF-8");
                 OutputStream os = urlConnection.getOutputStream();
-                String request = new RequestMaker("session").makeRequest(
+                String request = new RequestMaker("session").makeRequest(new String[] {
                         "email", email,
-                        "password", password);
+                        "password", password
+                });
 
                 os.write(request.getBytes());
                 os.flush();
@@ -140,7 +144,7 @@ public class LoginActivity extends Activity {
                 //check if user preferences are filled in, fill if not.
                 //required when the app was newly installed
                 SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-                if (globalPreferences.contains(Globals.USER_ID)) {//no preferences saved, so do it
+                if (!globalPreferences.contains(Globals.USER_ID)) {//no preferences saved, so do it
                     JSONObject userJSON = json.getJSONObject("user");
                     PunisherUser user = new PunisherUser(
                             userJSON.getString("email"),
@@ -149,18 +153,22 @@ public class LoginActivity extends Activity {
                             userJSON.getString("firstname"),
                             userJSON.getString("secondname"),
                             userJSON.getString("phone_number"));
-                    globalPreferences.edit()
+                    user.id = Integer.parseInt(userJSON.getString("id"));
+                    boolean b = globalPreferences.edit()
                             .putString(Globals.USER_EMAIL, user.email)
                             .putString(Globals.USER_PASSWORD, user.password)
                             .putString(Globals.USER_SURNAME, user.surname)
                             .putString(Globals.USER_NAME, user.name)
                             .putString(Globals.USER_SECOND_NAME, user.secondName)
                             .putString(Globals.USER_PHONE, user.phone)
-                            .putInt(Globals.USER_ID, user.id).apply();
+                            .putInt(Globals.USER_ID, user.id).commit();
+                    int i =0;
                 }
                 startActivity(new Intent(context, MainActivity.class));
             } catch (JSONException e) {
-                Log.e("Punisher-JSON", e.getMessage());
+                if (s.contains(RESPONSE_INVALID_PASSWORD)){
+                    Toast.makeText(LoginActivity.this, MESSAGE_INVALID_PASSWORD, Toast.LENGTH_LONG).show();
+                }
             }
             progressBar.setVisibility(View.GONE);
         }

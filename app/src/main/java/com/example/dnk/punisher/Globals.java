@@ -6,11 +6,12 @@ package com.example.dnk.punisher;
 public class Globals {
 
     public static final String ITEM_ID = "PUNISHER_ITEM_ID";
-    public static final String SERVER_URL = "https://fierce-dawn-36913.herokuapp.com/";
+    public static final String SERVER_URL = "https://fierce-dawn-36913.herokuapp.com/api/v1/";
 
     //intent extras
     public static final String CREATE_MODE = "PUNISHER_CREATE_MODE";
     public static final String VIOLATION = "com.example.dnk.punisher.Violation";
+    public static final String MEDIA_FILE = "PUNISHER_MEDIA_FILE";
 
     //user data tags
     public static final String LAST_LOGIN_EMAIL = "LAST_LOGIN_EMAIL";
@@ -24,5 +25,6 @@ public class Globals {
 
     public static String token;
     public static PunisherUser user;
+
 
 }

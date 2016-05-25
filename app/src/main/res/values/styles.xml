@@ -13,8 +13,8 @@
     <style name="GreenButton" parent="@android:style/Widget.Button">
         <item name="android:background">@drawable/selector_green_button</item>
         <item name="android:textColor">@color/colorBackground</item>
-        <item name="android:layout_marginLeft">@dimen/activity_horizontal_margin</item>
-        <item name="android:layout_marginRight">@dimen/activity_horizontal_margin</item>
+        <!--item name="android:layout_marginLeft">@dimen/activity_horizontal_margin</item>
+        <item name="android:layout_marginRight">@dimen/activity_horizontal_margin</item-->
         <item name="android:padding">@dimen/element_horizontal_padding</item>
         <item name="android:textSize">16sp</item>
         <item name="android:layout_gravity">center_horizontal</item>
@@ -25,7 +25,8 @@
     </style>
     
     <style name="EditTextStyle" parent="@android:style/Widget.EditText">
-        <item name="android:background">@android:color/white</item>
+        <!--item name="android:background">@android:color/white</item-->
+        <item name="android:background">@drawable/border_for_edittext_normal</item>
         <item name="android:textSize">16sp</item>
         <item name="android:padding">@dimen/element_horizontal_padding</item>
     </style>

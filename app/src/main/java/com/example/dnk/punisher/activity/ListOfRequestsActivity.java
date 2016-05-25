@@ -48,7 +48,7 @@ public class ListOfRequestsActivity  extends AppCompatActivity {
 
         Intent intent = new Intent(this, ViolationActivity.class)
                 .putExtra(Globals.CREATE_MODE, false)
-                .putExtra(Globals.ITEM_ID, id - 1); //because the list items are 1-based, not 0-based
+                .putExtra(Globals.ITEM_ID, id); //the list items are 1-based, not 0-based
         startActivity(intent);
     }
 }

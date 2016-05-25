@@ -1,31 +1,30 @@
 package com.example.dnk.punisher.view;
 
 import android.content.Context;
-import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
+import android.widget.GridView;
 import android.widget.ListAdapter;
-import android.widget.ListView;
 
 /**
  * Created by Dima on 10.05.2016.
  */
-public class ExpandedListView extends ListView implements View.OnTouchListener, AbsListView.OnScrollListener {
-    public ExpandedListView(Context context) {
+public class ExpandedGridView extends GridView implements View.OnTouchListener, AbsListView.OnScrollListener {
+    public ExpandedGridView(Context context) {
         super(context);
     }
 
-    public ExpandedListView(Context context, AttributeSet attrs) {
+    public ExpandedGridView(Context context, AttributeSet attrs) {
         super(context, attrs);
         listViewTouchAction = -1;
         setOnScrollListener(this);
         setOnTouchListener(this);
     }
 
-    public ExpandedListView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public ExpandedGridView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
@@ -56,9 +55,9 @@ public class ExpandedListView extends ListView implements View.OnTouchListener, 
         if (heightMode != MeasureSpec.EXACTLY) {
             ListAdapter listAdapter = getAdapter();
             if (listAdapter != null && !listAdapter.isEmpty()) {
-                int listPosition = 0;
+                int listPosition;
                 for (listPosition = 0; listPosition < listAdapter.getCount()
-                        && listPosition < MAXIMUM_LIST_ITEMS_VIEWABLE; listPosition++) {
+                        && listPosition < MAXIMUM_LIST_ITEMS_VIEWABLE; listPosition += getNumColumns()) {
                     View listItem = listAdapter.getView(listPosition, null, this);
                     //now it will not throw a NPE if listItem is a ViewGroup instance
                     if (listItem instanceof ViewGroup) {
@@ -68,7 +67,7 @@ public class ExpandedListView extends ListView implements View.OnTouchListener, 
                     listItem.measure(widthMeasureSpec, heightMeasureSpec);
                     newHeight += listItem.getMeasuredHeight();
                 }
-                newHeight += getDividerHeight() * listPosition;
+                newHeight += getVerticalSpacing() * listPosition;
             }
             if ((heightMode == MeasureSpec.AT_MOST) && (newHeight > heightSize)) {
                 if (newHeight > heightSize) {

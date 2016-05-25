@@ -12,10 +12,9 @@ public class ForgotPassword2Activity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_password2);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     public void proceedWithPasswordRenovation(View view) {
-
+        finishAffinity();
     }
 }
