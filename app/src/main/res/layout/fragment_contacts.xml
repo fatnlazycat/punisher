@@ -1,0 +1,58 @@
+<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:src="@mipmap/logo2"
+        android:layout_gravity="center"
+        android:id="@+id/imageView2" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/contacts"
+        android:id="@+id/textView3"
+        android:background="@android:color/white"
+        android:paddingLeft="@dimen/text_box_horizontal_padding"
+        android:paddingRight="@dimen/text_box_horizontal_padding"
+        android:paddingTop="@dimen/text_box_vertical_padding"
+        android:paddingBottom="@dimen/text_box_vertical_padding" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:background="@android:color/white"
+        android:paddingLeft="@dimen/text_box_horizontal_padding"
+        android:text="@string/office_phone"
+        android:textColor="@color/darkGreen"
+        android:drawableStart="@drawable/ic_phone"
+        android:drawablePadding="16dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:background="@android:color/white"
+        android:paddingLeft="@dimen/text_box_horizontal_padding"
+        android:text="@string/office_mail"
+        android:textColor="@color/darkGreen"
+        android:drawableStart="@drawable/ic_mail"
+        android:drawablePadding="16dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="16dp"
+        android:background="@android:color/white"
+        android:paddingLeft="@dimen/text_box_horizontal_padding"
+        android:paddingRight="@dimen/text_box_horizontal_padding"
+        android:text="@string/office_address"
+        android:textColor="@color/darkGreen"
+        android:drawableStart="@drawable/ic_location"
+        android:drawablePadding="16dp"/>
+</LinearLayout>

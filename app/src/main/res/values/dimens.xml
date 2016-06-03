@@ -7,7 +7,9 @@
     <dimen name="text_box_horizontal_padding">24dp</dimen>
     <dimen name="text_box_vertical_padding">16dp</dimen>
 
-    <dimen name="thumbnail_size">96dp</dimen>
+    <dimen name="thumbnail_size">96px</dimen>
     <dimen name="small_circle_size">8dp</dimen>
     <dimen name="drawer_item_text_size">16sp</dimen>
+    <dimen name="textSizeRequisiteHeader">11sp</dimen>
+    <dimen name="textSizeRequisiteDescription">12sp</dimen>
 </resources>

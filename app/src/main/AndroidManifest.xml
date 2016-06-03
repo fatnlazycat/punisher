@@ -16,7 +16,9 @@
         android:theme="@style/AppTheme">
         <meta-data android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id"/>
-        <activity android:name="org.foundation101.thepunisher.activity.StartActivity"
+        <meta-data android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+        <activity android:name=".activity.StartActivity"
             android:theme="@style/AppThemeWithoutDrawer">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,8 +27,12 @@
         </activity>
         <activity android:name="org.foundation101.thepunisher.activity.TutorialActivity"
             android:theme="@style/AppThemeWithoutDrawer" />
-        <activity android:name="org.foundation101.thepunisher.activity.LoginActivity"
+        <activity android:name=".activity.TipsActivity"
             android:theme="@style/AppThemeWithoutDrawer" />
+        <activity android:name="com.facebook.FacebookActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:label="@string/app_name" />
         <activity android:name="org.foundation101.thepunisher.activity.MainActivity"
             android:label="@string/title_activity_main" />
         <activity android:name="org.foundation101.thepunisher.activity.ViolationActivity"
@@ -36,20 +42,19 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.foundation101.thepunisher.activity.MainActivity" />
         </activity>
-        <activity android:name="org.foundation101.thepunisher.activity.ListOfRequestsActivity" />
         <activity android:name="org.foundation101.thepunisher.activity.NewsActivity" />
         <activity android:name="org.foundation101.thepunisher.activity.SignUpActivity"
             android:label="@string/title_activity_sign_up"
-            android:parentActivityName="org.foundation101.thepunisher.activity.LoginActivity">
+            android:parentActivityName=".activity.TipsActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.foundation101.thepunisher.activity.LoginActivity" />
+                android:value=".activity.TipsActivity" />
         </activity>
         <activity android:name="org.foundation101.thepunisher.activity.ForgotPasswordActivity"
-            android:parentActivityName="org.foundation101.thepunisher.activity.LoginActivity">
+            android:parentActivityName=".activity.TipsActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.foundation101.thepunisher.activity.LoginActivity" />
+                android:value=".activity.TipsActivity" />
         </activity>
         <activity android:name="org.foundation101.thepunisher.activity.ForgotPassword2Activity"
             android:label="@string/title_activity_forgot_password2"

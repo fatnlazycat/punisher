@@ -55,6 +55,18 @@
         <item>false</item>
     </string-array>
 
+    <string-array name="violationStatuses">
+        <item>ЧЕРНЕТКА</item>
+        <item>НА МОДЕРАЦІЇ</item>
+        <item>ВІДМОВЛЕНО В РОЗГЛЯДІ</item>
+        <item>В РОБОТІ</item>
+        <item>ОЧІКУВАННЯ ВІДПОВІДІ</item>
+        <item>ЗАКРИТО</item>
+        <item>6.null</item>
+        <item>7.null</item>
+        <item>8.null</item>
+    </string-array>
+
     <string-array name="drawerMenuItems">
         <item>Покарати за порушення</item>
         <item>Заявки</item>
@@ -222,6 +234,12 @@
         <item>НАЗВА ВИРОБНИКА ТОВАРУ</item>
         <item>Юридична особа або підприємець</item>
         <item>Юридична особа або підприємець</item>
+    </string-array>
+
+    <string-array name="change_avatar_dialog_items">
+        <item>Завантажити з галереї</item>
+        <item>Зробити фото</item>
+        <item>Видалити фото</item>
     </string-array>
 
 </resources>

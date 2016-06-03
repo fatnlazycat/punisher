@@ -75,4 +75,18 @@
     <string name="title_activity_show_photo">ShowPhotoActivity</string>
     <string name="tap_to_enter">Натисніть на єкран, щоб продовжити</string>
     <string name="user_created">Обліковий запис створено.</string>
+    <string name="you_have_made_no_requests_yet">Ви ще не створили жодної  заявки</string>
+    <string name="create_request">СТВОРИТИ ЗАЯВКУ</string>
+    <string name="punishment_requests">Заявки на покарання</string>
+    <string name="location_data_not_available">Пристрій не може визначити Ваше знаходження. Збереження заявки неможливо.</string>
+    <string name="contacts_header">Зворотній зв’язок</string>
+    <string name="contacts"><b>Якщо у вас є питання чи пропозиції — зв\'яжіться з нами</b></string>
+    <string name="office_phone">+38 (044) 209-69-33</string>
+    <string name="office_mail">mail@foundation101.org</string>
+    <string name="office_address">04215, м. Київ, пр. Георгія Гонгадзе, 32-Б. Громадська організація «Фундація.101»</string>
+    <string name="url_foundation101">https://www.foundation101.org</string>
+    <string name="url_peoples_project">http://www.peoplesproject.com</string>
+    <string name="change_profile_photo">Змінити фото профілю</string>
+    <string name="cancel">СКАСУВАТИ</string>
+    <string name="choose_picture">Оберіть картинку</string>
 </resources>

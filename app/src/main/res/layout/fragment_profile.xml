@@ -1,54 +1,63 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:layout_height="wrap_content"
     tools:context="org.foundation101.thepunisher.fragment.ProfileFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
         android:orientation="horizontal">
 
         <ImageView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:id="@+id/avatarProfileImageView"/>
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="19sp"
+            android:gravity="center"
             android:id="@+id/userNameTextView"/>
     </LinearLayout>
 
-    <include layout="@layout/item_violation_requisite"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/profile_email"/>
+        <include layout="@layout/item_violation_requisite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/profile_surname"/>
 
-    <include layout="@layout/item_violation_requisite"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/profile_password"/>
+        <include layout="@layout/item_violation_requisite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/profile_name"/>
 
-    <include layout="@layout/item_violation_requisite"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/profile_surname"/>
+        <include layout="@layout/item_violation_requisite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/profile_second_name"/>
 
+        <include layout="@layout/item_violation_requisite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/profile_phone"/>
 
-    <include layout="@layout/item_violation_requisite"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/profile_name"/>
+        <include layout="@layout/item_violation_requisite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:id="@+id/profile_email"/>
 
-    <include layout="@layout/item_violation_requisite"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/profile_second_name"/>
+        <include layout="@layout/item_violation_requisite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/profile_password"/>
 
-    <include layout="@layout/item_violation_requisite"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/profile_phone"/>
+    </LinearLayout>
 
-</LinearLayout>
+</ScrollView>
