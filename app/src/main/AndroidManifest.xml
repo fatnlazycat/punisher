@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.foundation101.thepunisher">
+    package="org.foundation101.karatel">
+
+    <permission android:name="org.foundation101.karatel.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="org.foundation101.karatel.permission.C2D_MESSAGE"/>
 
     <application
         android:allowBackup="true"
@@ -14,57 +19,144 @@
         android:label="@string/app_name"
         android:supportsRtl="false"
         android:theme="@style/AppTheme">
-        <meta-data android:name="com.facebook.sdk.ApplicationId"
-            android:value="@string/facebook_app_id"/>
-        <meta-data android:name="com.google.android.gms.version"
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+        <meta-data
+            android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
-        <activity android:name=".activity.StartActivity"
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAvOmKt5COzldoNnalypQJ5yYo_3o2XrvE"/>
+
+        <receiver
+            android:name="com.google.android.gms.gcm.GcmReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+                <category android:name="org.foundation101.karatel" />
+            </intent-filter>
+        </receiver>
+        <service
+            android:name=".MyGcmListenerService"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </service>
+        <service
+            android:name=".MyInstanceIDListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID" />
+            </intent-filter>
+        </service>
+        <service android:name=".RegistrationIntentService"
+            android:exported="false" />
+
+        <activity
+            android:name="org.foundation101.karatel.activity.StartActivity"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
             android:theme="@style/AppThemeWithoutDrawer">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="org.foundation101.thepunisher.activity.TutorialActivity"
+        <activity
+            android:name="org.foundation101.karatel.activity.TutorialActivity"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
             android:theme="@style/AppThemeWithoutDrawer" />
-        <activity android:name=".activity.TipsActivity"
+        <activity
+            android:name="org.foundation101.karatel.activity.TipsActivity"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
             android:theme="@style/AppThemeWithoutDrawer" />
-        <activity android:name="com.facebook.FacebookActivity"
+        <activity
+            android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:label="@string/app_name" />
-        <activity android:name="org.foundation101.thepunisher.activity.MainActivity"
-            android:label="@string/title_activity_main" />
-        <activity android:name="org.foundation101.thepunisher.activity.ViolationActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <activity
+            android:name="org.foundation101.karatel.activity.MainActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_main"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name="org.foundation101.karatel.activity.ViolationActivity"
+            android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_bribery"
-            android:parentActivityName="org.foundation101.thepunisher.activity.MainActivity">
+            android:parentActivityName="org.foundation101.karatel.activity.MainActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.foundation101.thepunisher.activity.MainActivity" />
+                android:value="org.foundation101.karatel.activity.MainActivity" />
         </activity>
-        <activity android:name="org.foundation101.thepunisher.activity.NewsActivity" />
-        <activity android:name="org.foundation101.thepunisher.activity.SignUpActivity"
+        <activity
+            android:name="org.foundation101.karatel.activity.SignUpActivity"
+            android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_sign_up"
-            android:parentActivityName=".activity.TipsActivity">
+            android:parentActivityName="org.foundation101.karatel.activity.TipsActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.TipsActivity" />
+                android:value="org.foundation101.karatel.activity.TipsActivity" />
         </activity>
-        <activity android:name="org.foundation101.thepunisher.activity.ForgotPasswordActivity"
-            android:parentActivityName=".activity.TipsActivity">
-            <meta-data
+        <activity
+            android:name="org.foundation101.karatel.activity.ForgotPasswordActivity"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait">
+
+            <!--
+                meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.TipsActivity" />
+                android:value=".activity.TipsActivity" /
+            -->
         </activity>
-        <activity android:name="org.foundation101.thepunisher.activity.ForgotPassword2Activity"
+        <activity
+            android:name="org.foundation101.karatel.activity.ForgotPassword2Activity"
+            android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_forgot_password2"
-            android:parentActivityName="org.foundation101.thepunisher.activity.ForgotPasswordActivity">
+            android:parentActivityName="org.foundation101.karatel.activity.ForgotPasswordActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.foundation101.thepunisher.activity.ForgotPasswordActivity" />
+                android:value="org.foundation101.karatel.activity.ForgotPasswordActivity" />
         </activity>
-        <activity android:name="org.foundation101.thepunisher.activity.ShowMediaActivity"
-            android:label="@string/title_activity_show_photo"/>
+        <activity
+            android:name="org.foundation101.karatel.activity.ShowMediaActivity"
+            android:label="@string/title_activity_show_photo" />
+        <activity
+            android:name="org.foundation101.karatel.activity.ChangeEmailActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_change_email"
+            android:parentActivityName="org.foundation101.karatel.activity.MainActivity"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.foundation101.karatel.activity.MainActivity" />
+        </activity>
+        <activity
+            android:name="org.foundation101.karatel.activity.ChangePasswordActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_change_password"
+            android:parentActivityName="org.foundation101.karatel.activity.MainActivity"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.foundation101.karatel.activity.MainActivity" />
+        </activity>
+        <activity
+            android:name="org.foundation101.karatel.activity.NewsActivity"
+            android:label="@string/title_activity_news"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"/>
     </application>
 
 </manifest>

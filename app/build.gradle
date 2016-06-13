@@ -5,9 +5,9 @@ android {
     buildToolsVersion "23.0.3"
 
     defaultConfig {
-        applicationId "org.foundation101.thepunisher"
+        applicationId "org.foundation101.karatel"
         minSdkVersion 17
-        targetSdkVersion 23
+        targetSdkVersion 22
         versionCode 1
         versionName "1.0"
     }
@@ -17,27 +17,24 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    packagingOptions {
-        exclude 'META-INF/spring.schemas'
-        exclude 'META-INF/spring.tooling'
-        exclude 'META-INF/spring.handlers'
-        exclude 'META-INF/license.txt'
-        exclude 'META-INF/notice.txt'
-        exclude 'META-INF/spring..txt'
+    packagingOptions{
+        exclude 'META-INF/ASL2.0'
     }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
+    testCompile 'junit:junit:4.8.2'
 
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:support-v4:23.4.0'
     compile 'com.android.support:recyclerview-v7:23.4.0'
     compile 'com.android.support:design:23.4.0'
     compile 'org.jsoup:jsoup:1.9.1'
-    compile 'com.google.android.gms:play-services-maps:9.0.1'
-    compile 'com.google.android.gms:play-services-location:9.0.1'
+    compile group: 'com.fasterxml', name: 'jackson-module-json-org', version: '0.9.1'
+    compile "com.google.android.gms:play-services-gcm:9.0.2"
+    compile 'com.google.android.gms:play-services-maps:9.0.2'
+    compile 'com.google.android.gms:play-services-location:9.0.2'
     compile 'com.facebook.android:facebook-android-sdk:4.11.0'
 }
 repositories {
@@ -46,3 +43,4 @@ repositories {
         url 'https://repo.spring.io/libs-milestone'
     }
 }
+apply plugin: 'com.google.gms.google-services'

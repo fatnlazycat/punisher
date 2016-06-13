@@ -89,4 +89,27 @@
     <string name="change_profile_photo">Змінити фото профілю</string>
     <string name="cancel">СКАСУВАТИ</string>
     <string name="choose_picture">Оберіть картинку</string>
+    <string name="title_activity_change_email">ChangeEmailActivity</string>
+    <string name="change_email">Змінити email</string>
+    <string name="change">Змінити</string>
+    <string name="new_email">Новий email</string>
+    <string name="enter_new_email">Введіть новий email</string>
+    <string name="are_you_sure">Ви впевнені?</string>
+    <string name="no">НІ</string>
+    <string name="yes">ТАК</string>
+    <string name="email_change">Зміна email</string>
+    <string name="ok">OK</string>
+    <string name="title_activity_change_password">ChangePasswordActivity</string>
+    <string name="current_password">ПОТОЧНИЙ ПАРОЛЬ</string>
+    <string name="new_password">НОВИЙ ПАРОЛЬ</string>
+    <string name="password_change">Зміна паролю</string>
+    <string name="your_password_is_changed_successfully">Ваш пароль успішно змінений</string>
+    <string name="information">Інформація</string>
+    <string name="request_status">Статус заявки</string>
+    <string name="addedPhotoVideo">Додані фото, відео</string>
+    <string name="title_activity_news">NewsActivity</string>
+    <string name="news_header">Новини</string>
+    <string name="bindProfile">Зв`язати профіль</string>
+    <string name="facebook_profile_binded">Профіль успішно зв`язаний!</string>
+    <string name="doSort">Сортувати</string>
 </resources>

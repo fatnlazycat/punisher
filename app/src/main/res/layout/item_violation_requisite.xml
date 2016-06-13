@@ -24,9 +24,15 @@
         android:textSize="@dimen/textSizeRequisiteDescription"
         android:id="@+id/textViewRequisiteDescription"/>
 
-    <EditText
+    <AutoCompleteTextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/editTextRequisite"/>
+
+    <FrameLayout
+        android:id="@+id/mapContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="140dp"
+        android:visibility="gone"/>
 
 </LinearLayout>

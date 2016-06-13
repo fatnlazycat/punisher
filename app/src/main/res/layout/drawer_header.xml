@@ -8,8 +8,9 @@
 
     <ImageView
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:gravity="center"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:src="@mipmap/hex_white"
         android:id="@+id/avatarImageView"/>
 
     <TextView

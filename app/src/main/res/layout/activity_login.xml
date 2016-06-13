@@ -36,6 +36,7 @@
             android:inputType="textPassword"
             android:id="@+id/editTextLoginPassword"
             android:text="qwerty"/>
+        <!--android:text="qwerty"-->
 
         <Button
             android:id="@+id/forgotPasswButton"
@@ -55,7 +56,7 @@
             android:layout_marginTop="20dp" />
 
         <!--facebook part - DO NOT DELETE -->
-        <!--LinearLayout
+        <LinearLayout
             android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -78,10 +79,10 @@
                 android:src="@drawable/grey_line"/>
         </LinearLayout>
 
-        <com.facebook.login.widget.LoginButton
+        <!--com.facebook.login.widget.LoginButton
             android:id="@+id/login_button"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"/-->
 
         <Button
             android:id="@+id/facebookLoginButton"
@@ -90,7 +91,8 @@
             android:drawableStart="@mipmap/facebook"
             android:text="@string/facebook_login"
             android:background="@drawable/selector_facebook_button"
-            android:padding="0dp" /-->
+            android:padding="0dp"
+            android:onClick="facebookLogin"/>
 
         <!--empty view to push the rest down the screen-->
         <View

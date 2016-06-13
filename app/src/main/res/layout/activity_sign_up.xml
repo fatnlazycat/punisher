@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="org.foundation101.thepunisher.activity.SignUpActivity">
+    tools:context="org.foundation101.karatel.activity.SignUpActivity">
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
