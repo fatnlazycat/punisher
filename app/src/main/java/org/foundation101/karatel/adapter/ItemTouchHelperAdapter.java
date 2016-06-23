@@ -1,4 +1,4 @@
-package org.foundation101.karatel;
+package org.foundation101.karatel.adapter;
 
 /**
  * Created by Dima on 27.05.2016.

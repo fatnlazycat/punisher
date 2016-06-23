@@ -8,6 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.NewsItem;
 import org.foundation101.karatel.R;
 
@@ -20,12 +21,11 @@ import java.util.Locale;
  * Created by Dima on 10.05.2016.
  */
 public class NewsListAdapter extends BaseAdapter {
-    SimpleDateFormat inFormatter, outFormatter;
+    public static final String INPUT_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss Z";
+    public static final String OUTPUT_DATE_FORMAT = "dd MMMMMMMM yyyy";
 
     public NewsListAdapter(ArrayList<NewsItem> content){
         this.content = content;
-        inFormatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.US);
-        outFormatter = new SimpleDateFormat("dd MMMMMMMM yyyy", new Locale("uk", "UA"));
     }
 
     ArrayList<NewsItem> content = new ArrayList<>();
@@ -57,16 +57,9 @@ public class NewsListAdapter extends BaseAdapter {
         textViewNewsHeader.setText(thisNews.title);
         TextView textViewNewsDate = (TextView)convertView.findViewById(R.id.textViewNewsDate);
 
-        try {
-            /*Date d = new Date();
-            String s = d.toString();
-            String s2  = inFormatter.format(d);*/
-            Date date = inFormatter.parse(thisNews.pubDate);
-            String dateString = outFormatter.format(date);
-            textViewNewsDate.setText(dateString);
-        } catch (Exception e) {
-            Log.e("Punisher", e.getMessage());
-        }
+        String dateString = Globals.translateDate(INPUT_DATE_FORMAT, OUTPUT_DATE_FORMAT, thisNews.pubDate);
+        textViewNewsDate.setText(dateString);
+
         ImageView imageViewNews = (ImageView)convertView.findViewById(R.id.imageViewNews);
         imageViewNews.setImageDrawable(thisNews.image);
 

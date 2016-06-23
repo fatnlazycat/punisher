@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     TextView avatarTextView;
     FragmentManager fManager;
     FragmentTransaction ft;
+    int currentFragment;
 
     //facebook part
     CallbackManager fbCallbackManager;
@@ -102,64 +103,81 @@ public class MainActivity extends AppCompatActivity {
 
         drawerListView.setOnItemClickListener(new ListView.OnItemClickListener(){
             public void onItemClick(AdapterView parent, View view, int position, long id){
+                String tag = "";
+                currentFragment = position;
                 switch (position){
                     case 1 : {
-                        toolbar.setTitle(R.string.do_punish);
-                        fManager.beginTransaction().detach(fManager.findFragmentByTag("current_fragment")).commit();
-                        fManager.beginTransaction().add(R.id.frameLayoutMain, new MainFragment(), "current_fragment").commit();
+                        tag = getResources().getString(R.string.do_punish);
+                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new MainFragment(), tag)
+                                .addToBackStack(tag).commit();
                         break;
                     }
                     case 2 : {
-                        //startActivity(new Intent(parent.getContext(), RequestListFragment.class));
-                        toolbar.setTitle(R.string.punishment_requests);
-                        fManager.beginTransaction().detach(fManager.findFragmentByTag("current_fragment")).commit();
-                        fManager.beginTransaction().add(R.id.frameLayoutMain, new RequestListFragment(), "current_fragment").commit();
+                        tag = getResources().getString(R.string.punishment_requests);
+                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new RequestListFragment(), tag)
+                                .addToBackStack(tag).commit();
                         break;
                     }
                     case 3 : {
-                        toolbar.setTitle(R.string.about_header);
-                        fManager.beginTransaction().detach(fManager.findFragmentByTag("current_fragment")).commit();
-                        fManager.beginTransaction().add(R.id.frameLayoutMain, new AboutFragment(), "current_fragment").commit();
+                        tag = getResources().getString(R.string.about_header);
+                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new AboutFragment(), tag)
+                                .addToBackStack(tag).commit();
                         break;
                     }
                     case 4 : {
-                        toolbar.setTitle(R.string.news_header);
-                        fManager.beginTransaction().detach(fManager.findFragmentByTag("current_fragment")).commit();
-                        fManager.beginTransaction().add(R.id.frameLayoutMain, new NewsFragment(), "current_fragment").commit();
+                        tag = getResources().getString(R.string.news_header);
+                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new NewsFragment(), tag)
+                                .addToBackStack(tag).commit();
                         break;
                     }
                         case 5 : {
-                        toolbar.setTitle(R.string.contacts_header);
-                        fManager.beginTransaction().detach(fManager.findFragmentByTag("current_fragment")).commit();
-                        fManager.beginTransaction().add(R.id.frameLayoutMain, new ContactsFragment(), "current_fragment").commit();
+                        tag = getResources().getString(R.string.contacts_header);
+                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new ContactsFragment(), tag)
+                                .addToBackStack(tag).commit();
                         break;
                     }
                     case 6 : {
-                        toolbar.setTitle(R.string.profile_header);
-                        fManager.beginTransaction().detach(fManager.findFragmentByTag("current_fragment")).commit();
-                        fManager.beginTransaction().add(R.id.frameLayoutMain, new ProfileFragment(), "current_fragment").commit();
+                        tag = getResources().getString(R.string.profile_header);
+                        //do not add profile fragment to back stack because of its strange behavior
+                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new ProfileFragment(), tag).commit();
                         break;
                     }
                     case 7 : finishAffinity();
                 }
+                toolbar.setTitle(tag);
                 drawerLayout.closeDrawer(Gravity.LEFT);
             }
         });
 
         getSupportActionBar().setDisplayShowTitleEnabled(false);
-        //getSupportActionBar().setHomeButtonEnabled(false);
 
+        //select fragment to start with (from savedInstanceState)
         ft = fManager.beginTransaction();
-        toolbar.setTitle(R.string.do_punish);
-        ft.add(R.id.frameLayoutMain, new MainFragment(), "current_fragment").commit();
+        String tag = "";
+        if (savedInstanceState != null) {
+            int action = savedInstanceState.getInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, 0);
+            switch (action){
+                case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT:{
+                    tag = getResources().getString(R.string.punishment_requests);
+                    ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
+                }
+                case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT:{//profile fragment not added to back stack due to its strange behavior
+                    tag = getResources().getString(R.string.profile_header);
+                    ft.add(R.id.frameLayoutMain, new ProfileFragment(), tag).commit();
+                }
+                case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT:{
+                    tag = getResources().getString(R.string.news_header);
+                    ft.add(R.id.frameLayoutMain, new NewsFragment(), tag).addToBackStack(tag).commit();
+                }
+            }
+        } else {
+            tag = getResources().getString(R.string.do_punish);
+            ft.add(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
+        }
+        toolbar.setTitle(tag);
+
 
         FacebookSdk.sdkInitialize(getApplicationContext());
-        /*accessTokenTracker = new AccessTokenTracker() {
-            @Override
-            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken newAccessToken) {
-                updateWithToken(newAccessToken);
-            }
-        };*/
     }
 
 
@@ -167,15 +185,31 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == CameraManager.IMAGE_CAPTURE_INTENT && resultCode == Activity.RESULT_OK){
-            fManager.findFragmentByTag("current_fragment").onActivityResult(requestCode, resultCode, data);
-        } else {
+            fManager.findFragmentByTag(getResources().getString(R.string.profile_header)).onActivityResult(requestCode, resultCode, data);
+        } else if (fbCallbackManager != null) {
             fbCallbackManager.onActivityResult(requestCode, resultCode, data);
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        int entryNumber = fManager.getBackStackEntryCount() - 2;
+        if (entryNumber >= 0) {
+            String tag = fManager.getBackStackEntryAt(entryNumber).getName();
+            toolbar.setTitle(tag);
+        }
+        super.onBackPressed();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, currentFragment);
+        super.onSaveInstanceState(outState);
+    }
+
     /*
-         *the task is to add the first list item with the user's name
-         */
+             *the task is to add the first list item with the user's name
+             */
     String[] makeDrawerList(){
         String[] menuItems = getResources().getStringArray(R.array.drawerMenuItems);
         ArrayList<String> tempList = new ArrayList(Arrays.asList(menuItems));
@@ -193,9 +227,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void createRequest(View view) {
-        toolbar.setTitle(R.string.do_punish);
-        fManager.beginTransaction().detach(fManager.findFragmentByTag("current_fragment")).commit();
-        fManager.beginTransaction().add(R.id.frameLayoutMain, new MainFragment(), "current_fragment").commit();
+        String tag = getResources().getString(R.string.do_punish);
+        toolbar.setTitle(tag);
+        fManager.beginTransaction().replace(R.id.frameLayoutMain, new MainFragment(), tag).commit();
     }
 
     public void open101(View view) {

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 public class EvidenceAdapter extends BaseAdapter {
     Context context;
     public ArrayList<String> content = new ArrayList<>();
+    public ArrayList<Bitmap> mediaContent = new ArrayList<>();
     public ArrayList<String> filesDeletedDuringSession = new ArrayList<>();
     boolean editTrigger = true;
 
@@ -67,44 +68,36 @@ public class EvidenceAdapter extends BaseAdapter {
         if (convertView==null){
             convertView=inflater.inflate(R.layout.item_evidence, parent, false);
         }
+        if (mediaContent.size() > position) {//means we have initialized this position in media content
+            Bitmap thumbnail = mediaContent.get(position);
+            ImageView imageViewEvidence = (ImageView) convertView.findViewById(R.id.imageViewEvidence);
+            imageViewEvidence.setBackground(new BitmapDrawable(parent.getResources(), thumbnail));
+            //imageViewEvidence.setImageBitmap(thumbnail);
 
-        String fileName = content.get(position);
-        Bitmap thumbnail;
-        //the thumbnail should have the same size as MediaStore.Video.Thumbnails.MICRO_KIND
-        int dimension = parent.getResources().getDimensionPixelOffset(R.dimen.thumbnail_size);
-        if (fileName.endsWith(CameraManager.JPG)){
-            thumbnail = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(fileName), dimension, dimension);
-        } else { //it's video
-            thumbnail = ThumbnailUtils.createVideoThumbnail(fileName, MediaStore.Video.Thumbnails.MICRO_KIND);
-        }
-        ImageView imageViewEvidence = (ImageView)convertView.findViewById(R.id.imageViewEvidence);
-        imageViewEvidence.setBackground(new BitmapDrawable(parent.getResources(), thumbnail));
-        //imageViewEvidence.setImageBitmap(thumbnail);
+            ImageButton imageButtonDeleteEvidence = (ImageButton) convertView.findViewById(R.id.imageButtonDeleteEvidence);
+            if (editTrigger) {
+                imageButtonDeleteEvidence.setBackgroundResource(R.mipmap.ic_delete);
+                imageButtonDeleteEvidence.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        filesDeletedDuringSession.add(content.get(position));
+                        content.remove(position);
+                        EvidenceAdapter.this.notifyDataSetChanged();
+                    }
+                });
+            } else {
+                imageButtonDeleteEvidence.setVisibility(View.GONE);
+            }
 
-        ImageButton imageButtonDeleteEvidence = (ImageButton) convertView.findViewById(R.id.imageButtonDeleteEvidence);
-        if (editTrigger) {
-            imageButtonDeleteEvidence.setBackgroundResource(R.mipmap.ic_delete);
-            imageButtonDeleteEvidence.setOnClickListener(new View.OnClickListener() {
+            convertView.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
-                    filesDeletedDuringSession.add(content.get(position));
-                    content.remove(position);
-                    EvidenceAdapter.this.notifyDataSetChanged();
+                public void onClick(View view) {
+                    Intent newIntent = new Intent(parent.getContext(), ShowMediaActivity.class);
+                    newIntent.putExtra(Globals.MEDIA_FILE, content.get(position));
+                    parent.getContext().startActivity(newIntent);
                 }
             });
-        } else {
-            imageButtonDeleteEvidence.setVisibility(View.GONE);
         }
-
-        convertView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent newIntent = new Intent(parent.getContext(), ShowMediaActivity.class);
-                newIntent.putExtra(Globals.MEDIA_FILE, content.get(position));
-                parent.getContext().startActivity(newIntent);
-            }
-        });
-
         return convertView;
     }
 

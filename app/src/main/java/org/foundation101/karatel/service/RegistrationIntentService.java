@@ -1,4 +1,4 @@
-package org.foundation101.karatel;
+package org.foundation101.karatel.service;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -10,6 +10,9 @@ import android.util.Log;
 import com.google.android.gms.gcm.GcmPubSub;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
+
+import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.R;
 
 import java.io.IOException;
 
@@ -36,6 +39,7 @@ public class RegistrationIntentService extends IntentService {
             InstanceID instanceID = InstanceID.getInstance(this);
             String token = instanceID.getToken(getString(R.string.gcm_defaultSenderId),
                     GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+            Globals.pushToken = token;
             // [END get_token]
             Log.i(TAG, "GCM Registration Token: " + token);
 

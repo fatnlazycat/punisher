@@ -1,5 +1,7 @@
 package org.foundation101.karatel;
 
+import org.json.JSONArray;
+
 import java.io.Serializable;
 
 /**
@@ -7,9 +9,12 @@ import java.io.Serializable;
  */
 public class Request implements Serializable{
     public String type;
-    public int id, user_id, complain_status_id;
+    public int id, user_id, complain_status_id, rating, authority_id;
     public String id_number, address, description, vehicle_number, the_closest_landmark, all_name, position,
-            name_of_authority, name_of_institution, name_of_entity, product_name, name_producer, created_at, updated_at;
-    public double latitude, longitude;
-    public String[] media_files;
+            name_of_authority, name_of_institution, name_of_entity, product_name, name_producer, created_at,
+            updated_at, create_in_the_device;
+    public double latitude, longitude, address_lat, address_lon;
+    public MediaEntity[] images, videos;
+    public UpdateEntity[] updates;
+    public String[] media_files; //delete at new server because it's substituted with images, videos
 }

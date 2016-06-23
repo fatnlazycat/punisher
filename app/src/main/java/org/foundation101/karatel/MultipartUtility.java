@@ -1,5 +1,7 @@
 package org.foundation101.karatel;
 
+import android.util.Log;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,13 +42,14 @@ public class MultipartUtility {
         boundary = "===" + System.currentTimeMillis() + "===";
         URL url = new URL(requestURL);
         httpConn = (HttpURLConnection) url.openConnection();
-        httpConn.setChunkedStreamingMode(1024);
+        httpConn.setChunkedStreamingMode(4096);
         httpConn.setRequestMethod(method);
         httpConn.setUseCaches(false);
         httpConn.setDoOutput(true);    // indicates POST method
         httpConn.setDoInput(true);
         httpConn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-        httpConn.setRequestProperty("Authorization", Globals.token);
+        httpConn.setRequestProperty( "Accept-Encoding", "" );
+        httpConn.setRequestProperty("Authorization", Globals.sessionToken);
         outputStream = httpConn.getOutputStream();
         writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
     }
@@ -92,8 +95,10 @@ public class MultipartUtility {
         FileInputStream inputStream = new FileInputStream(uploadFile);
         byte[] buffer = new byte[4096];
         int bytesRead = -1;
+        int i = 0;
         while ((bytesRead = inputStream.read(buffer)) != -1) {
             outputStream.write(buffer, 0, bytesRead);
+            Log.e("Punisher", "#" + bytesRead + " # " + i++);
         }
         outputStream.flush();
         inputStream.close();

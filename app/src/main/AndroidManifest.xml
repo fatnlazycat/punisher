@@ -40,21 +40,21 @@
             </intent-filter>
         </receiver>
         <service
-            android:name=".MyGcmListenerService"
+            android:name=".service.MyGcmListenerService"
             android:exported="false" >
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
             </intent-filter>
         </service>
         <service
-            android:name=".MyInstanceIDListenerService"
+            android:name=".service.MyInstanceIDListenerService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.android.gms.iid.InstanceID" />
             </intent-filter>
         </service>
-        <service android:name=".RegistrationIntentService"
-            android:exported="false" />
+        <service android:name=".service.RegistrationIntentService"
+        android:exported="false" />
 
         <activity
             android:name="org.foundation101.karatel.activity.StartActivity"
@@ -63,7 +63,6 @@
             android:theme="@style/AppThemeWithoutDrawer">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -130,8 +129,7 @@
                 android:value="org.foundation101.karatel.activity.ForgotPasswordActivity" />
         </activity>
         <activity
-            android:name="org.foundation101.karatel.activity.ShowMediaActivity"
-            android:label="@string/title_activity_show_photo" />
+            android:name="org.foundation101.karatel.activity.ShowMediaActivity"/>
         <activity
             android:name="org.foundation101.karatel.activity.ChangeEmailActivity"
             android:configChanges="orientation|screenSize"
@@ -145,7 +143,6 @@
         <activity
             android:name="org.foundation101.karatel.activity.ChangePasswordActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_change_password"
             android:parentActivityName="org.foundation101.karatel.activity.MainActivity"
             android:screenOrientation="portrait">
             <meta-data

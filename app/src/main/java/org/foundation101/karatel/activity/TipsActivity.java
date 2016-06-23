@@ -11,6 +11,7 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -56,7 +57,7 @@ public class TipsActivity extends Activity {
         //check connectivity
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Activity.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
-        if (!networkInfo.isConnected()){
+        if (networkInfo == null || !networkInfo.isConnected()){
             Toast.makeText(this, "no internet connection", Toast.LENGTH_LONG).show();
         }
 
@@ -80,9 +81,12 @@ public class TipsActivity extends Activity {
     public void login(View view) {
         String email = editTextLoginEmail.getText().toString();
         String passw = editTextLoginPassword.getText().toString();
+        String gcmToken = Globals.pushToken == null ? "" : Globals.pushToken;
         String request = new HttpHelper("session").makeRequestString(new String[] {
                 "email", email,
-                "password", passw
+                "password", passw,
+                "token", gcmToken,
+                "platform", "android"
         });
         new LoginSender(this, false).execute(request);
     }
@@ -104,7 +108,13 @@ public class TipsActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
          //facebook part
         fbCallbackManager.onActivityResult(requestCode, resultCode, data);
+    }
 
+    //hides the software keyboard
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        Globals.hideSoftKeyboard(this, event);
+        return super.dispatchTouchEvent( event );
     }
 
     public void facebookLogin(View view) {
@@ -155,39 +165,6 @@ public class TipsActivity extends Activity {
         protected String doInBackground(String... params) {
             String api = viaFacebook ? "signin?provider=facebook" : "signin";
             return HttpHelper.proceedRequest(api, params[0], false);
-            /*String result = new StringBuilder();
-
-            try {
-                HttpURLConnection urlConnection = (HttpURLConnection) new URL(Globals.SERVER_URL
-                        + "signin").openConnection();
-                urlConnection.setRequestMethod("POST");
-                urlConnection.setDoOutput(true);
-                urlConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                urlConnection.setRequestProperty("Accept-Encoding", "UTF-8");
-                OutputStream os = urlConnection.getOutputStream();
-                String request = new HttpHelper("session").makeRequestString(new String[] {
-                        "email", email,
-                        "password", password
-                });
-
-                os.write(request.getBytes());
-                os.flush();
-                os.close();
-
-                int responseCode = urlConnection.getResponseCode();
-                InputStream is;
-                is = (responseCode == HttpURLConnection.HTTP_OK) ?
-                        urlConnection.getInputStream(): urlConnection.getErrorStream();
-                BufferedReader reader = new BufferedReader((new InputStreamReader(is)));
-                String inputLine;
-                while ((inputLine = reader.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                reader.close();
-            } catch (IOException e) {
-                Log.e("Punisher error", e.getMessage());
-            }
-            return response.toString();*/
         }
 
         @Override
@@ -197,7 +174,7 @@ public class TipsActivity extends Activity {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals("success")) {
                     JSONObject dataJSON = json.getJSONObject("data");
-                    Globals.token = dataJSON.getString("token");
+                    Globals.sessionToken = dataJSON.getString("token");
                     //if we've got token without catching an exception -> login successful!
                     preferences.edit().putString(Globals.LAST_LOGIN_EMAIL, editTextLoginEmail.getText().toString()).apply();
 

@@ -8,7 +8,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.RegistrationIntentService;
+import org.foundation101.karatel.service.RegistrationIntentService;
 
 public class StartActivity extends Activity {
     private static final String PREFERENCE_FIRST_RUN_FLAG = "firstRun";

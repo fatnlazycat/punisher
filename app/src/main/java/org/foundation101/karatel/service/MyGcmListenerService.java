@@ -1,4 +1,4 @@
-package org.foundation101.karatel;
+package org.foundation101.karatel.service;
 
 
 import android.app.NotificationManager;

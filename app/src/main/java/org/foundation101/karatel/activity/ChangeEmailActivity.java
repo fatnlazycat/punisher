@@ -10,12 +10,15 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.HttpHelper;
 import org.json.JSONException;
@@ -63,6 +66,23 @@ public class ChangeEmailActivity extends AppCompatActivity {
         viewGroup.getChildAt(1).setVisibility(View.GONE);
 
         button = (Button)findViewById(R.id.buttonRegister);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    //hides the software keyboard
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        Globals.hideSoftKeyboard(this, event);
+        return super.dispatchTouchEvent( event );
     }
 
     void validateButton(String s){

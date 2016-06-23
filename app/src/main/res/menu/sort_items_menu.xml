@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:punisher="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/sortMenuItem"
         android:icon="@drawable/ic_filter_list_black_24_px"
-        android:title="@string/doSort"/>
+        android:title="@string/doSort"
+        punisher:showAsAction="always"/>
 </menu>

@@ -25,14 +25,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
-import org.foundation101.karatel.ItemTouchHelperAdapter;
+import org.foundation101.karatel.adapter.ItemTouchHelperAdapter;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Request;
 import org.foundation101.karatel.activity.MainActivity;
@@ -43,7 +45,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Locale;
 
 public class RequestListFragment extends Fragment {
     View mainView;
@@ -51,11 +59,16 @@ public class RequestListFragment extends Fragment {
     FrameLayout progressBar;
     RequestListAdapter requestListAdapter;
     RelativeLayout sortMenu;
+    TextView textViewByStatus, textViewByDate;
+    ImageView sortByStatusButton, sortByDateButton;
 
     SQLiteDatabase db;
 
+    final int COLOR_GREY = Color.parseColor("#86888a");
+    final int COLOR_GREEN = Color.parseColor("#6c8c39");
+
     public RequestListFragment(){
-        // Required empty public constructor
+        //required empty constructor
     }
 
     @Override
@@ -90,6 +103,36 @@ public class RequestListFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         progressBar = (FrameLayout) view.findViewById(R.id.frameLayoutProgress);
         sortMenu = (RelativeLayout) view.findViewById(R.id.sortingLayout);
+
+        sortByStatusButton = (ImageView)view.findViewById(R.id.sortByStatusButton);
+        sortByStatusButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sortByStatusButton.clearColorFilter();
+                sortByDateButton.clearColorFilter();
+                textViewByStatus.setTextColor(COLOR_GREEN);
+                textViewByDate.setTextColor(COLOR_GREY);
+                Collections.sort(requestListAdapter.content, new RequestComparator(RequestComparator.SORT_FLAG_STATUS));
+                requestListAdapter.notifyDataSetChanged();
+            }
+        });
+        textViewByStatus = (TextView)view.findViewById(R.id.textViewByStatus);
+
+        sortByDateButton = (ImageView)view.findViewById(R.id.sortByDateButton);
+        sortByDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sortByDateButton.setColorFilter(COLOR_GREEN);
+                sortByStatusButton.setColorFilter(COLOR_GREY);
+                textViewByStatus.setTextColor(COLOR_GREY);
+                textViewByDate.setTextColor(COLOR_GREEN);
+
+                Collections.sort(requestListAdapter.content, new RequestComparator(RequestComparator.SORT_FLAG_DATE));
+                requestListAdapter.notifyDataSetChanged();
+            }
+        });
+        textViewByDate = (TextView)view.findViewById(R.id.textViewByDate);
+
         mainView = view;
 
         ArrayList<Request> draftRequests = new ArrayList<>();
@@ -140,9 +183,7 @@ public class RequestListFragment extends Fragment {
     }
 
     void deleteDraftRequest(Integer position){
-        String idString = position.toString();
-        db.delete(DBHelper.VIOLATIONS_TABLE, "id = ?", new String[]{idString});
-        db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idString});
+        DBHelper.deleteRequest(db, position);
     }
 
     void changeSortMenuVisibility(){
@@ -221,7 +262,7 @@ public class RequestListFragment extends Fragment {
                 float height = (float) itemView.getBottom() - (float) itemView.getTop();
                 float width = height / 3;
 
-                p.setColor(Color.parseColor("#D32F2F"));
+                p.setColor(Color.parseColor("#c4cad0"));
                 RectF background = new RectF((float) itemView.getRight() + dX, (float) itemView.getTop(),(float) itemView.getRight(), (float) itemView.getBottom());
                 c.drawRect(background,p);
                 icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_delete);
@@ -255,13 +296,13 @@ public class RequestListFragment extends Fragment {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals("success")){
                     JSONArray dataJSON = json.getJSONArray("data");
+                    ObjectMapper mapper = new ObjectMapper();
                     for (int i = 0; i < dataJSON.length(); i++) {
                         JSONArray oneRequest = dataJSON.getJSONArray(i);
                         JSONObject requestBody = oneRequest.getJSONObject(1);
-
-                        ObjectMapper mapper = new ObjectMapper();
                         String requestBodyString = requestBody.toString();
                         Request request = mapper.readValue(requestBodyString, Request.class);
+
                         request.type = oneRequest.getString(0);
 
                         requestsFromServer.add(request);
@@ -295,6 +336,38 @@ public class RequestListFragment extends Fragment {
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             progressBar.setVisibility(View.GONE);
+        }
+    }
+
+    class RequestComparator implements Comparator<Request>{
+        static final int SORT_FLAG_STATUS = 1;
+        static final int SORT_FLAG_DATE = 2;
+        int sortFlag;
+
+        RequestComparator(int sortFlag){
+            this.sortFlag = sortFlag;
+        }
+        @Override
+        public int compare(Request first, Request second) {
+            int result = 0;
+            switch (sortFlag){
+                case SORT_FLAG_STATUS : {
+                    Integer status1 = first.complain_status_id;
+                    Integer status2 = second.complain_status_id;
+                    return status1.compareTo(status2);
+                }case SORT_FLAG_DATE : {
+                    try {
+                        SimpleDateFormat dateFormatter = new SimpleDateFormat(RequestListAdapter.INPUT_DATE_FORMAT, Locale.US);
+                        Date date1 = dateFormatter.parse(first.created_at);
+                        Date date2 = dateFormatter.parse(second.created_at);
+                        return date1.compareTo(date2);
+                    } catch (ParseException e){
+                        Log.e("Punisher", e.getMessage());
+                        break;
+                    }
+                }
+            }
+            return 0;
         }
     }
 }

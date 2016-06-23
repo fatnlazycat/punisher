@@ -1,16 +1,27 @@
 package org.foundation101.karatel.activity;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
 
+import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.R;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ForgotPasswordActivity extends AppCompatActivity {
 
+    EditText editTextForgotPasswordEmail;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,9 +32,53 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_grey);
+
+        editTextForgotPasswordEmail = (EditText)findViewById(R.id.editTextForgotPasswordEmail);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    //hides the software keyboard
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        Globals.hideSoftKeyboard(this, event);
+        return super.dispatchTouchEvent( event );
     }
 
     public void proceedWithPasswordRenovation(View view) {
-        startActivity(new Intent(this, org.foundation101.karatel.activity.ForgotPassword2Activity.class));
+        String email = editTextForgotPasswordEmail.getText().toString();
+        new PasswordRestorator().execute(email);
+    }
+
+
+    class PasswordRestorator extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            String request = new HttpHelper("user").makeRequestString(new String[]{"email", params[0]});
+            return HttpHelper.proceedRequest("password", request, false);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            try {
+                JSONObject json = new JSONObject(s);
+                if (json.getString("status").equals(Globals.SERVER_SUCCESS)){
+                    startActivity(new Intent(ForgotPasswordActivity.this,
+                            org.foundation101.karatel.activity.ForgotPassword2Activity.class));
+                } else Toast.makeText(ForgotPasswordActivity.this, s, Toast.LENGTH_LONG).show();
+            } catch (JSONException e) {
+                Log.e("Punisher", e.getMessage());
+            }
+        }
     }
 }

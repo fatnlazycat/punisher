@@ -185,9 +185,11 @@ public class ProfileFragment extends Fragment {
             try {
                 String requestUrl = Globals.SERVER_URL + "users/" + Globals.user.id;
                 MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8", "PUT");
+                multipart.addFormField("user[email]", Globals.user.email);
                 multipart.addFormField("user[firstname]", Globals.user.name);
                 multipart.addFormField("user[surname]", Globals.user.surname);
                 multipart.addFormField("user[secondname]", Globals.user.secondName);
+                multipart.addFormField("user[phone_number]", Globals.user.phone);
                 //multipart.addFormField("user[password]", "qwerty"); //Globals.user.password
                 //multipart.addFormField("user[password_confirmation]", "qwerty");//Globals.user.password
 
@@ -198,7 +200,6 @@ public class ProfileFragment extends Fragment {
                 }
 
                 List<String> responseList = multipart.finish();
-                Log.e("Punisher", "SERVER REPLIED:");
                 for (String line : responseList) {
                     Log.e("Punisher", "Upload Files Response:::" + line);
                     response.append(line);

@@ -1,19 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="?listPreferredItemHeight"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginEnd="8dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="15dp"
     android:background="@android:color/white">
 
    <ImageView
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
+       android:paddingTop="6dp"
        android:id="@+id/imageViewStatus"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingLeft="8dp"
         android:id="@+id/textViewRequestStatus"
         android:layout_alignParentTop="true"
         android:layout_toEndOf="@+id/imageViewStatus" />
@@ -29,6 +36,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/textViewRequestType"
+        android:textSize="16sp"
         android:layout_below="@+id/textViewRequestStatus"
         android:layout_alignParentStart="true" />
 </RelativeLayout>

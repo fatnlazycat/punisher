@@ -78,6 +78,11 @@
     </string-array>
 
     <string-array name="BribeRequisites">
+        <item>Bribe_address</item>
+        <item>АДРЕСА</item>
+        <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
+        <item>Вкажіть місце інциденту</item>
+
         <item>Bribe_all_name</item>
         <item>П.І.Б. ХАБАРНИКА</item>
         <item>Не обов’язково, але бажано заповнити</item>
@@ -93,11 +98,6 @@
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
 
-        <item>Bribe_address</item>
-        <item>АДРЕСА</item>
-        <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
-        <item>Вкажіть місце інциденту</item>
-
         <item>Bribe_description</item>
         <item>ЩО СТАЛОСЬ?</item>
         <item>Коротко описати обставини, за яких стався інцидент</item>
@@ -105,6 +105,11 @@
     </string-array>
 
     <string-array name="InsultRequisites">
+        <item>Insult_address</item>
+        <item>АДРЕСА</item>
+        <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
+        <item>Вкажіть місце інциденту</item>
+
         <item>Insult_all_name</item>
         <item>П.І.Б. ТОГО, ХТО ВАС ОБРАЗИВ</item>
         <item>Не обов’язково, але бажано заповнити</item>
@@ -119,11 +124,6 @@
         <item>НАЗВА ОРГАНУ ВЛАДИ АБО ПРИВАТНОГО ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
-
-        <item>Insult_address</item>
-        <item>АДРЕСА</item>
-        <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
-        <item>Вкажіть місце інциденту</item>
 
         <item>Insult_name_of_institution</item>
         <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>

@@ -26,7 +26,7 @@ public class HttpHelper {
         while (i < args.length){
             if (args[i].contains("@")) args[i] = args[i].replace("@", "%40");
             if (args[i+1].contains("@")) args[i+1] = args[i+1].replace("@", "%40");
-            result = result.concat(fixed).concat("["+args[i++]+"]=").concat(args[i++]+"&");
+            result = result.concat(fixed).concat("%5B"+args[i++]+"%5D=").concat(args[i++]+"&");
         }
         return result.substring(0, result.length()-1); //remove trailing "&"
     }
@@ -54,7 +54,7 @@ public class HttpHelper {
                     break;
                 }//default is GET
             }
-            if (authorizationRequired) urlConnection.setRequestProperty("Authorization", Globals.token);
+            if (authorizationRequired) urlConnection.setRequestProperty("Authorization", Globals.sessionToken);
 
             if  (!request.isEmpty()) {
                 OutputStream os = urlConnection.getOutputStream();
@@ -64,8 +64,8 @@ public class HttpHelper {
             }
 
             int responseCode = urlConnection.getResponseCode();
-            InputStream is = (urlConnection.getInputStream() != null) ?
-                    urlConnection.getInputStream(): urlConnection.getErrorStream();
+            InputStream is = (urlConnection.getErrorStream() != null) ?
+                    urlConnection.getErrorStream(): urlConnection.getInputStream();
             BufferedReader reader = new BufferedReader((new InputStreamReader(is)));
             String inputLine;
             while ((inputLine = reader.readLine()) != null) {

@@ -12,4 +12,5 @@
     <dimen name="drawer_item_text_size">16sp</dimen>
     <dimen name="textSizeRequisiteHeader">11sp</dimen>
     <dimen name="textSizeRequisiteDescription">12sp</dimen>
+    <dimen name="textSizeRequisiteEditText">16sp</dimen>
 </resources>

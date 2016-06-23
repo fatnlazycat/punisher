@@ -1,24 +1,27 @@
 package org.foundation101.karatel.activity;
 
-import android.Manifest;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationManager;
+import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -40,27 +43,33 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Places;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.MultipartUtility;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Request;
+import org.foundation101.karatel.UpdateEntity;
 import org.foundation101.karatel.Violation;
+import org.foundation101.karatel.ViolationRequisite;
+import org.foundation101.karatel.adapter.EvidenceAdapter;
+import org.foundation101.karatel.adapter.HistoryAdapter;
+import org.foundation101.karatel.adapter.RequestListAdapter;
 import org.foundation101.karatel.adapter.RequisitesListAdapter;
 import org.foundation101.karatel.view.ExpandedGridView;
 import org.foundation101.karatel.view.ExpandedListView;
-import org.foundation101.karatel.ViolationRequisite;
-import org.foundation101.karatel.adapter.EvidenceAdapter;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -80,9 +89,11 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     ListView listViewRequisites;
     RequisitesListAdapter requisitesAdapter;
     EvidenceAdapter evidenceAdapter = new EvidenceAdapter(this);
+    HistoryAdapter historyAdapter;
     DBHelper dbHelper;
     Cursor cursor;
-    int createMode;
+    int mode, thumbDimension;
+    Request request = null;
     Integer id, status, idOnServer;
     String idString, time_stamp;
     String id_number_server = "";
@@ -108,13 +119,11 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     @Override
     protected void onResume() {
         super.onResume();
-        checkGooglePlayServices();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Intent intent = this.getIntent();
         setContentView(R.layout.activity_violation);
 
         progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
@@ -123,33 +132,22 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
         if (checkGooglePlayServices()) buildGoogleApiClient();
 
-        //initializing tabs
+        //dimension of the thumbnail - the thumbnail should have the same size as MediaStore.Video.Thumbnails.MICRO_KIND
+        thumbDimension = getResources().getDimensionPixelOffset(R.dimen.thumbnail_size);
+
+        //initializing tab view with only one tab - the second will be initialized later
         tabs=(TabHost)findViewById(android.R.id.tabhost);
         tabs.setup();
         setupTab(R.id.tabInfo, getString(R.string.information));
         tabs.setCurrentTab(0);
         TabWidget tabWidget = (TabWidget)findViewById(android.R.id.tabs);
 
-        /*tabs.setOnTabChangedListener(new TabHost.OnTabChangeListener(){
-            @Override
-            public void onTabChanged(String tabId) {
-                switch (tabs.getCurrentTab()){
-                    case 0: {
-
-                        break;
-                    }
-                    case 1: {
-                        break;
-                    }
-                }
-            }
-        });*/
         dbHelper = new DBHelper(this, DBHelper.DATABASE, 1);
         requisitesAdapter = new RequisitesListAdapter(this);
 
-        createMode = intent.getIntExtra(Globals.VIOLATION_ACTIVITY_MODE, MODE_EDIT);
-        if (createMode == MODE_CREATE) {
-
+        Intent intent = this.getIntent();
+        mode = intent.getIntExtra(Globals.VIOLATION_ACTIVITY_MODE, MODE_EDIT);
+        if (mode == MODE_CREATE) {
             idOnServer = 0;
             violation = (Violation) intent.getExtras().getSerializable(Globals.VIOLATION);
             status = 0; //status = draft
@@ -161,7 +159,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
             id = intent.getIntExtra(Globals.ITEM_ID, 0);
             idString = id.toString();
-            if (createMode == MODE_EDIT) {
+            if (mode == MODE_EDIT) {
                 SQLiteDatabase db = dbHelper.getReadableDatabase();
                 //query to data table
                 String table = "violations_table";
@@ -182,22 +180,10 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     requisitesAdapter.content.get(i).value =
                             cursor.getString(cursor.getColumnIndex(requisitesAdapter.content.get(i).dbTag));
                 }
-
-                //query to media table
-                table = "violations_table INNER JOIN media_table ON violations_table._id = media_table.id";
-                columns = new String[]{"id", "file_name"};
-                where = "id=?"; //take selectionArgs from previous query
-                cursor = db.query(table, columns, where, selectionArgs, null, null, null);
-                if (cursor.moveToFirst()) {
-                    do {
-                        String evidenceFileName = cursor.getString(1); //file names are in the second column of the cursor
-                        evidenceAdapter.content.add(evidenceFileName);
-                    } while (cursor.moveToNext());
-                }
                 cursor.close();
                 db.close();
             } else {//if neither create nor edit mode then it's loaded from server
-                Request request = (Request)intent.getExtras().getSerializable(Globals.REQUEST_JSON);
+                request = (Request)intent.getExtras().getSerializable(Globals.REQUEST_JSON);
 
                 idOnServer = request.id;
                 id_number_server = request.id_number;
@@ -228,19 +214,19 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         listViewRequisites.setFocusable(false);
 
         ExpandedGridView evidenceGridView = (ExpandedGridView) findViewById(R.id.evidenceGridView);
+        makeEvidenceAdapterContent(mode, request);
         evidenceGridView.setAdapter(evidenceAdapter);
         evidenceGridView.setFocusable(false);
 
         final Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
-        //actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
         actionBar.setTitle(Violation.getViolationNameFromType(this, violation.getType()));
 
         //check if the request is already filed - > no edit anymore
-        if (createMode > MODE_EDIT){
+        if (mode > MODE_EDIT){
             punishButton.setVisibility(View.GONE);
             saveButton.setVisibility(View.GONE);
             requisitesAdapter.setEditTrigger(false);
@@ -254,33 +240,92 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             imageButtonAddEvidence.setVisibility(View.GONE);
             TextView addedPhotoVideoTextView = (TextView)findViewById(R.id.addedPhotoVideoTextView);
             addedPhotoVideoTextView.setText(getString(R.string.addedPhotoVideo));
+
+            ListView historyListView = (ListView)findViewById(R.id.historyListView);
+            historyAdapter = new HistoryAdapter(this);
+            historyListView.setAdapter(historyAdapter);
+        }
+    }
+
+    void makeEvidenceAdapterContent(int mode, Request request){
+        if (mode == MODE_EDIT) {
+            SQLiteDatabase _db = dbHelper.getReadableDatabase();
+            //query to media table
+            String table = DBHelper.VIOLATIONS_TABLE + " INNER JOIN " + DBHelper.MEDIA_TABLE + " ON "
+                    + DBHelper.VIOLATIONS_TABLE + "._id = " + DBHelper.MEDIA_TABLE + ".id";
+            String[] columns = new String[]{"id", "file_name"};
+            String where = "id=?";
+            String[] selectionArgs = {idString};
+            Cursor _cursor = _db.query(table, columns, where, selectionArgs, null, null, null);
+            if (_cursor.moveToFirst()) {
+                do {
+                    String evidenceFileName = _cursor.getString(1); //file names are in the second column of the cursor
+                    Bitmap thumbnail;
+                    if (evidenceFileName.endsWith(CameraManager.JPG)) {
+                        thumbnail = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(evidenceFileName),
+                                thumbDimension, thumbDimension);
+                    } else { //it's video
+                        thumbnail = ThumbnailUtils.createVideoThumbnail(evidenceFileName, MediaStore.Video.Thumbnails.MICRO_KIND);
+                    }
+                    evidenceAdapter.content.add(evidenceFileName);
+                    evidenceAdapter.mediaContent.add(thumbnail);
+                } while (_cursor.moveToNext());
+            }
+            _cursor.close();
+            _db.close();
+        } else if (mode > MODE_EDIT){
+            String serverUrl = Globals.SERVER_URL.replace("/api/v1/", "");
+            for (int i = 0; i < request.images.length; i++) {
+                String evidenceFileName = serverUrl + request.images[i].thumb.url;
+                evidenceAdapter.content.add(evidenceFileName);
+                new ThumbnailFetcher().execute(evidenceFileName);
+            }
+            for (int i = 0; i < request.videos.length; i++) {
+                String evidenceFileName = serverUrl + request.videos[i].thumb.url;
+                evidenceAdapter.content.add(evidenceFileName);
+                new ThumbnailFetcher().execute(evidenceFileName);
+            }
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        if (resultCode == RESULT_OK) {
+        if (resultCode == RESULT_OK &&
+                (requestCode == CameraManager.IMAGE_CAPTURE_INTENT || requestCode == CameraManager.VIDEO_CAPTURE_INTENT)) {
             evidenceAdapter.content.add(CameraManager.lastCapturedFile);
+            Bitmap bmp;
+            if (CameraManager.lastCapturedFile.endsWith(CameraManager.JPG)) {
+                bmp = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(CameraManager.lastCapturedFile),
+                        thumbDimension, thumbDimension);
+            } else {
+                bmp = ThumbnailUtils.createVideoThumbnail(CameraManager.lastCapturedFile, MediaStore.Video.Thumbnails.MICRO_KIND);
+            }
+            evidenceAdapter.mediaContent.add(bmp);
             evidenceAdapter.notifyDataSetChanged();
         }
+        super.onActivityResult(requestCode, resultCode, intent);
     }
 
-    /*@Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.sort_items_menu, menu);
-        return true;
-    }*/
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        //No call for super(). Bug on API Level > 11.
+        // Fighting with java.lang.IllegalStateException: Can not perform this action after onSaveInstanceState
+    }
 
-    //called from MainActivity.onCreate to set the tabs
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    //called from onCreate to set the tabs
     private void setupTab(final int contentViewId, String tag){
-        /*LayoutInflater inflater= LayoutInflater.from(tabs.getContext());
-        View customTab=inflater.inflate(R.layout.layout_custom_tabs, null, false);
-        TextView textView=(TextView)customTab.findViewById(R.id.oneOfCustomTabs);
-        textView.setText(tag);*/
-
         TabHost.TabSpec tabBuilder=tabs.newTabSpec(tag);
-        //tabBuilder.setIndicator(customTab);
         tabBuilder.setIndicator(tag);
         tabBuilder.setContent(new TabHost.TabContentFactory(){
             public View createTabContent(String tag) {return findViewById(contentViewId);}
@@ -289,56 +334,71 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     }
 
     public void saveToBase(View view) {
-        Long rowID;
+        //first check if location is available - show error dialog if not
+        if (checkLocation()) {
 
-        //db actions
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        ContentValues cv = new ContentValues();
+            Long rowID;
 
-        cv.put("type", violation.type);
-        cv.put("status", status);
-        cv.put(DBHelper.ID_SERVER, idOnServer);
-        cv.put(DBHelper.ID_NUMBER_SERVER, id_number_server);
-        cv.put(DBHelper.USER_ID, Globals.user.id);
+            //db actions
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            ContentValues cv = new ContentValues();
 
-        for (int i = 0; i < requisitesAdapter.getCount(); i++) {
-            ViolationRequisite thisRequisite = (ViolationRequisite) requisitesAdapter.getItem(i);
-            cv.put(thisRequisite.dbTag, ((EditText) ((LinearLayout) listViewRequisites.getChildAt(i))
-                    .getChildAt(2)).getText().toString());
-        }
-        if (createMode == MODE_CREATE) {
-            cv.put(DBHelper.LONGITUDE, longitude);
-            cv.put(DBHelper.LATITUDE, latitude);
-            cv.put(DBHelper.TIME_STAMP, new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(new Date()));
-            rowID = db.insertOrThrow("violations_table", null, cv);
-            id = new BigDecimal(rowID).intValue();
-            createMode = MODE_EDIT; //once created the record we switch to edit mode
-        } else {
-            cv.put("_id", id);
-            cv.put(DBHelper.LONGITUDE, longitude);
-            cv.put(DBHelper.LATITUDE, latitude);
-            cv.put(DBHelper.TIME_STAMP, time_stamp);
-            rowID = db.replace("violations_table", null, cv);
-        }
-        cv.clear();
+            cv.put("type", violation.type);
+            cv.put("status", status);
+            cv.put(DBHelper.ID_SERVER, idOnServer);
+            cv.put(DBHelper.ID_NUMBER_SERVER, id_number_server);
+            cv.put(DBHelper.USER_ID, Globals.user.id);
+
+            for (int i = 0; i < requisitesAdapter.getCount(); i++) {
+                ViolationRequisite thisRequisite = (ViolationRequisite) requisitesAdapter.getItem(i);
+                cv.put(thisRequisite.dbTag, ((EditText) ((LinearLayout) listViewRequisites.getChildAt(i))
+                        .getChildAt(2)).getText().toString());
+            }
+            if (mode == MODE_CREATE) {
+                cv.put(DBHelper.LONGITUDE, longitude);
+                cv.put(DBHelper.LATITUDE, latitude);
+                cv.put(DBHelper.TIME_STAMP, new SimpleDateFormat(RequestListAdapter.INPUT_DATE_FORMAT, Locale.US)
+                        .format(new Date()));
+                rowID = db.insertOrThrow("violations_table", null, cv);
+                id = new BigDecimal(rowID).intValue();
+                mode = MODE_EDIT; //once created the record we switch to edit mode
+            } else {
+                cv.put("_id", id);
+                cv.put(DBHelper.LONGITUDE, longitude);
+                cv.put(DBHelper.LATITUDE, latitude);
+                cv.put(DBHelper.TIME_STAMP, time_stamp);
+                rowID = db.replace("violations_table", null, cv);
+            }
+            cv.clear();
 
         /*actions with the media table: if in edit mode - we delete all previously written records
          *& fill the table again, because the user could add or delete something
          */
-        if (createMode != MODE_CREATE) db.delete("media_table", "id = ?", new String[]{idString});
-            else createMode = MODE_EDIT; //once created the record we switch to edit mode
-        for (int i = 0; i < evidenceAdapter.content.size(); i++) {
-            cv.put("id", rowID);
-            cv.put("file_name", evidenceAdapter.content.get(i));
-            db.insert("media_table", null, cv);
-            cv.clear();
-        }
-        db.close();
+            if (mode != MODE_CREATE) db.delete("media_table", "id = ?", new String[]{idString});
+            else mode = MODE_EDIT; //once created the record we switch to edit mode
+            for (int i = 0; i < evidenceAdapter.content.size(); i++) {
+                cv.put("id", rowID);
+                cv.put("file_name", evidenceAdapter.content.get(i));
+                db.insert("media_table", null, cv);
+                cv.clear();
+            }
+            db.close();
 
-        //delete the evidence files removed by the user from filesystem
-        for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession){
-            new File(fileToDelete).delete();
+            //delete the evidence files removed by the user from filesystem
+            for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
+                new File(fileToDelete).delete();
+            }
+            Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_LONG).show();
         }
+    }
+
+    boolean checkLocation(){
+        if (latitude == null){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            AlertDialog dialog = builder.setTitle(R.string.cannot_define_location).setNegativeButton(R.string.ok, null).create();
+            dialog.show();
+            return false;
+        } else return true;
     }
 
     public void photoVideoPopupMenu(View view) {
@@ -410,11 +470,15 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         return result;
     }
 
+    public void blockButtons(){
+        punishButton.setVisibility(View.GONE);
+        saveButton.setVisibility((View.GONE));
+    }
+
     /**
      * @return the last known best location
      */
-    private Location getLastLocation() {
-        Location locationNet = null;
+    private Location getLastLocation() throws NullPointerException {
         //permission check required by the system
         /*if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
                 PackageManager.PERMISSION_GRANTED &&
@@ -428,19 +492,22 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
         }*/
-        locationNet = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-        if (locationNet != null) {
-        } else {
-            Toast.makeText(this, R.string.location_data_not_available, Toast.LENGTH_LONG).show();
-        }
-        return locationNet;
+        Location locationGoogle = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        return locationGoogle;
+    }
+
+    public Location getOldAndroidLocation() throws NullPointerException {
+        //old Android package location code
+        LocationManager lm = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
+        String best = lm.getBestProvider(new Criteria(), true);
+        Location locationAndroid = lm.getLastKnownLocation(best);
+        return locationAndroid;
     }
 
     private boolean checkGooglePlayServices(){
         GoogleApiAvailability gaa = GoogleApiAvailability.getInstance();
         int resultCode = gaa.isGooglePlayServicesAvailable(getApplicationContext());
         if (resultCode == ConnectionResult.SUCCESS){
-            Toast.makeText(getApplicationContext(), "isGooglePlayServicesAvailable SUCCESS", Toast.LENGTH_LONG).show();
             return true;
         }else{
             if (gaa.isUserResolvableError(resultCode)) {
@@ -467,11 +534,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        if (createMode == MODE_CREATE) {
+        if (mode == MODE_CREATE) {
             l = getLastLocation();
-            latitude = l.getLatitude();
-            longitude = l.getLongitude();
-            requisitesAdapter.notifyDataSetChanged();
+            if (l != null) {
+                latitude = l.getLatitude();
+                longitude = l.getLongitude();
+                requisitesAdapter.notifyDataSetChanged();
+            }
         }
     }
 
@@ -483,6 +552,12 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult result) {
         Log.e("Punisher", "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
+        if (mode == MODE_CREATE) {
+            l = getOldAndroidLocation();
+            latitude = l.getLatitude();
+            longitude = l.getLongitude();
+            requisitesAdapter.notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -492,7 +567,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     @Override //Activity method
     protected void onStop() {
-        googleApiClient.disconnect();
+        if (googleApiClient != null) googleApiClient.disconnect();
         super.onStop();
     }
 
@@ -546,40 +621,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
                 //prepare the request parameters
                 ArrayList<String> requestParameters = new ArrayList<>();
-                String[] keysForRequestParameters = new String[0];
-                switch (violation.getType()){
-                    case "WrongParking" : {
-                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
-                                "address", "longitude", "latitude", "vehicle_number"}; break;
-                    }
-                    case "PitRoad" : {
-                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
-                                "address", "longitude", "latitude", "the_closest_landmark", "type"}; break;
-                    }
-                    case "NoSmoking" : {
-                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
-                                "address", "longitude", "latitude", "name_of_institution", "name_of_entity", "type"}; break;
-                    }
-                    case "Damage" : {
-                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
-                                "address", "longitude", "latitude", "the_closest_landmark", "type"}; break;
-                    }
-                    case "SaleOfGood" : {
-                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
-                                "address", "longitude", "latitude", "name_of_authority", "name_of_institution",
-                                "name_of_entity", "type"}; break;
-                    }
-                    case "Insult" : {
-                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
-                                "address", "longitude", "latitude", "description", "all_name", "position",
-                                "name_of_authority", "name_of_institution", "name_of_entity", "type"}; break;
-                    }
-                    case "Bribe" : {
-                        keysForRequestParameters = new String[] {"user_id", "id_number", "complain_status_id",
-                                "address", "longitude", "latitude", "description", "all_name", "position",
-                                "name_of_authority", "type"}; break;
-                    }
-                }
+                String[] keysForRequestParameters = ViolationRequisite.getRequisites(violation.getType());
                 for (String str : keysForRequestParameters){
                     requestParameters.add(str);
                     switch (str) {
@@ -616,7 +658,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                             requestParametersArray[i++]);
                 }
                 for (String mediaFileName : evidenceAdapter.content) {
-                    multipart.addFilePart(typeServerSuffixNoS + "[media_files][]", new File(mediaFileName));
+                    String requestTag = mediaFileName.endsWith(CameraManager.JPG) ? "images" : "videos";
+                    multipart.addFilePart(typeServerSuffixNoS + "[" + requestTag + "][]", new File(mediaFileName));
                 }
                 List<String> responseList = multipart.finish();
                 Log.e("Punisher", "SERVER REPLIED:");
@@ -637,12 +680,55 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             super.onPostExecute(s);
             progressBar.setVisibility(View.GONE);
             try {
-                JSONObject json = new JSONObject(s).getJSONObject("data");
-                idOnServer = json.getInt("id");
-                id_number_server = json.getString("id_number");
-                ViolationActivity.this.saveToBase(null);
+                JSONObject fullAnswer = new JSONObject(s);
+                if (fullAnswer.getString("status").equals(Globals.SERVER_SUCCESS)) {
+                    DBHelper.deleteRequest(dbHelper.getWritableDatabase(), id);
+                    finish();
+                }
             } catch (JSONException e){
                 Toast.makeText(context, e.getMessage()  , Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    class ThumbnailFetcher extends AsyncTask<String, Void, Void>{
+
+        @Override
+        protected Void doInBackground(String... params) {
+            try {
+                URL url = new URL(params[0]);
+                Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+                ViolationActivity.this.evidenceAdapter.mediaContent.add(bmp);
+                ViolationActivity.this.evidenceAdapter.notifyDataSetChanged();
+            } catch (Exception e) {
+                Log.e("Punisher", e.getMessage());
+            }
+            return null;
+        }
+    }
+
+    class RequestFetcher extends AsyncTask<Integer, Void, String>{
+
+        @Override
+        protected String doInBackground(Integer... params) {
+            String result = HttpHelper.proceedRequest("complains/" + params[0], "GET", "", true);
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            try {
+                JSONArray updatesJSON = new JSONObject(s).getJSONArray("data").getJSONObject(1).getJSONArray("updates");
+                ObjectMapper objectMapper = new ObjectMapper();
+                UpdateEntity[] updates = new UpdateEntity[updatesJSON.length()];
+                for (int i = 0; i < updatesJSON.length(); i++){
+                    updates[i] = objectMapper.readValue(updatesJSON.get(i).toString(), UpdateEntity.class);
+                }
+                historyAdapter.setContent(updates);
+                historyAdapter.notifyDataSetChanged();
+            } catch (JSONException | IOException e) {
+                Log.e("Punisher", e.getMessage());
             }
         }
     }

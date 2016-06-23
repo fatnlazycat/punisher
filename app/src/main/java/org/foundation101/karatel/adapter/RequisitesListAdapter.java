@@ -2,6 +2,7 @@ package org.foundation101.karatel.adapter;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.location.Location;
 import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -29,6 +30,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.foundation101.karatel.R;
@@ -57,10 +59,12 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
     public ArrayList<ViolationRequisite> content;
 
     boolean editTrigger = true;
+    boolean hasMarker = false;
 
     FragmentManager fm;
     SupportMapFragment supportMapFragment;
     private GoogleMap mMap;
+    PendingResult<PlaceLikelihoodBuffer> placeLikelihoodResult;
     ArrayAdapter<String> addressAdapter;
 
     public void setEditTrigger(boolean editTrigger) {
@@ -119,9 +123,9 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
             //work with map & autocomplete textview
             EditText editTextRequisite;
             if (thisRequisite.dbTag.endsWith("_address")){
-                fm.beginTransaction().replace(R.id.mapContainer, supportMapFragment).commit();
-                supportMapFragment.getMapAsync(this);
                 FrameLayout mapContainer = (FrameLayout)convertView.findViewById(R.id.mapContainer);
+                fm.beginTransaction().replace(R.id.mapContainer, supportMapFragment).commitAllowingStateLoss();// allowingStateLoss - Fighting with java.lang.IllegalStateException: Can not perform this action after onSaveInstanceState
+                supportMapFragment.getMapAsync(this);
                 mapContainer.setVisibility(View.VISIBLE);
 
                 editTextRequisite = (AutoCompleteTextView)convertView.findViewById(R.id.editTextRequisite);
@@ -151,32 +155,42 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
-        /*DecimalFormat formatter = new DecimalFormat("#0.0000");
-        DecimalFormatSymbols dfs = formatter.getDecimalFormatSymbols();
-        dfs.setDecimalSeparator('.');
-        formatter.setDecimalFormatSymbols(dfs);
-
-        Double latitude = Double.valueOf(formatter.format(((ViolationActivity)context).latitude));
-        Double longitude = Double.valueOf(formatter.format(((ViolationActivity)context).longitude));*/
-        Double latitude = ((ViolationActivity)context).latitude;
-        Double longitude = ((ViolationActivity)context).longitude;
-        LatLng here = new LatLng(latitude, longitude);
-        mMap.addMarker(new MarkerOptions().position(here));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, 15)); //zoom values are floats from 2 to 21
-
-        PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi
-                .getCurrentPlace(((ViolationActivity)context).googleApiClient, null);
-        result.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
-            @Override
-            public void onResult(PlaceLikelihoodBuffer likelyPlaces) {
-                for (PlaceLikelihood placeLikelihood : likelyPlaces) {
-                    String address = placeLikelihood.getPlace().getAddress().toString();
-                    addressAdapter.add(address);
-                }
-                addressAdapter.notifyDataSetChanged();
-                likelyPlaces.release();
+        double latitude = 0;
+        double longitude = 0;
+        if (((ViolationActivity) context).latitude == null){
+            Location l = ((ViolationActivity) context).getOldAndroidLocation();
+            if (l == null) {
+                ((ViolationActivity) context).blockButtons();
+            } else {
+                latitude = l.getLatitude();
+                longitude = l.getLongitude();
             }
-        });
+        } else {
+            latitude = ((ViolationActivity) context).latitude;
+            longitude = ((ViolationActivity) context).longitude;
+        }
+        LatLng here = new LatLng(latitude, longitude);
+        if (hasMarker){
+            mMap.clear();
+        }
+        MarkerOptions markerOptions = new MarkerOptions().position(here);
+        Marker marker = mMap.addMarker(markerOptions);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, 18)); //zoom values are floats from 2 to 21
+        hasMarker = true;
+
+        if (placeLikelihoodResult == null) {
+            placeLikelihoodResult = Places.PlaceDetectionApi.getCurrentPlace(((ViolationActivity) context).googleApiClient, null);
+            placeLikelihoodResult.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
+                @Override
+                public void onResult(PlaceLikelihoodBuffer likelyPlaces) {
+                    for (PlaceLikelihood placeLikelihood : likelyPlaces) {
+                        String address = placeLikelihood.getPlace().getAddress().toString();
+                        addressAdapter.add(address);
+                    }
+                    addressAdapter.notifyDataSetChanged();
+                    likelyPlaces.release();
+                }
+            });
+        }
     }
 }

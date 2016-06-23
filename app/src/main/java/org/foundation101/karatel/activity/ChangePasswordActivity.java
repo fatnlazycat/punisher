@@ -11,6 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,6 +72,16 @@ public class ChangePasswordActivity extends AppCompatActivity {
         showOldPassword.setOnTouchListener(new ShowPasswordOnTouchListener(oldPassword));
         showNewPassword = (ImageButton)findViewById(R.id.showNewPasswordButton);
         showNewPassword.setOnTouchListener(new ShowPasswordOnTouchListener(newPassword));
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public void startPasswordRenovation(View view) {

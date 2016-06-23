@@ -176,44 +176,16 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         @Override
         protected String doInBackground(PunisherUser... params) {
             PunisherUser user = params[0];
-            StringBuffer response = new StringBuffer();
-
-            try {
-                HttpURLConnection urlConnection = (HttpURLConnection) new URL(Globals.SERVER_URL
-                        + "users").openConnection();
-                urlConnection.setRequestMethod("POST");
-                urlConnection.setDoOutput(true);
-                urlConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                urlConnection.setRequestProperty("Accept-Encoding", "UTF-8");
-                OutputStream os = urlConnection.getOutputStream();
-                String request = new HttpHelper("user").makeRequestString(new String[]{
-                        "email", user.email,
-                        "firstname", user.name,
-                        "surname", user.surname,
-                        "secondname", user.secondName,
-                        "phone_number", user.phone,
-                        "password", user.password,
-                        "password_confirmation", user.password
-                });
-
-                os.write(request.getBytes());
-                os.flush();
-                os.close();
-
-                int responseCode = urlConnection.getResponseCode();
-                InputStream is;
-                is = (responseCode == HttpURLConnection.HTTP_OK) ?
-                        urlConnection.getInputStream(): urlConnection.getErrorStream();
-                BufferedReader reader = new BufferedReader((new InputStreamReader(is)));
-                String inputLine;
-                while ((inputLine = reader.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                reader.close();
-            } catch (IOException e) {
-                Log.e("Punisher error", e.getMessage());
-            }
-            return response.toString();
+            String request = new HttpHelper("user").makeRequestString(new String[]{
+                    "email", user.email,
+                    "firstname", user.name,
+                    "surname", user.surname,
+                    "secondname", user.secondName,
+                    "phone_number", user.phone,
+                    "password", user.password,
+                    "password_confirmation", user.password
+            });
+            return HttpHelper.proceedRequest("users", request, false);
         }
 
         @Override

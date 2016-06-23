@@ -109,5 +109,11 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return result;
     }
+
+    public static void deleteRequest(SQLiteDatabase db, Integer id){
+        String idString = id.toString();
+        db.delete(DBHelper.VIOLATIONS_TABLE, "_id = ?", new String[]{idString});
+        db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idString});
+    }
 }
 

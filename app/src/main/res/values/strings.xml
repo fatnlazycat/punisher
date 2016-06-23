@@ -72,13 +72,11 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="profile_header">Профіль</string>
-    <string name="title_activity_show_photo">ShowPhotoActivity</string>
     <string name="tap_to_enter">Натисніть на єкран, щоб продовжити</string>
-    <string name="user_created">Обліковий запис створено.</string>
+    <string name="user_created">Обліковий запис створено. Перевірте email.</string>
     <string name="you_have_made_no_requests_yet">Ви ще не створили жодної  заявки</string>
     <string name="create_request">СТВОРИТИ ЗАЯВКУ</string>
     <string name="punishment_requests">Заявки на покарання</string>
-    <string name="location_data_not_available">Пристрій не може визначити Ваше знаходження. Збереження заявки неможливо.</string>
     <string name="contacts_header">Зворотній зв’язок</string>
     <string name="contacts"><b>Якщо у вас є питання чи пропозиції — зв\'яжіться з нами</b></string>
     <string name="office_phone">+38 (044) 209-69-33</string>
@@ -99,7 +97,6 @@
     <string name="yes">ТАК</string>
     <string name="email_change">Зміна email</string>
     <string name="ok">OK</string>
-    <string name="title_activity_change_password">ChangePasswordActivity</string>
     <string name="current_password">ПОТОЧНИЙ ПАРОЛЬ</string>
     <string name="new_password">НОВИЙ ПАРОЛЬ</string>
     <string name="password_change">Зміна паролю</string>
@@ -112,4 +109,15 @@
     <string name="bindProfile">Зв`язати профіль</string>
     <string name="facebook_profile_binded">Профіль успішно зв`язаний!</string>
     <string name="doSort">Сортувати</string>
+    <string name="byStatus">За статусом</string>
+    <string name="byDate">За датою</string>
+    <string name="operatorComment">Коментар оператора</string>
+    <string name="answerToRequest">Відповідь на звернення</string>
+    <string name="answerBy">Відповідь надана</string>
+    <string name="estimateGivenAnswer">Оцініть надану відповідь</string>
+    <string name="cannot_define_location">Пристрій не може визначити Ваше місцезнаходження. Збереження буде неможливе.</string>
+    <string name="requestSaved">Заявку збережено</string>
+    <string name="show_details">Показати подробиці</string>
+    <string name="hide_details">Сховати подробиці</string>
+    <string name="chooseEmailClient">Яка поштова скринька?</string>
 </resources>
