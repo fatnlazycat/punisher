@@ -72,7 +72,6 @@ public class EvidenceAdapter extends BaseAdapter {
             Bitmap thumbnail = mediaContent.get(position);
             ImageView imageViewEvidence = (ImageView) convertView.findViewById(R.id.imageViewEvidence);
             imageViewEvidence.setBackground(new BitmapDrawable(parent.getResources(), thumbnail));
-            //imageViewEvidence.setImageBitmap(thumbnail);
 
             ImageButton imageButtonDeleteEvidence = (ImageButton) convertView.findViewById(R.id.imageButtonDeleteEvidence);
             if (editTrigger) {
@@ -82,6 +81,7 @@ public class EvidenceAdapter extends BaseAdapter {
                     public void onClick(View v) {
                         filesDeletedDuringSession.add(content.get(position));
                         content.remove(position);
+                        mediaContent.remove(position);
                         EvidenceAdapter.this.notifyDataSetChanged();
                     }
                 });

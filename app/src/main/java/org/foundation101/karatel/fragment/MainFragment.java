@@ -43,7 +43,6 @@ public class MainFragment extends Fragment {
         violationsGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //Activity toStart = ViolationsAdapter.content.get(position).getHandlingActivity();
                 Intent intent = new Intent(parent.getContext(), ViolationActivity.class)
                         .putExtra(Globals.VIOLATION_ACTIVITY_MODE, ViolationActivity.MODE_CREATE)
                         .putExtra(Globals.VIOLATION, ViolationsAdapter.content.get(position));

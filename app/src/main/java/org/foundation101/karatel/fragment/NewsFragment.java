@@ -63,7 +63,7 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
             docFetcher.execute(rssURL);
 
         } catch (Exception e){
-            Log.e("punisher.NewsFragment", e.toString());
+            Globals.showError(getActivity(), R.string.cannot_connect_server, e);
         }
         return v;
     }
@@ -74,41 +74,6 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
         intent.putExtra(Globals.NEWS_ITEM, newsListContent.get(position).link);
         intent.putExtra(Globals.NEWS_TITLE, newsListContent.get(position).title);
         startActivity(intent);
-    }
-
-
-    class AsyncDrawableFetcher extends AsyncTask<Integer, Void, Void>{
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            progressBar.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected Void doInBackground(Integer... params) {
-            Drawable image;
-            try {
-                NewsItem newsItem = newsListContent.get(params[0]);
-                Document docToGetImage = Jsoup.connect(newsItem.link).get();
-                String imageLink = docToGetImage.select("div.preview_img > img").first().attr("src");
-                URLConnection urlConnection = new URL(imageLink).openConnection();
-                InputStream is = urlConnection.getInputStream();
-                image = Drawable.createFromStream(is, "newsImage");
-                is.close();
-                newsListContent.get(params[0]).image = image;
-            } catch (IOException e){
-                Log.e("punisher.AsyncDrawable", e.getMessage());
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void v) {
-            super.onPostExecute(v);
-            newsListAdapter.notifyDataSetChanged();
-            progressBar.setVisibility(View.GONE);
-        }
     }
 
     class AsyncDocFetcher extends AsyncTask<String, Void, Void> {
@@ -139,8 +104,13 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
 
                     newsListContent.add(new NewsItem(title, description, pubDate, link, image));
                 }
-            } catch (IOException e){
-                Log.e("punisher.AsyncDocFetche", e.getMessage());
+            } catch (final IOException e){
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                    }
+                });
             }
             return null;
         }

@@ -1,6 +1,12 @@
 package org.foundation101.karatel;
 
+import android.content.Context;
+import android.content.res.Resources;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -9,41 +15,21 @@ import java.util.Map;
 public class ViolationRequisite {
     public String dbTag, name, description, hint, value;
 
-    public static String[] getRequisites(String type){
-        String[] result = new String[0];
-        switch (type){
-            case "WrongParking" : {
-                result = new String[] {"user_id", "id_number", "complain_status_id",
-                        "address", "longitude", "latitude", "vehicle_number"}; break;
-            }
-            case "PitRoad" : {
-                result = new String[] {"user_id", "id_number", "complain_status_id",
-                        "address", "longitude", "latitude", "the_closest_landmark", "type"}; break;
-            }
-            case "NoSmoking" : {
-                result = new String[] {"user_id", "id_number", "complain_status_id",
-                        "address", "longitude", "latitude", "name_of_institution", "name_of_entity", "type"}; break;
-            }
-            case "Damage" : {
-                result = new String[] {"user_id", "id_number", "complain_status_id",
-                        "address", "longitude", "latitude", "the_closest_landmark", "type"}; break;
-            }
-            case "SaleOfGood" : {
-                result = new String[] {"user_id", "id_number", "complain_status_id",
-                        "address", "longitude", "latitude", "name_of_authority", "name_of_institution",
-                        "name_of_entity", "type"}; break;
-            }
-            case "Insult" : {
-                result = new String[] {"user_id", "id_number", "complain_status_id",
-                        "address", "longitude", "latitude", "description", "all_name", "position",
-                        "name_of_authority", "name_of_institution", "name_of_entity", "type"}; break;
-            }
-            case "Bribe" : {
-                result = new String[] {"user_id", "id_number", "complain_status_id",
-                        "address", "longitude", "latitude", "description", "all_name", "position",
-                        "name_of_authority", "type"}; break;
-            }
+    public static String[] getRequisites(Context context, String type){
+        String[] common = new String[] {"user_id", "id_number", "complain_status_id", "longitude", "latitude",
+                "rating", "create_in_the_device", "type"};
+        ArrayList<String> resultingList = new ArrayList<>(Arrays.asList(common));
+
+        String packageName = context.getPackageName();
+        Resources res = context.getResources();
+        int arrayId = res.getIdentifier(type + "Requisites", "array", packageName);
+        String[] array = res.getStringArray(arrayId);
+
+        for (int i=0; i < array.length; i+=4){
+            String dbTag = array[i].replace(type + "_", "");
+            resultingList.add(dbTag);
         }
+        String[] result = resultingList.toArray(new String[0]);
         return result;
     }
 }

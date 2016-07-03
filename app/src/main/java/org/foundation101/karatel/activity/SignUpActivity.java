@@ -56,8 +56,6 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
-        //getSupportActionBar().setDisplayShowTitleEnabled(true);
-        //getSupportActionBar().setHomeButtonEnabled(true);
 
         textViewSignUpErrorMessage = (TextView)findViewById(R.id.textViewSignUpErrorMessage);
 
@@ -79,7 +77,6 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         editTextName.addTextChangedListener(textWatcher);
         editTextSecondName.addTextChangedListener(textWatcher);
         editTextPhone.addTextChangedListener(textWatcher);
-        //checkBoxPersonalDataAgreement.setOnFocusChangeListener(this);
         checkBoxPersonalDataAgreement.setOnClickListener(this);
     }
 
@@ -117,30 +114,10 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
             validateButton();
         }
     }
-    /*public void saveUser(PunisherUser user){
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(Globals.USER_EMAIL, user.email);
-        editor.putString(Globals.USER_PASSWORD, user.password);
-        editor.putString(Globals.USER_SURNAME, user.surname);
-        editor.putString(Globals.USER_NAME, user.name);
-        editor.putString(Globals.USER_SECOND_NAME, user.secondName);
-        editor.putString(Globals.USER_PHONE, user.phone);
-        editor.putInt(Globals.USER_ID, user.id);
-        boolean b = editor.commit();
-
-        //Globals.user = user;
-    }*/
-
-    /*@Override
-    public void onFocusChange(View v, boolean hasFocus) {
-        signUpButton.setEnabled(signUpDataOK());
-    }*/
 
     @Override
     public void onClick(View v) {
         validateButton();
-        //v.requestFocus();
     }
 
     public void empty(View view) {
@@ -185,7 +162,17 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                     "password", user.password,
                     "password_confirmation", user.password
             });
-            return HttpHelper.proceedRequest("users", request, false);
+            try {
+                return HttpHelper.proceedRequest("users", request, false);
+            } catch (final IOException e){
+                SignUpActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(SignUpActivity.this, R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
+            }
         }
 
         @Override
@@ -199,8 +186,6 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                     JSONObject dataJSON = json.getJSONObject("data");
                     if (dataJSON.has("id")) {
                         Toast.makeText(SignUpActivity.this, R.string.user_created, Toast.LENGTH_LONG).show();
-                        //newUser.id = json.getInt("id");
-                        //saveUser(newUser);
                         SignUpActivity.this.finish();
                     }
                 } else if (json.getString("status").equals("error")) {
@@ -223,14 +208,16 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                         sb.append(errorMessage + "\n");
                         if (toMarkRed != null) {
                             toMarkRed.setBackgroundResource(R.drawable.border_for_edittext_error);
-
                         }
                     }
                     textViewSignUpErrorMessage.setText(sb.toString());
                 }
             } catch (JSONException e) {
-                textViewSignUpErrorMessage.setVisibility(View.VISIBLE);
-                textViewSignUpErrorMessage.setText(e.getMessage());
+                Globals.showError(SignUpActivity.this, R.string.error, e);
+                if (e.getMessage() != null) {
+                    textViewSignUpErrorMessage.setVisibility(View.VISIBLE);
+                    textViewSignUpErrorMessage.setText(e.getMessage());
+                }
             }
         }
     }

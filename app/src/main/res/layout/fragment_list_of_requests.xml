@@ -10,31 +10,34 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="16dp"
+        android:paddingBottom="16dp"
         android:background="@android:color/white"
         android:visibility="gone"
         android:id="@+id/sortingLayout">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:gravity="center"
             android:text="@string/doSort"
-            android:textSize="12sp"
+            android:textSize="16sp"
             android:id="@+id/textViewDoSort"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:gravity="center"
             android:layout_below="@id/textViewDoSort">
 
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_sort_by_status"
-                android:tint="@color/grey_button"
+                android:src="@mipmap/ic_sort_by_status"
                 android:id="@+id/sortByStatusButton"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
                 android:text="@string/byStatus"
                 android:textAllCaps="true"
                 android:textColor="@color/grey_button"
@@ -43,11 +46,13 @@
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_sort_by_date"
+                android:layout_marginLeft="47dp"
+                android:src="@mipmap/ic_sort_by_date"
                 android:id="@+id/sortByDateButton"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
                 android:text="@string/byDate"
                 android:textAllCaps="true"
                 android:textColor="@color/grey_button"

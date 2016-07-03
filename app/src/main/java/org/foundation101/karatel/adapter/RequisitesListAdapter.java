@@ -34,6 +34,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.Violation;
 import org.foundation101.karatel.ViolationRequisite;
 import org.foundation101.karatel.activity.ViolationActivity;
 
@@ -51,7 +52,6 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
         this.context=context;
         fm = ((ViolationActivity)context).getSupportFragmentManager();
         supportMapFragment =  SupportMapFragment.newInstance();
-        //ArrayList<String> addressList = new ArrayList<>();
         addressAdapter = new ArrayAdapter<>(context, android.R.layout.simple_dropdown_item_1line);
     }
 
@@ -76,7 +76,7 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
         String packageName = context.getPackageName();
         Resources res = context.getResources();
         int arrayId = res.getIdentifier(violationType + "Requisites", "array", packageName);
-        String[] array = context.getResources().getStringArray(arrayId);
+        String[] array = res.getStringArray(arrayId);
         int i = 0;
         while (i < array.length){
             ViolationRequisite requisite = new ViolationRequisite();
@@ -138,16 +138,21 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
             if ((requisiteValue==null) || (requisiteValue.isEmpty())) editTextRequisite.setHint(thisRequisite.hint);
                 else editTextRequisite.setText(thisRequisite.value);
             editTextRequisite.setEnabled(editTrigger);
-            editTextRequisite.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                @Override
-                public void afterTextChanged(Editable s) {
-                    ((ViolationActivity)context).validatePunishButton();
-                }
-            });
+            editTextRequisite.setFocusable(editTrigger);
+            if (editTrigger) {
+                editTextRequisite.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) { }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        ((ViolationActivity) context).validatePunishButton();
+                    }
+                });
+            }
         }
         return convertView;
     }
@@ -160,14 +165,17 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
         if (((ViolationActivity) context).latitude == null){
             Location l = ((ViolationActivity) context).getOldAndroidLocation();
             if (l == null) {
-                ((ViolationActivity) context).blockButtons();
+                ((ViolationActivity) context).blockButtons(true);
             } else {
                 latitude = l.getLatitude();
                 longitude = l.getLongitude();
+                ((ViolationActivity) context).blockButtons(false);
             }
         } else {
             latitude = ((ViolationActivity) context).latitude;
             longitude = ((ViolationActivity) context).longitude;
+            if (((ViolationActivity) context).getMode() == ViolationActivity.MODE_CREATE)
+                ((ViolationActivity) context).blockButtons(false);
         }
         LatLng here = new LatLng(latitude, longitude);
         if (hasMarker){
@@ -175,7 +183,7 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
         }
         MarkerOptions markerOptions = new MarkerOptions().position(here);
         Marker marker = mMap.addMarker(markerOptions);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, 18)); //zoom values are floats from 2 to 21
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, 17)); //zoom values are floats from 2 to 21
         hasMarker = true;
 
         if (placeLikelihoodResult == null) {

@@ -17,12 +17,15 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.HttpHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.IOException;
 
 public class ChangeEmailActivity extends AppCompatActivity {
     Toolbar toolbar;
@@ -108,12 +111,23 @@ public class ChangeEmailActivity extends AppCompatActivity {
     };
 
     private class EmailChanger extends AsyncTask<String, Void, String> {
+        String email;
 
         @Override
         protected String doInBackground(String... params) {
-            String email = params[0];
+            email = params[0];
             String request = new HttpHelper("user").makeRequestString(new String[] {"email", email});
-            return HttpHelper.proceedRequest("email", request, true);
+            try {
+                return HttpHelper.proceedRequest("email", request, true);
+            } catch (final IOException e){
+                ChangeEmailActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(ChangeEmailActivity.this, R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
+            }
         }
 
         @Override
@@ -122,15 +136,21 @@ public class ChangeEmailActivity extends AppCompatActivity {
             String message;
             try {
                 JSONObject json = new JSONObject(s);
-                message = json.getString("status");
+                if (json.getString("status").equals(Globals.SERVER_SUCCESS)){
+                    Globals.user.email = email;
+                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ChangeEmailActivity.this);
+                    AlertDialog dialog = dialogBuilder.setTitle(R.string.email_changed)
+                            .setNegativeButton(R.string.ok, simpleListener).create();
+                    dialog.show();
+                } else {
+                    message = json.getString("errors");
+                    Toast.makeText(ChangeEmailActivity.this, message, Toast.LENGTH_LONG).show();
+                }
             } catch (JSONException e) {
-                e.printStackTrace();
-                message = s;
+                Globals.showError(ChangeEmailActivity.this, R.string.cannot_connect_server, e);
             }
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ChangeEmailActivity.this);
-            AlertDialog dialog = dialogBuilder.setTitle(R.string.email_change)
-                    .setNegativeButton(R.string.ok, simpleListener).create();
-            dialog.show();
+
+
         }
     }
 }

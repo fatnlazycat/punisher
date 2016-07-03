@@ -67,6 +67,8 @@ public class RequestListFragment extends Fragment {
     final int COLOR_GREY = Color.parseColor("#86888a");
     final int COLOR_GREEN = Color.parseColor("#6c8c39");
 
+    public static boolean punishPerformed = false;
+
     public RequestListFragment(){
         //required empty constructor
     }
@@ -74,7 +76,7 @@ public class RequestListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        db = new DBHelper(getContext(), "violations_db", 1).getReadableDatabase();
+        db = new DBHelper(getContext(), DBHelper.DATABASE, 1).getReadableDatabase();
         setHasOptionsMenu(true);
     }
 
@@ -108,10 +110,11 @@ public class RequestListFragment extends Fragment {
         sortByStatusButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sortByStatusButton.clearColorFilter();
-                sortByDateButton.clearColorFilter();
+                sortByStatusButton.setImageResource(R.mipmap.ic_sort_by_status_selected);
+                sortByDateButton.setImageResource(R.mipmap.ic_sort_by_date);
                 textViewByStatus.setTextColor(COLOR_GREEN);
                 textViewByDate.setTextColor(COLOR_GREY);
+
                 Collections.sort(requestListAdapter.content, new RequestComparator(RequestComparator.SORT_FLAG_STATUS));
                 requestListAdapter.notifyDataSetChanged();
             }
@@ -122,8 +125,8 @@ public class RequestListFragment extends Fragment {
         sortByDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sortByDateButton.setColorFilter(COLOR_GREEN);
-                sortByStatusButton.setColorFilter(COLOR_GREY);
+                sortByStatusButton.setImageResource(R.mipmap.ic_sort_by_status);
+                sortByDateButton.setImageResource(R.mipmap.ic_sort_by_date_selected);
                 textViewByStatus.setTextColor(COLOR_GREY);
                 textViewByDate.setTextColor(COLOR_GREEN);
 
@@ -135,6 +138,30 @@ public class RequestListFragment extends Fragment {
 
         mainView = view;
 
+        recycler = (RecyclerView)view.findViewById(R.id.recyclerViewRequests);
+        recycler.setHasFixedSize(true);
+        recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
+        requestListAdapter = new RequestListAdapter(getContext(), progressBar);
+        requestListAdapter.setContent(getDraftRequests());
+        recycler.setAdapter(requestListAdapter);
+        ItemTouchHelper.Callback callback = new MyItemTouchHelperCallback(requestListAdapter);
+        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+        touchHelper.attachToRecyclerView(recycler);
+
+        new RequestListFetcher().execute();
+    }
+
+    @Override
+    public void onResume() {
+        if (punishPerformed) {
+            requestListAdapter.setContent(getDraftRequests());
+            new RequestListFetcher().execute();
+            punishPerformed = false;
+        }
+        super.onResume();
+    }
+
+    ArrayList<Request> getDraftRequests(){
         ArrayList<Request> draftRequests = new ArrayList<>();
         String table = DBHelper.VIOLATIONS_TABLE;
         String[] columns = {DBHelper._ID, DBHelper.ID_SERVER, DBHelper.TYPE, DBHelper.STATUS,
@@ -151,19 +178,7 @@ public class RequestListFragment extends Fragment {
             draftRequests.add(request);
         }
         cursor.close();
-
-        recycler = (RecyclerView)view.findViewById(R.id.recyclerViewRequests);
-
-        recycler.setHasFixedSize(true);
-        recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
-        requestListAdapter = new RequestListAdapter(getContext(), progressBar);
-        requestListAdapter.setContent(draftRequests);
-        recycler.setAdapter(requestListAdapter);
-        ItemTouchHelper.Callback callback = new MyItemTouchHelperCallback(requestListAdapter);
-        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
-        touchHelper.attachToRecyclerView(recycler);
-
-        new RequestListFetcher().execute();
+        return draftRequests;
     }
 
     void showNoRequestsLayout(){
@@ -201,8 +216,13 @@ public class RequestListFragment extends Fragment {
 
         @Override
         public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-            int dragFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
-            int swipeFlags = ItemTouchHelper.START | ItemTouchHelper.END;
+            final int position = viewHolder.getAdapterPosition();
+            final Request requestToSwipe = requestListAdapter.getContent().get(position);
+            int dragFlags, swipeFlags;
+            dragFlags = 0; // no drag att all
+            if (requestToSwipe.complain_status_id == 0) {//draft
+                swipeFlags = ItemTouchHelper.START | ItemTouchHelper.END;
+            } else swipeFlags = 0; //we can delete only drafts
             return makeMovementFlags(dragFlags, swipeFlags);
         }
 
@@ -229,28 +249,28 @@ public class RequestListFragment extends Fragment {
             final Request requestToDelete = requestListAdapter.getContent().get(position);
             touchAdapter.onItemDismiss(position);
             Snackbar snackbar = Snackbar
-                .make(recycler, "Видалено", Snackbar.LENGTH_LONG)
-                .setAction("UNDO", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        undoDeleteRequest(requestToDelete, position);
-                    }
-                }).setActionTextColor(getResources().getColor(R.color.colorPrimary))
-                .setCallback(new Snackbar.Callback() {
-                    @Override
-                    public void onDismissed(Snackbar snackbar, int event) {
-                        super.onDismissed(snackbar, event);
-                        //if we didn't restore the position - delete it
-                        if (event == DISMISS_EVENT_TIMEOUT
-                                || event == DISMISS_EVENT_SWIPE
-                                || event == DISMISS_EVENT_CONSECUTIVE ){
-                            if (requestToDelete.complain_status_id == ViolationActivity.MODE_EDIT)
-                                deleteDraftRequest(requestToDelete.id);
-                            else deleteRequestPermanently(requestToDelete.id);
-                            if (position == 0) showNoRequestsLayout();
+                    .make(recycler, "Видалено", Snackbar.LENGTH_LONG)
+                    .setAction("UNDO", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            undoDeleteRequest(requestToDelete, position);
                         }
-                    }
-                });
+                    }).setActionTextColor(getResources().getColor(R.color.colorPrimary))
+                    .setCallback(new Snackbar.Callback() {
+                        @Override
+                        public void onDismissed(Snackbar snackbar, int event) {
+                            super.onDismissed(snackbar, event);
+                            //if we didn't restore the position - delete it
+                            if (event == DISMISS_EVENT_TIMEOUT
+                                    || event == DISMISS_EVENT_SWIPE
+                                    || event == DISMISS_EVENT_CONSECUTIVE) {
+                                if (requestToDelete.complain_status_id == ViolationActivity.MODE_EDIT)
+                                    deleteDraftRequest(requestToDelete.id);
+                                else deleteRequestPermanently(requestToDelete.id);
+                                if (requestListAdapter.getContent().size() == 0) showNoRequestsLayout();
+                            }
+                        }
+                    });
             snackbar.show();
         }
 
@@ -283,7 +303,17 @@ public class RequestListFragment extends Fragment {
 
         @Override
         protected String doInBackground(Void... params) {
-            return HttpHelper.proceedRequest("complains", "GET", "", true);
+            try {
+                return HttpHelper.proceedRequest("complains", "GET", "", true);
+            } catch (final IOException e){
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
+            }
         }
 
 
@@ -308,14 +338,14 @@ public class RequestListFragment extends Fragment {
                         requestsFromServer.add(request);
 
                     }
-                    RequestListFragment.this.requestListAdapter.getContent().addAll(requestsFromServer);
-                    RequestListFragment.this.requestListAdapter.notifyDataSetChanged();
+                    requestListAdapter.getContent().addAll(requestsFromServer);
+                    requestListAdapter.notifyDataSetChanged();
                 }
-                if (RequestListFragment.this.requestListAdapter.getItemCount() == 0) { //there are no requests
+                if (requestListAdapter.getItemCount() == 0) { //there are no requests
                     showNoRequestsLayout();
                 }
             } catch (JSONException | IOException e) {
-                Log.e("Punisher", e.getMessage());
+                Globals.showError(getActivity(), R.string.error, e);
             }
         }
     }
@@ -329,7 +359,17 @@ public class RequestListFragment extends Fragment {
 
         @Override
         protected String doInBackground(Integer... params) {
-            return HttpHelper.proceedRequest("complains/" + params[0], "DELETE", "", true);
+            try {
+                return HttpHelper.proceedRequest("complains/" + params[0], "DELETE", "", true);
+            } catch (final IOException e){
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
+            }
         }
 
         @Override
@@ -349,7 +389,6 @@ public class RequestListFragment extends Fragment {
         }
         @Override
         public int compare(Request first, Request second) {
-            int result = 0;
             switch (sortFlag){
                 case SORT_FLAG_STATUS : {
                     Integer status1 = first.complain_status_id;
@@ -362,7 +401,7 @@ public class RequestListFragment extends Fragment {
                         Date date2 = dateFormatter.parse(second.created_at);
                         return date1.compareTo(date2);
                     } catch (ParseException e){
-                        Log.e("Punisher", e.getMessage());
+                        Globals.showError(getActivity(), R.string.error, e);
                         break;
                     }
                 }

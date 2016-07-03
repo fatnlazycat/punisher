@@ -7,7 +7,7 @@ import java.io.Serializable;
  */
 public class UpdateEntity implements Serializable{
     public int id, complain_status_id, complain_id;
-    public String[] documents;
+    public UpdateEntity.DocUrl[] documents;
     public String reply, name_of_authority, created_at, updated_at;
 
     public boolean collapsed = true;
@@ -24,5 +24,9 @@ public class UpdateEntity implements Serializable{
     }
     public boolean isRated() {
         return rated;
+    }
+
+    public static class DocUrl implements Serializable {
+        public String url;
     }
 }

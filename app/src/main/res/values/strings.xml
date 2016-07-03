@@ -95,7 +95,7 @@
     <string name="are_you_sure">Ви впевнені?</string>
     <string name="no">НІ</string>
     <string name="yes">ТАК</string>
-    <string name="email_change">Зміна email</string>
+    <string name="email_changed">Email змінено</string>
     <string name="ok">OK</string>
     <string name="current_password">ПОТОЧНИЙ ПАРОЛЬ</string>
     <string name="new_password">НОВИЙ ПАРОЛЬ</string>
@@ -108,7 +108,7 @@
     <string name="news_header">Новини</string>
     <string name="bindProfile">Зв`язати профіль</string>
     <string name="facebook_profile_binded">Профіль успішно зв`язаний!</string>
-    <string name="doSort">Сортувати</string>
+    <string name="doSort"><b>Сортувати</b></string>
     <string name="byStatus">За статусом</string>
     <string name="byDate">За датою</string>
     <string name="operatorComment">Коментар оператора</string>
@@ -120,4 +120,9 @@
     <string name="show_details">Показати подробиці</string>
     <string name="hide_details">Сховати подробиці</string>
     <string name="chooseEmailClient">Яка поштова скринька?</string>
+    <string name="cannot_connect_server">Неможливо зв\'язатись з сервером. Спробуйте ще раз пізніше</string>
+    <string name="profile_changes_saved">Зміни до профілю збережено</string>
+    <string name="error">помилка</string>
+    <string name="operation_cancelled">Операцію відмінено</string>
+    <string name="cannot_write_file">Неможливо записати файл</string>
 </resources>

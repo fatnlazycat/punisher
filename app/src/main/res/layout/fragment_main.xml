@@ -9,7 +9,7 @@
         android:layout_weight="1"
         android:id="@+id/gridViewMain"
         android:numColumns="2"
-        android:background="@color/colorBackground"
+        android:background="@color/greyBackground"
         android:verticalSpacing="1dp"
         android:horizontalSpacing="1dp" />
 

@@ -26,6 +26,8 @@
                 android:id="@android:id/tabs"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:divider="@null"
+                android:background="@android:color/white"
                 android:visibility="gone"/>
             <FrameLayout
                 android:id="@android:id/tabcontent"
@@ -33,7 +35,7 @@
                 android:layout_height="match_parent">
                 <ScrollView
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:id="@+id/tabInfo">
 
                     <LinearLayout
@@ -51,7 +53,7 @@
                             android:paddingRight="@dimen/activity_horizontal_margin"
                             android:textAppearance="?android:attr/textAppearanceLarge"
                             android:text="@string/violation_header"
-                            android:id="@+id/textView"
+                            android:id="@+id/textViewViolationHeader"
                             android:drawableStart="@mipmap/ic_target" />
 
                         <TextView
@@ -141,16 +143,12 @@
 
                     </LinearLayout>
                 </ScrollView>
-                <ScrollView
+                <ListView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/tabStatus">
-                    <ListView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/historyListView">
-                    </ListView>
-                </ScrollView>
+                    android:divider="@color/colorBackground"
+                    android:dividerHeight="16dp"
+                    android:id="@+id/historyListView_TabStatus"/>
             </FrameLayout>
         </LinearLayout>
     </TabHost>

@@ -2,8 +2,10 @@ package org.foundation101.karatel.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,12 +13,20 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Request;
 import org.foundation101.karatel.Violation;
+import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.ViolationActivity;
+import org.foundation101.karatel.fragment.RequestListFragment;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Created by Dima on 04.05.2016.
@@ -46,6 +56,7 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
         this.context = context;
         setProgressBar(progressBar);
         violationStatuses = context.getResources().getStringArray(R.array.violationStatuses);
+        new StatusListFetcher().execute();
     }
 
     @Override
@@ -65,8 +76,9 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
 
         holder.textViewRequestType.setText(Violation.getViolationNameFromType(context, thisRequest.type));
 
-        int status = thisRequest.complain_status_id;
-        if (status <= violationStatuses.length) {
+        int statusIdOnServer = thisRequest.complain_status_id;
+        if (Globals.statusesMap.containsKey(statusIdOnServer)) {
+            int status = Globals.statusesMap.get(statusIdOnServer);
             String statusText = violationStatuses[status];
             holder.textViewRequestStatus.setText(statusText);
             holder.imageViewStatus.setImageResource(R.drawable.level_list_status);
@@ -129,6 +141,46 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
                     RequestListAdapter.this.openRequest(ViewHolder.this.getAdapterPosition());
                 }
             });
+        }
+    }
+
+    class StatusListFetcher extends AsyncTask<Void, Void, String> {
+
+        @Override
+        protected String doInBackground(Void... params) {
+            try {
+                return HttpHelper.proceedRequest("complain_statuses", "GET", "", false);
+            } catch (final IOException e) {
+                ((MainActivity)context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(context, R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            Globals.statusesMap.put(0, 0); //for the draft requests
+            try {
+                JSONObject json = new JSONObject(s);
+                if (json.getString("status").equals("success")){
+                    JSONArray dataJSON = json.getJSONArray("data");
+                    for (int i = 0; i < dataJSON.length(); i++) {
+                        JSONObject oneStatus = dataJSON.getJSONObject(i);
+                        int statusIdOnServer = oneStatus.getInt("id");
+                        String statusName = oneStatus.getString("title");
+                        int statusIndex = Arrays.asList(violationStatuses).indexOf(statusName);
+                        Globals.statusesMap.put(statusIdOnServer, statusIndex);
+                    }
+                notifyDataSetChanged();
+                }
+            } catch (JSONException e) {
+                Log.e("Punisher", e.getMessage()); //no need for Globals#showError here
+            }
         }
     }
 }

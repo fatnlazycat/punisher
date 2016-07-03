@@ -29,7 +29,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
- * Created by Dima on 28.05.2016.
+ * This class is not used here - I keep it just for reference of how to handle cursorAdapter inside the recyclerView
  */
 public class CursorAdapterForRecyclerView extends CursorAdapter{
     View progressBar;

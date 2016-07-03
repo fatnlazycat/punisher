@@ -4,6 +4,7 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#212121</color>
     <color name="colorBackground">#ececed</color>
+    <color name="greyBackground">#e8e9ea</color>
     <color name="borderlessButtonText">#3e434a</color>
     <color name="facebook_color">#4566a3</color>
     <color name="darkGreen">#6c8c39</color>

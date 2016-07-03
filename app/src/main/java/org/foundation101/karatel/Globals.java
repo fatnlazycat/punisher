@@ -9,10 +9,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 
 /**
@@ -30,12 +32,13 @@ public class Globals {
     public static final String NEWS_TITLE = "PUNISHER_NEWS_TITLE";
     public static final String REGISTRATION_COMPLETE = "PUNISHER_REGISTARTION_COMPLETE";
     public static final String MAIN_ACTIVITY_SAVED_INSTANCE_STATE = "PUNISHER_MAIN_ACTIVITY_SAVED_INSTANCE_STATE";
-    public static final String THUMBNAIL_URL = "PUNISHER_THUMBNAIL_URL";
 
     //fragment tags for MainActivity
     public static final int MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT = 2;
     public static final int MAIN_ACTIVITY_NEWS_FRAGMENT = 4;
     public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 6;
+
+    public static boolean MAIN_ACTIVITY_FROM_PUSH = false;
 
     //user data tags
     public static final String LAST_LOGIN_EMAIL = "LAST_LOGIN_EMAIL";
@@ -58,6 +61,9 @@ public class Globals {
 
     //preferences
     public static final String SENT_TOKEN_TO_SERVER = "SENT_TOKEN_TO_SERVER";
+
+    //map of complain statuses: key-indexes on server, value-index in array in apk resources
+    public static HashMap<Integer, Integer> statusesMap = new HashMap<>();
 
 
     //hides the software keyboard
@@ -88,5 +94,13 @@ public class Globals {
             Log.e("Punisher", e.getMessage());
         }
         return outDate;
+    }
+
+    public static void showError(Context context, int errorMessageResId, Exception e){
+        Toast.makeText(context, errorMessageResId, Toast.LENGTH_LONG).show();
+        if (e != null) {
+            String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
+            Log.e("Punisher error", logMessage);
+        }
     }
 }

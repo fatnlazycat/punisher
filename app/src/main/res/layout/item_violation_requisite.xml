@@ -12,9 +12,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/textSizeRequisiteHeader"
-        android:textColor="@color/darkGreen"
-        android:id="@+id/textViewRequisiteHeader" />
+        android:id="@+id/textViewRequisiteHeader"
+        style="@style/GreenHeader"/>
 
     <TextView
         android:layout_width="wrap_content"

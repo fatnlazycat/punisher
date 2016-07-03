@@ -59,6 +59,7 @@ import org.foundation101.karatel.adapter.EvidenceAdapter;
 import org.foundation101.karatel.adapter.HistoryAdapter;
 import org.foundation101.karatel.adapter.RequestListAdapter;
 import org.foundation101.karatel.adapter.RequisitesListAdapter;
+import org.foundation101.karatel.fragment.RequestListFragment;
 import org.foundation101.karatel.view.ExpandedGridView;
 import org.foundation101.karatel.view.ExpandedListView;
 import org.json.JSONArray;
@@ -68,7 +69,6 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -90,18 +90,27 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     RequisitesListAdapter requisitesAdapter;
     EvidenceAdapter evidenceAdapter = new EvidenceAdapter(this);
     HistoryAdapter historyAdapter;
+    ListView historyListView;
     DBHelper dbHelper;
     Cursor cursor;
     int mode, thumbDimension;
-    Request request = null;
+
+    public int getMode() {
+        return mode;
+    }
+
+    public Request request = null;
     Integer id, status, idOnServer;
     String idString, time_stamp;
     String id_number_server = "";
     Violation violation = new Violation();
+    public Double latitude, longitude;
+    boolean statusTabFirstShow = true;
+
     FrameLayout progressBar;
     TabHost tabs;
     Button punishButton, saveButton;
-    public Double latitude, longitude;
+
 
     public GoogleApiClient googleApiClient;
     Location l;
@@ -114,11 +123,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         }
         validatePunishButton();
         validateSaveButton();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
     }
 
     @Override
@@ -140,7 +144,20 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         tabs.setup();
         setupTab(R.id.tabInfo, getString(R.string.information));
         tabs.setCurrentTab(0);
-        TabWidget tabWidget = (TabWidget)findViewById(android.R.id.tabs);
+        tabs.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+            @Override
+            public void onTabChanged(String tabId) {
+                if (statusTabFirstShow) {
+                    historyListView = (ListView)findViewById(R.id.historyListView_TabStatus);
+                    FrameLayout.LayoutParams mParam = new FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT);
+                    historyListView.setLayoutParams(mParam);
+                    historyListView.setAdapter(historyAdapter);
+                    historyAdapter.notifyDataSetChanged();
+                    statusTabFirstShow = false;
+                }
+            }
+        });
 
         dbHelper = new DBHelper(this, DBHelper.DATABASE, 1);
         requisitesAdapter = new RequisitesListAdapter(this);
@@ -201,6 +218,9 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                         e.printStackTrace();
                     }
                 }
+
+                historyAdapter = new HistoryAdapter(this);
+                new RequestFetcher().execute(idOnServer);
             }
         }
 
@@ -227,23 +247,22 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
         //check if the request is already filed - > no edit anymore
         if (mode > MODE_EDIT){
-            punishButton.setVisibility(View.GONE);
-            saveButton.setVisibility(View.GONE);
+            blockButtons(true);
             requisitesAdapter.setEditTrigger(false);
             evidenceAdapter.setEditTrigger(false);
             toolbar.setSubtitle("Заявка № " + id_number_server);
 
-            setupTab(R.id.tabStatus, getString(R.string.request_status));
+            setupTab(R.id.historyListView_TabStatus, getString(R.string.request_status));
+            TabWidget tabWidget = (TabWidget)findViewById(android.R.id.tabs);
             tabWidget.setVisibility(View.VISIBLE);
+            tabs.setCurrentTab(0);
+
+            findViewById(R.id.textViewViolationHeader).setVisibility(View.GONE);
 
             ImageButton imageButtonAddEvidence = (ImageButton)findViewById(R.id.imageButtonAddEvidence);
             imageButtonAddEvidence.setVisibility(View.GONE);
             TextView addedPhotoVideoTextView = (TextView)findViewById(R.id.addedPhotoVideoTextView);
             addedPhotoVideoTextView.setText(getString(R.string.addedPhotoVideo));
-
-            ListView historyListView = (ListView)findViewById(R.id.historyListView);
-            historyAdapter = new HistoryAdapter(this);
-            historyListView.setAdapter(historyAdapter);
         }
     }
 
@@ -253,13 +272,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             //query to media table
             String table = DBHelper.VIOLATIONS_TABLE + " INNER JOIN " + DBHelper.MEDIA_TABLE + " ON "
                     + DBHelper.VIOLATIONS_TABLE + "._id = " + DBHelper.MEDIA_TABLE + ".id";
-            String[] columns = new String[]{"id", "file_name"};
+            String[] columns = new String[]{DBHelper.ID, DBHelper.FILE_NAME};
             String where = "id=?";
             String[] selectionArgs = {idString};
             Cursor _cursor = _db.query(table, columns, where, selectionArgs, null, null, null);
             if (_cursor.moveToFirst()) {
-                do {
-                    String evidenceFileName = _cursor.getString(1); //file names are in the second column of the cursor
+                do try {
+                    String evidenceFileName = _cursor.getString(_cursor.getColumnIndex(DBHelper.FILE_NAME));
                     Bitmap thumbnail;
                     if (evidenceFileName.endsWith(CameraManager.JPG)) {
                         thumbnail = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(evidenceFileName),
@@ -269,6 +288,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     }
                     evidenceAdapter.content.add(evidenceFileName);
                     evidenceAdapter.mediaContent.add(thumbnail);
+                } catch (Exception e){//we read files so need to catch exceptions
+                    Globals.showError(this, R.string.error, e);
                 } while (_cursor.moveToNext());
             }
             _cursor.close();
@@ -277,13 +298,19 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             String serverUrl = Globals.SERVER_URL.replace("/api/v1/", "");
             for (int i = 0; i < request.images.length; i++) {
                 String evidenceFileName = serverUrl + request.images[i].thumb.url;
-                evidenceAdapter.content.add(evidenceFileName);
                 new ThumbnailFetcher().execute(evidenceFileName);
+                //when done with the thumbnail we get the full image name
+                evidenceFileName = serverUrl + request.images[i].url;
+                evidenceAdapter.content.add(evidenceFileName);
+
             }
             for (int i = 0; i < request.videos.length; i++) {
                 String evidenceFileName = serverUrl + request.videos[i].thumb.url;
-                evidenceAdapter.content.add(evidenceFileName);
                 new ThumbnailFetcher().execute(evidenceFileName);
+                //when done with the thumbnail we get the full image name
+                evidenceFileName = serverUrl + request.videos[i].url;
+                evidenceAdapter.content.add(evidenceFileName);
+
             }
         }
     }
@@ -292,16 +319,20 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (resultCode == RESULT_OK &&
                 (requestCode == CameraManager.IMAGE_CAPTURE_INTENT || requestCode == CameraManager.VIDEO_CAPTURE_INTENT)) {
-            evidenceAdapter.content.add(CameraManager.lastCapturedFile);
-            Bitmap bmp;
-            if (CameraManager.lastCapturedFile.endsWith(CameraManager.JPG)) {
-                bmp = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(CameraManager.lastCapturedFile),
-                        thumbDimension, thumbDimension);
-            } else {
-                bmp = ThumbnailUtils.createVideoThumbnail(CameraManager.lastCapturedFile, MediaStore.Video.Thumbnails.MICRO_KIND);
+            try {
+                evidenceAdapter.content.add(CameraManager.lastCapturedFile);
+                Bitmap bmp;
+                if (CameraManager.lastCapturedFile.endsWith(CameraManager.JPG)) {
+                    bmp = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(CameraManager.lastCapturedFile),
+                            thumbDimension, thumbDimension);
+                } else {
+                    bmp = ThumbnailUtils.createVideoThumbnail(CameraManager.lastCapturedFile, MediaStore.Video.Thumbnails.MICRO_KIND);
+                }
+                evidenceAdapter.mediaContent.add(bmp);
+                evidenceAdapter.notifyDataSetChanged();
+            } catch (Exception e) {
+                Globals.showError(this, R.string.error, e);
             }
-            evidenceAdapter.mediaContent.add(bmp);
-            evidenceAdapter.notifyDataSetChanged();
         }
         super.onActivityResult(requestCode, resultCode, intent);
     }
@@ -359,34 +390,38 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 cv.put(DBHelper.LATITUDE, latitude);
                 cv.put(DBHelper.TIME_STAMP, new SimpleDateFormat(RequestListAdapter.INPUT_DATE_FORMAT, Locale.US)
                         .format(new Date()));
-                rowID = db.insertOrThrow("violations_table", null, cv);
+                rowID = db.insertOrThrow(DBHelper.VIOLATIONS_TABLE, null, cv);
                 id = new BigDecimal(rowID).intValue();
                 mode = MODE_EDIT; //once created the record we switch to edit mode
             } else {
-                cv.put("_id", id);
+                cv.put(DBHelper._ID, id);
                 cv.put(DBHelper.LONGITUDE, longitude);
                 cv.put(DBHelper.LATITUDE, latitude);
                 cv.put(DBHelper.TIME_STAMP, time_stamp);
-                rowID = db.replace("violations_table", null, cv);
+                rowID = db.replace(DBHelper.VIOLATIONS_TABLE, null, cv);
             }
             cv.clear();
 
         /*actions with the media table: if in edit mode - we delete all previously written records
          *& fill the table again, because the user could add or delete something
          */
-            if (mode != MODE_CREATE) db.delete("media_table", "id = ?", new String[]{idString});
-            else mode = MODE_EDIT; //once created the record we switch to edit mode
+            if (mode == MODE_EDIT) //this condition works only in edit mode - delete all files previously added to db
+                db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idString});
             for (int i = 0; i < evidenceAdapter.content.size(); i++) {
-                cv.put("id", rowID);
-                cv.put("file_name", evidenceAdapter.content.get(i));
-                db.insert("media_table", null, cv);
+                cv.put(DBHelper.ID, rowID);
+                cv.put(DBHelper.FILE_NAME, evidenceAdapter.content.get(i));
+                db.insert(DBHelper.MEDIA_TABLE, null, cv);
                 cv.clear();
             }
             db.close();
 
             //delete the evidence files removed by the user from filesystem
-            for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
-                new File(fileToDelete).delete();
+            try {
+                for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
+                    new File(fileToDelete).delete();
+                }
+            } catch (Exception e) {
+                Globals.showError(this, R.string.cannot_write_file, e);
             }
             Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_LONG).show();
         }
@@ -431,6 +466,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     }
 
     public void punish(View view) {
+        RequestListFragment.punishPerformed = true;
         saveToBase(null);
         new ViolationSender(this).execute(violation);
     }
@@ -450,7 +486,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     public boolean allDataEntered(){
         boolean result = !evidenceAdapter.isEmpty();
 
-        /*if the inflation of the view is not conducted yet -> we have just opened the activity * do not need to
+        /*if the inflation of the view is not conducted yet -> we have just opened the activity & do not need to
          * check EditText values, but check adapter's content values instead
          */
         if (listViewRequisites.getChildAt(0) == null) {
@@ -470,9 +506,10 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         return result;
     }
 
-    public void blockButtons(){
-        punishButton.setVisibility(View.GONE);
-        saveButton.setVisibility((View.GONE));
+    public void blockButtons(boolean block){
+        int visibility = block ? View.GONE : View.VISIBLE;
+        punishButton.setVisibility(visibility);
+        saveButton.setVisibility((visibility));
     }
 
     /**
@@ -554,9 +591,11 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         Log.e("Punisher", "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
         if (mode == MODE_CREATE) {
             l = getOldAndroidLocation();
-            latitude = l.getLatitude();
-            longitude = l.getLongitude();
-            requisitesAdapter.notifyDataSetChanged();
+            if (l != null) {
+                latitude = l.getLatitude();
+                longitude = l.getLongitude();
+                requisitesAdapter.notifyDataSetChanged();
+            }
         }
     }
 
@@ -569,6 +608,22 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     protected void onStop() {
         if (googleApiClient != null) googleApiClient.disconnect();
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (mode == MODE_CREATE){
+            boolean deletedSuccessfully = true;
+            //delete the evidence files if the request was not saved
+            for (String fileToDelete : evidenceAdapter.content) {
+                deletedSuccessfully = new File(fileToDelete).delete() && deletedSuccessfully;
+            }
+            for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
+                deletedSuccessfully = new File(fileToDelete).delete() && deletedSuccessfully;
+            }
+            Log.e("Punisher", "files deleted successfully " + deletedSuccessfully);
+        }
+        super.onDestroy();
     }
 
     class ViolationSender extends AsyncTask<Violation, Void, String> {
@@ -621,7 +676,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
                 //prepare the request parameters
                 ArrayList<String> requestParameters = new ArrayList<>();
-                String[] keysForRequestParameters = ViolationRequisite.getRequisites(violation.getType());
+                String[] keysForRequestParameters = ViolationRequisite.getRequisites(ViolationActivity.this,
+                        violation.getType());
                 for (String str : keysForRequestParameters){
                     requestParameters.add(str);
                     switch (str) {
@@ -642,6 +698,9 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                         }
                         case "latitude" : {
                             requestParameters.add(latitude.toString()); break;
+                        }
+                        case "create_in_the_device" : {
+                            requestParameters.add(time_stamp); break;
                         }
                         default : {
                             String adaptedKey = violation.getType() + "_" + str;
@@ -666,11 +725,10 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 for (String line : responseList) {
                     Log.e("Punisher", "Upload Files Response:::" + line);
                     response.append(line);
-                    // get your server response here.
                 }
 
             } catch (IOException e) {
-                Log.e("Punisher error", e.getMessage());
+                Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
             }
             return response.toString();
         }
@@ -691,19 +749,26 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         }
     }
 
-    class ThumbnailFetcher extends AsyncTask<String, Void, Void>{
+    class ThumbnailFetcher extends AsyncTask<String, Void, Exception>{
 
         @Override
-        protected Void doInBackground(String... params) {
+        protected Exception doInBackground(String... params) {
             try {
                 URL url = new URL(params[0]);
                 Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
                 ViolationActivity.this.evidenceAdapter.mediaContent.add(bmp);
-                ViolationActivity.this.evidenceAdapter.notifyDataSetChanged();
             } catch (Exception e) {
-                Log.e("Punisher", e.getMessage());
+                return e;
             }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Exception e) {
+            ViolationActivity.this.evidenceAdapter.notifyDataSetChanged();
+            super.onPostExecute(e);
+            if (e != null)
+                Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
         }
     }
 
@@ -711,7 +776,18 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
         @Override
         protected String doInBackground(Integer... params) {
-            String result = HttpHelper.proceedRequest("complains/" + params[0], "GET", "", true);
+            String result = null;
+            try {
+                result = HttpHelper.proceedRequest("complains/" + params[0], "GET", "", true);
+            } catch (final IOException e) {
+                ViolationActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
+            }
             return result;
         }
 
@@ -726,9 +802,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     updates[i] = objectMapper.readValue(updatesJSON.get(i).toString(), UpdateEntity.class);
                 }
                 historyAdapter.setContent(updates);
-                historyAdapter.notifyDataSetChanged();
             } catch (JSONException | IOException e) {
-                Log.e("Punisher", e.getMessage());
+                Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
             }
         }
     }

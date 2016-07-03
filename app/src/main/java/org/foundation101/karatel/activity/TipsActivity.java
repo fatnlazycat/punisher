@@ -35,6 +35,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -43,12 +44,9 @@ public class TipsActivity extends Activity {
     EditText editTextLoginEmail, editTextLoginPassword;
     FrameLayout progressBar;
     SharedPreferences preferences;
+
     // facebook part
-    Button facebookLoginButton;
-    //private LoginButton loginButton;
     private CallbackManager fbCallbackManager;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,8 +135,7 @@ public class TipsActivity extends Activity {
 
             @Override
             public void onError(FacebookException e) {
-                String message = e.getMessage();
-                Toast.makeText(TipsActivity.this, message, Toast.LENGTH_LONG).show();
+                Globals.showError(TipsActivity.this, R.string.cannot_connect_server, e);
             }
         });
     }
@@ -164,7 +161,17 @@ public class TipsActivity extends Activity {
         @Override
         protected String doInBackground(String... params) {
             String api = viaFacebook ? "signin?provider=facebook" : "signin";
-            return HttpHelper.proceedRequest(api, params[0], false);
+            try {
+                return HttpHelper.proceedRequest(api, params[0], false);
+            } catch (final IOException e){
+                TipsActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(TipsActivity.this, R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
+            }
         }
 
         @Override
@@ -193,35 +200,17 @@ public class TipsActivity extends Activity {
                         new AvatarGetter().execute(avatarUrl);
                     }
                     startActivity(new Intent(context, MainActivity.class));
-                } else if (json.getString("status").equals("error")){
-                    Toast.makeText(TipsActivity.this, json.getString("error"), Toast.LENGTH_LONG).show();
+                } else {
+                    String errorMessage;
+                    if (json.getString("status").equals("error")){
+                        errorMessage = json.getString("error");
+                    } else {
+                        errorMessage = s;
+                    }
+                    Toast.makeText(TipsActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                 }
-                /*//check if user preferences are filled in, fill if not.
-                //required when the app was newly installed
-                SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-                if (!globalPreferences.contains(Globals.USER_ID)) {//no preferences saved, so do it
-                    JSONObject userJSON = json.getJSONObject("user");
-                    PunisherUser user = new PunisherUser(
-                            userJSON.getString("email"),
-                            "", //for password
-                            userJSON.getString("surname"),
-                            userJSON.getString("firstname"),
-                            userJSON.getString("secondname"),
-                            userJSON.getString("phone_number"));
-                    user.id = Integer.parseInt(userJSON.getString("id"));
-                    boolean b = globalPreferences.edit()
-                            .putString(Globals.USER_EMAIL, user.email)
-                            .putString(Globals.USER_PASSWORD, user.password)
-                            .putString(Globals.USER_SURNAME, user.surname)
-                            .putString(Globals.USER_NAME, user.name)
-                            .putString(Globals.USER_SECOND_NAME, user.secondName)
-                            .putString(Globals.USER_PHONE, user.phone)
-                            .putInt(Globals.USER_ID, user.id).commit();
-                    int i =0;
-                }*/
-
             } catch (JSONException e) {
-                Toast.makeText(TipsActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                Globals.showError(TipsActivity.this, R.string.error, e);
             }
             progressBar.setVisibility(View.GONE);
         }
@@ -237,9 +226,14 @@ public class TipsActivity extends Activity {
                 FileOutputStream fos = new FileOutputStream(Globals.user.avatarFileName);
                 bmp.compress(Bitmap.CompressFormat.PNG, 100, fos);
                 fos.close();
-            } catch (Exception e){
+            } catch (final Exception e){
                 Globals.user.avatarFileName = "";
-                Log.e("Punisher", e.getMessage());
+                TipsActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(TipsActivity.this, R.string.cannot_connect_server, e);
+                    }
+                });
             }
             return null;
         }

@@ -31,9 +31,6 @@ public class TutorialActivity extends Activity {
         texts=getResources().getStringArray(R.array.tutorialStringArray);
         tutorialText.setText(texts[0]);
 
-        //progressBarTutorial = (ImageView)findViewById(R.id.progressBarTutorial);
-        //progressBarTutorial.setImageResource(R.drawable.level_list_tutorial_progress);
-
         //setting the small circles
         circles = new ImageView[]{
             (ImageView)findViewById(R.id.small_circle0),

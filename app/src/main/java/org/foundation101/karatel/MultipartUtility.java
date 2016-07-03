@@ -43,6 +43,7 @@ public class MultipartUtility {
         URL url = new URL(requestURL);
         httpConn = (HttpURLConnection) url.openConnection();
         httpConn.setChunkedStreamingMode(4096);
+        httpConn.setReadTimeout(5000);
         httpConn.setRequestMethod(method);
         httpConn.setUseCaches(false);
         httpConn.setDoOutput(true);    // indicates POST method

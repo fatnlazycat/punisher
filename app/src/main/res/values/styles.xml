@@ -54,6 +54,7 @@
     <style name="GreenHeader">
         <item name="android:textSize">11sp</item>
         <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/darkGreen</item>
     </style>
 
 </resources>

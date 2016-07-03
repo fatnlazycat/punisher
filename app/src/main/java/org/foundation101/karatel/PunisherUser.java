@@ -15,5 +15,4 @@ public class PunisherUser {
 
     public String email, password, surname, name, secondName, phone, avatarFileName;
     public Integer id;
-    //public BitmapDrawable avatar;
 }

@@ -16,7 +16,6 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -46,6 +45,7 @@ import org.foundation101.karatel.fragment.RequestListFragment;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
         toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         //init navigation drawer
         ListView drawerListView = (ListView)findViewById(R.id.drawerListView);
@@ -139,7 +140,8 @@ public class MainActivity extends AppCompatActivity {
                     case 6 : {
                         tag = getResources().getString(R.string.profile_header);
                         //do not add profile fragment to back stack because of its strange behavior
-                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new ProfileFragment(), tag).commit();
+                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new ProfileFragment(), tag)
+                                .addToBackStack(tag).commit();
                         break;
                     }
                     case 7 : finishAffinity();
@@ -149,33 +151,36 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-
         //select fragment to start with (from savedInstanceState)
         ft = fManager.beginTransaction();
         String tag = "";
-        if (savedInstanceState != null) {
-            int action = savedInstanceState.getInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, 0);
-            switch (action){
-                case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT:{
-                    tag = getResources().getString(R.string.punishment_requests);
-                    ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
-                }
-                case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT:{//profile fragment not added to back stack due to its strange behavior
-                    tag = getResources().getString(R.string.profile_header);
-                    ft.add(R.id.frameLayoutMain, new ProfileFragment(), tag).commit();
-                }
-                case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT:{
-                    tag = getResources().getString(R.string.news_header);
-                    ft.add(R.id.frameLayoutMain, new NewsFragment(), tag).addToBackStack(tag).commit();
-                }
-            }
+        if (Globals.MAIN_ACTIVITY_FROM_PUSH){
+            Globals.MAIN_ACTIVITY_FROM_PUSH = false;
+            tag = getResources().getString(R.string.punishment_requests);
+            ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
         } else {
-            tag = getResources().getString(R.string.do_punish);
-            ft.add(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
+            if (savedInstanceState != null) {
+                int action = savedInstanceState.getInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, 0);
+                switch (action){
+                    case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT:{
+                        tag = getResources().getString(R.string.punishment_requests);
+                        ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
+                    }
+                    case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT:{//profile fragment not added to back stack due to its strange behavior
+                        tag = getResources().getString(R.string.profile_header);
+                        ft.add(R.id.frameLayoutMain, new ProfileFragment(), tag).addToBackStack(tag).commit();
+                    }
+                    case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT:{
+                        tag = getResources().getString(R.string.news_header);
+                        ft.add(R.id.frameLayoutMain, new NewsFragment(), tag).addToBackStack(tag).commit();
+                    }
+                }
+            } else {
+                tag = getResources().getString(R.string.do_punish);
+                ft.add(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
+            }
         }
         toolbar.setTitle(tag);
-
 
         FacebookSdk.sdkInitialize(getApplicationContext());
     }
@@ -196,9 +201,14 @@ public class MainActivity extends AppCompatActivity {
         int entryNumber = fManager.getBackStackEntryCount() - 2;
         if (entryNumber >= 0) {
             String tag = fManager.getBackStackEntryAt(entryNumber).getName();
+            if (tag.equals(getResources().getString(R.string.profile_header))) {//skip the profile page
+                tag = getResources().getString(R.string.do_punish);//& go to main page
+            }
             toolbar.setTitle(tag);
+            fManager.popBackStackImmediate(tag, 0);
+        } else {
+            super.onBackPressed();
         }
-        super.onBackPressed();
     }
 
     @Override
@@ -208,8 +218,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /*
-             *the task is to add the first list item with the user's name
-             */
+     *the task is to add the first list item with the user's name
+     */
     String[] makeDrawerList(){
         String[] menuItems = getResources().getStringArray(R.array.drawerMenuItems);
         ArrayList<String> tempList = new ArrayList(Arrays.asList(menuItems));
@@ -279,11 +289,11 @@ public class MainActivity extends AppCompatActivity {
                 }
                 @Override
                 public void onCancel() {
-                    Log.e("Punisher","facebook login canceled");
+                    Globals.showError(MainActivity.this, R.string.operation_cancelled, null);
                 }
                 @Override
                 public void onError(FacebookException e) {
-                    Log.e("Punisher", "facebook login failed error");
+                    Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
                 }
             });
         }
@@ -306,25 +316,12 @@ public class MainActivity extends AppCompatActivity {
     public void setAvatarImageView(ImageView avatarView){
         if (Globals.user.avatarFileName == null || Globals.user.avatarFileName.isEmpty()){
             avatarView.setBackgroundResource(R.mipmap.no_avatar);
-        } else {
+        } else try {
             avatarView.setBackground(Drawable.createFromPath(Globals.user.avatarFileName));
+        } catch (Exception e){
+            Globals.showError(this, R.string.error, e);
         }
     }
-
-    /*PunisherUser getUser(){
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-        boolean b = preferences.contains(Globals.USER_SURNAME);
-        PunisherUser result = new PunisherUser(
-                preferences.getString(Globals.USER_EMAIL, ""),
-                preferences.getString(Globals.USER_PASSWORD, ""),
-                preferences.getString(Globals.USER_SURNAME, ""),
-                preferences.getString(Globals.USER_NAME, ""),
-                preferences.getString(Globals.USER_SECOND_NAME, ""),
-                preferences.getString(Globals.USER_PHONE, "")
-        );
-        result.id = preferences.getInt(Globals.USER_ID, 0);
-        return result;
-    }*/
 
     class FacebookBinder extends AsyncTask<String, Void, String> {
         String fbUserId;
@@ -335,7 +332,18 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(String... params) {
-            String result = HttpHelper.proceedRequest("socials", params[0], true);
+            String result;
+            try {
+                result = HttpHelper.proceedRequest("socials", params[0], true);
+            } catch (final IOException e){
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
+            }
             return result;
         }
 
@@ -348,10 +356,10 @@ public class MainActivity extends AppCompatActivity {
                 if (json.getString("status").equals("success")){
                     message = MainActivity.this.getResources().getString(R.string.facebook_profile_binded);
                 } else message = json.getString("error");
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
             } catch (JSONException e){
-                message = e.getMessage();
+                Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
             }
-            Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
         }
     }
 }

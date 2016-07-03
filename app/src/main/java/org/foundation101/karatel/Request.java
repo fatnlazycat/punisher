@@ -16,5 +16,4 @@ public class Request implements Serializable{
     public double latitude, longitude, address_lat, address_lon;
     public MediaEntity[] images, videos;
     public UpdateEntity[] updates;
-    public String[] media_files; //delete at new server because it's substituted with images, videos
 }

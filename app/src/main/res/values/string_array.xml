@@ -56,12 +56,12 @@
     </string-array>
 
     <string-array name="violationStatuses">
-        <item>ЧЕРНЕТКА</item>
-        <item>НА МОДЕРАЦІЇ</item>
-        <item>ВІДМОВЛЕНО В РОЗГЛЯДІ</item>
-        <item>В РОБОТІ</item>
-        <item>ОЧІКУВАННЯ ВІДПОВІДІ</item>
-        <item>ЗАКРИТО</item>
+        <item>Чернетка</item>
+        <item>На модерації</item>
+        <item>Відмовлено в розгляді</item>
+        <item>В роботі</item>
+        <item>Очікування відповіді</item>
+        <item>Закрито</item>
         <item>6.null</item>
         <item>7.null</item>
         <item>8.null</item>
@@ -215,22 +215,22 @@
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
 
-        <item>SaleOfGood_name_of_authority</item>
+        <item>SaleOfGood_name_of_institution</item>
         <item>НАЗВА ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
 
-        <item>SaleOfGood_name_of_institution</item>
+        <item>SaleOfGood_name_of_entity</item>
         <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>
         <item>Юридична особа або підприємець; подивитись в кутку споживача</item>
         <item>Юридична особа або підприємець</item>
 
-        <item>SaleOfGood_merchandise</item>
+        <item>SaleOfGood_product_name</item>
         <item>НАЗВА ТОВАРУ</item>
         <item></item>
         <item>Вкажіть назву товару</item>
 
-        <item>SaleOfGood_name_of_entity</item>
+        <item>SaleOfGood_name_producer</item>
         <item>НАЗВА ВИРОБНИКА ТОВАРУ</item>
         <item>Юридична особа або підприємець</item>
         <item>Юридична особа або підприємець</item>

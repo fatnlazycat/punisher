@@ -27,6 +27,8 @@ import org.foundation101.karatel.R;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+
 public class ChangePasswordActivity extends AppCompatActivity {
     Toolbar toolbar;
     ViewGroup viewGroupPassword, viewGroupNewPassword;
@@ -82,6 +84,13 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    //hides the software keyboard
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        Globals.hideSoftKeyboard(this, event);
+        return super.dispatchTouchEvent( event );
     }
 
     public void startPasswordRenovation(View view) {
@@ -148,7 +157,17 @@ public class ChangePasswordActivity extends AppCompatActivity {
             String newPass = params[1];
             String request = new HttpHelper("user").makeRequestString(new String[]
                     {"password", oldPass, "new_user_password", newPass});
-            return HttpHelper.proceedRequest("password", request, true);
+            try {
+                return HttpHelper.proceedRequest("password", request, true);
+            } catch (final IOException e) {
+                ChangePasswordActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(ChangePasswordActivity.this, R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
+            }
         }
 
         @Override
@@ -164,12 +183,13 @@ public class ChangePasswordActivity extends AppCompatActivity {
                             .setMessage(R.string.your_password_is_changed_successfully)
                             .setNegativeButton(R.string.ok, simpleListener).create();
                     dialog.show();
+                } else {
+                    message = json.getString("errors");
+                    Toast.makeText(ChangePasswordActivity.this, message, Toast.LENGTH_LONG).show();
                 }
             } catch (JSONException e) {
-                e.printStackTrace();
-                message = s;
+                Globals.showError(ChangePasswordActivity.this, R.string.cannot_connect_server, e);
             }
-            Toast.makeText(ChangePasswordActivity.this, message, Toast.LENGTH_LONG).show();
         }
     }
 }

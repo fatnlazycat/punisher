@@ -88,7 +88,7 @@ public class DrawerAdapter extends BaseAdapter {
     }
 
     public static int getNumberOfRequests(Context context){
-        SQLiteDatabase db = new DBHelper(context, "violations_db", 1).getReadableDatabase();
+        SQLiteDatabase db = new DBHelper(context, DBHelper.DATABASE, 1).getReadableDatabase();
         String table = DBHelper.VIOLATIONS_TABLE;
         String[] columns = {DBHelper._ID, DBHelper.TYPE};
         String where = "user_id=?";
@@ -96,6 +96,7 @@ public class DrawerAdapter extends BaseAdapter {
         Cursor cursor = db.query(table, columns, where, selectionArgs, null, null, null);
         int result = cursor.getCount();
         cursor.close();
+        db.close();
         return result;
     }
 }

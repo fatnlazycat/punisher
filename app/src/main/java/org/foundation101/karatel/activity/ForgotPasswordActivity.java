@@ -19,6 +19,8 @@ import org.foundation101.karatel.R;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+
 public class ForgotPasswordActivity extends AppCompatActivity {
 
     EditText editTextForgotPasswordEmail;
@@ -64,7 +66,17 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... params) {
             String request = new HttpHelper("user").makeRequestString(new String[]{"email", params[0]});
-            return HttpHelper.proceedRequest("password", request, false);
+            try {
+                return HttpHelper.proceedRequest("password", request, false);
+            } catch (final IOException e){
+                ForgotPasswordActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(ForgotPasswordActivity.this, R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
+            }
         }
 
         @Override
@@ -73,11 +85,10 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             try {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals(Globals.SERVER_SUCCESS)){
-                    startActivity(new Intent(ForgotPasswordActivity.this,
-                            org.foundation101.karatel.activity.ForgotPassword2Activity.class));
-                } else Toast.makeText(ForgotPasswordActivity.this, s, Toast.LENGTH_LONG).show();
+                    startActivity(new Intent(ForgotPasswordActivity.this, ForgotPassword2Activity.class));
+                } else Toast.makeText(ForgotPasswordActivity.this, json.getString("errors"), Toast.LENGTH_LONG).show();
             } catch (JSONException e) {
-                Log.e("Punisher", e.getMessage());
+                Globals.showError(ForgotPasswordActivity.this, R.string.cannot_connect_server, e);
             }
         }
     }

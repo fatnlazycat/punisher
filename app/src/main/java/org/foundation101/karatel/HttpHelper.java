@@ -31,9 +31,9 @@ public class HttpHelper {
         return result.substring(0, result.length()-1); //remove trailing "&"
     }
 
-    public static String proceedRequest (String api, String method, String request, boolean authorizationRequired){
-        StringBuilder response = new StringBuilder();
-        try {
+    public static String proceedRequest (String api, String method, String request, boolean authorizationRequired)
+        throws IOException {
+            StringBuilder response = new StringBuilder();
             HttpURLConnection urlConnection = (HttpURLConnection) new URL(Globals.SERVER_URL + api).openConnection();
             switch (method){
                 case "POST" : {
@@ -73,14 +73,13 @@ public class HttpHelper {
             }
             reader.close();
             is.close();
-        } catch (IOException e) {
-            Log.e("Punisher error", e.getMessage());
-        }
-        return response.toString();
+
+            return response.toString();
     }
 
     //short convenience for "POST"
-    public static String proceedRequest(String api, String request, boolean authorizationRequired){
-        return HttpHelper.proceedRequest(api, "POST", request, authorizationRequired);
+    public static String proceedRequest(String api, String request, boolean authorizationRequired)
+        throws IOException {
+            return HttpHelper.proceedRequest(api, "POST", request, authorizationRequired);
     }
 }
