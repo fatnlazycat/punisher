@@ -48,10 +48,8 @@ public class ViolationsAdapter extends BaseAdapter {
         TextView violationName=(TextView)convertView.findViewById(R.id.violationName);
         violationName.setText(thisViolation.name);
 
-        if (thisViolation.usesCamera){
-            ImageView cameraIcon=(ImageView)convertView.findViewById(R.id.cameraIcon);
-            cameraIcon.setImageResource(R.mipmap.ic_record);
-        }
+        ImageView cameraIcon=(ImageView)convertView.findViewById(R.id.cameraIcon);
+        cameraIcon.setVisibility(thisViolation.usesCamera ? View.VISIBLE : View.GONE);
 
         return convertView;
     }

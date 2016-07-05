@@ -24,6 +24,8 @@ public class HttpHelper {
         String result = "";
         int i = 0;
         while (i < args.length){
+            if (args[i] == null) args[i] = "";
+            if (args[i+1] == null) args[i+1] = "";
             if (args[i].contains("@")) args[i] = args[i].replace("@", "%40");
             if (args[i+1].contains("@")) args[i+1] = args[i+1].replace("@", "%40");
             result = result.concat(fixed).concat("%5B"+args[i++]+"%5D=").concat(args[i++]+"&");

@@ -125,4 +125,5 @@
     <string name="error">помилка</string>
     <string name="operation_cancelled">Операцію відмінено</string>
     <string name="cannot_write_file">Неможливо записати файл</string>
+    <string name="requestSent">Заявка відправлена</string>
 </resources>

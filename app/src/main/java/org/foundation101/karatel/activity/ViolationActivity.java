@@ -72,6 +72,7 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -85,6 +86,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     public static final int MODE_CREATE = -1;
     public static final int MODE_EDIT = 0;
+    public static final String STATUS_REFUSED = "Відмовлено в розгляді";
 
     ListView listViewRequisites;
     RequisitesListAdapter requisitesAdapter;
@@ -94,6 +96,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     DBHelper dbHelper;
     Cursor cursor;
     int mode, thumbDimension;
+    Long rowID;
 
     public int getMode() {
         return mode;
@@ -101,7 +104,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     public Request request = null;
     Integer id, status, idOnServer;
-    String idString, time_stamp;
+    String idInDbString, time_stamp;
     String id_number_server = "";
     Violation violation = new Violation();
     public Double latitude, longitude;
@@ -175,14 +178,14 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             }
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
             id = intent.getIntExtra(Globals.ITEM_ID, 0);
-            idString = id.toString();
+            idInDbString = id.toString();
             if (mode == MODE_EDIT) {
                 SQLiteDatabase db = dbHelper.getReadableDatabase();
                 //query to data table
                 String table = "violations_table";
                 String[] columns = null;
                 String where = "_id=?";
-                String[] selectionArgs = {idString};
+                String[] selectionArgs = {idInDbString};
                 cursor = db.query(table, columns, where, selectionArgs, null, null, null);
                 cursor.moveToFirst();
                 idOnServer = cursor.getInt(cursor.getColumnIndex(DBHelper.ID_SERVER));
@@ -215,7 +218,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                         String fieldName = requisitesAdapter.content.get(i).dbTag.replace(violation.getType() + "_", "");
                         requisitesAdapter.content.get(i).value = (String)Request.class.getField(fieldName).get(request);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Globals.showError(this, R.string.error, e);
                     }
                 }
 
@@ -245,11 +248,21 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
         actionBar.setTitle(Violation.getViolationNameFromType(this, violation.getType()));
 
-        //check if the request is already filed - > no edit anymore
         if (mode > MODE_EDIT){
-            blockButtons(true);
-            requisitesAdapter.setEditTrigger(false);
+            //first check if the status is "refused" which means we can edit the data & re-send the request
+            if (mode == calculateRefusedStatus()){
+                saveButton.setVisibility(View.GONE);
+            } else { //the request is already filed & not refused - > no edit anymore
+                blockButtons(true);
+                requisitesAdapter.setEditTrigger(false);
+            }
+
             evidenceAdapter.setEditTrigger(false);
+            ImageButton imageButtonAddEvidence = (ImageButton)findViewById(R.id.imageButtonAddEvidence);
+            imageButtonAddEvidence.setVisibility(View.GONE);
+            TextView addedPhotoVideoTextView = (TextView)findViewById(R.id.addedPhotoVideoTextView);
+            addedPhotoVideoTextView.setText(getString(R.string.addedPhotoVideo));
+
             toolbar.setSubtitle("Заявка № " + id_number_server);
 
             setupTab(R.id.historyListView_TabStatus, getString(R.string.request_status));
@@ -258,12 +271,20 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             tabs.setCurrentTab(0);
 
             findViewById(R.id.textViewViolationHeader).setVisibility(View.GONE);
-
-            ImageButton imageButtonAddEvidence = (ImageButton)findViewById(R.id.imageButtonAddEvidence);
-            imageButtonAddEvidence.setVisibility(View.GONE);
-            TextView addedPhotoVideoTextView = (TextView)findViewById(R.id.addedPhotoVideoTextView);
-            addedPhotoVideoTextView.setText(getString(R.string.addedPhotoVideo));
         }
+    }
+
+    int calculateRefusedStatus(){
+        int result = -100;
+        String[] violationStatuses = getResources().getStringArray(R.array.violationStatuses);
+        int refusedStatusIndex = Arrays.asList(violationStatuses).indexOf(STATUS_REFUSED);
+        if (Globals.statusesMap != null){
+            for (int key : Globals.statusesMap.keySet()){
+                if (Globals.statusesMap.get(key) == refusedStatusIndex)
+                    result = key;
+            }
+        }
+        return result;
     }
 
     void makeEvidenceAdapterContent(int mode, Request request){
@@ -274,7 +295,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     + DBHelper.VIOLATIONS_TABLE + "._id = " + DBHelper.MEDIA_TABLE + ".id";
             String[] columns = new String[]{DBHelper.ID, DBHelper.FILE_NAME};
             String where = "id=?";
-            String[] selectionArgs = {idString};
+            String[] selectionArgs = {idInDbString};
             Cursor _cursor = _db.query(table, columns, where, selectionArgs, null, null, null);
             if (_cursor.moveToFirst()) {
                 do try {
@@ -364,11 +385,9 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         tabs.addTab(tabBuilder);
     }
 
-    public void saveToBase(View view) {
+    public void saveToBase(View view) throws Exception {
         //first check if location is available - show error dialog if not
         if (checkLocation()) {
-
-            Long rowID;
 
             //db actions
             SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -379,34 +398,45 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             cv.put(DBHelper.ID_SERVER, idOnServer);
             cv.put(DBHelper.ID_NUMBER_SERVER, id_number_server);
             cv.put(DBHelper.USER_ID, Globals.user.id);
+            cv.put(DBHelper.LONGITUDE, longitude);
+            cv.put(DBHelper.LATITUDE, latitude);
 
             for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                 ViolationRequisite thisRequisite = (ViolationRequisite) requisitesAdapter.getItem(i);
                 cv.put(thisRequisite.dbTag, ((EditText) ((LinearLayout) listViewRequisites.getChildAt(i))
                         .getChildAt(2)).getText().toString());
             }
-            if (mode == MODE_CREATE) {
-                cv.put(DBHelper.LONGITUDE, longitude);
-                cv.put(DBHelper.LATITUDE, latitude);
-                cv.put(DBHelper.TIME_STAMP, new SimpleDateFormat(RequestListAdapter.INPUT_DATE_FORMAT, Locale.US)
-                        .format(new Date()));
-                rowID = db.insertOrThrow(DBHelper.VIOLATIONS_TABLE, null, cv);
-                id = new BigDecimal(rowID).intValue();
-                mode = MODE_EDIT; //once created the record we switch to edit mode
-            } else {
-                cv.put(DBHelper._ID, id);
-                cv.put(DBHelper.LONGITUDE, longitude);
-                cv.put(DBHelper.LATITUDE, latitude);
-                cv.put(DBHelper.TIME_STAMP, time_stamp);
-                rowID = db.replace(DBHelper.VIOLATIONS_TABLE, null, cv);
+            switch (mode) {
+                case MODE_CREATE: {
+                    String createdTimeStamp = new SimpleDateFormat(RequestListAdapter.INPUT_DATE_FORMAT, Locale.US)
+                            .format(new Date());
+                    if (createdTimeStamp == null) {
+                        throw new Exception("my exception: Date = null");
+                    } //TODO check why this happens
+                    cv.put(DBHelper.TIME_STAMP, createdTimeStamp);
+                    rowID = db.insertOrThrow(DBHelper.VIOLATIONS_TABLE, null, cv);
+                    id = new BigDecimal(rowID).intValue();
+                    mode = MODE_EDIT; //once created the record we switch to edit mode
+                    break;
+                }
+                case MODE_EDIT :{
+                    cv.put(DBHelper._ID, id);
+                    cv.put(DBHelper.TIME_STAMP, time_stamp);
+                    rowID = db.replace(DBHelper.VIOLATIONS_TABLE, null, cv);
+                    break;
+                }
+                default : {//re-send mode
+                    cv.put(DBHelper.TIME_STAMP, time_stamp);
+                    rowID = db.insertOrThrow(DBHelper.VIOLATIONS_TABLE, null, cv);
+                }
             }
             cv.clear();
 
         /*actions with the media table: if in edit mode - we delete all previously written records
          *& fill the table again, because the user could add or delete something
          */
-            if (mode == MODE_EDIT) //this condition works only in edit mode - delete all files previously added to db
-                db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idString});
+            if (mode == MODE_EDIT) //this condition works only in edit mode - delete all records previously added to db
+                db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idInDbString});
             for (int i = 0; i < evidenceAdapter.content.size(); i++) {
                 cv.put(DBHelper.ID, rowID);
                 cv.put(DBHelper.FILE_NAME, evidenceAdapter.content.get(i));
@@ -466,9 +496,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     }
 
     public void punish(View view) {
-        RequestListFragment.punishPerformed = true;
-        saveToBase(null);
-        new ViolationSender(this).execute(violation);
+        try {
+            RequestListFragment.punishPerformed = true;
+            saveToBase(null);
+            new ViolationSender(this).execute(violation);
+        } catch (Exception e){
+            Globals.showError(this,  R.string.error, e);
+        }
     }
 
     public void empty(View view) {
@@ -647,23 +681,24 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
             SQLiteDatabase db = dbHelper.getReadableDatabase();
             //query to data table
-            String table = "violations_table";
+            String table = DBHelper.VIOLATIONS_TABLE;
             String[] columns = null;
             String where = "_id=?";
-            idString = id.toString();
-            String[] selectionArgs = {idString};
+            idInDbString = new BigDecimal(rowID).toString();
+            String[] selectionArgs = {idInDbString};
             cursor = db.query(table, columns, where, selectionArgs, null, null, null);
             cursor.moveToFirst();
-            Double latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
-            Double longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
-            Map<String, String> dbRowData= new HashMap<>();
+            Double latitude = cursor.getDouble(cursor.getColumnIndex(DBHelper.LATITUDE));
+            Double longitude = cursor.getDouble(cursor.getColumnIndex(DBHelper.LONGITUDE));
+            Map<String, String> dbRowData = new HashMap<>();
             for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                 String columnName = requisitesAdapter.content.get(i).dbTag;
                 String columnValue = cursor.getString(cursor.getColumnIndex(columnName));
-                dbRowData.put(columnName, columnValue==null ? "" : columnValue);
+                dbRowData.put(columnName, columnValue == null ? "" : columnValue);
             }
             cursor.close();
             db.close();
+
             try {
                 //get resources
                 Resources res = context.getResources();
@@ -685,13 +720,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                             requestParameters.add(Globals.user.id.toString()); break;
                         }
                         case "id_number" : {
-                            requestParameters.add(idString); break;
+                            requestParameters.add(idInDbString); break;
                         }
                         case "type" : {
                             requestParameters.add(violation.getType()); break;
                         }
                         case "complain_status_id" : {
-                            requestParameters.add("1"); break;
+                            requestParameters.add(Integer.valueOf(mode).toString()); break;
                         }
                         case "longitude" : {
                             requestParameters.add(longitude.toString()); break;
@@ -708,27 +743,38 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                         }
                     }
                 }
-
-                MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8");
-                int i=0;
                 String[] requestParametersArray = requestParameters.toArray(new String[0]);
-                while (i < requestParametersArray.length) {
-                    multipart.addFormField(typeServerSuffixNoS +"[" + requestParametersArray[i++] + "]",
-                            requestParametersArray[i++]);
-                }
-                for (String mediaFileName : evidenceAdapter.content) {
-                    String requestTag = mediaFileName.endsWith(CameraManager.JPG) ? "images" : "videos";
-                    multipart.addFilePart(typeServerSuffixNoS + "[" + requestTag + "][]", new File(mediaFileName));
-                }
-                List<String> responseList = multipart.finish();
-                Log.e("Punisher", "SERVER REPLIED:");
-                for (String line : responseList) {
-                    Log.e("Punisher", "Upload Files Response:::" + line);
-                    response.append(line);
+
+                if (mode == calculateRefusedStatus()){
+                    String request = new HttpHelper(typeServerSuffixNoS).makeRequestString(requestParametersArray);
+                    return HttpHelper.proceedRequest(typeServerSuffix + "/" + id.toString(), "PUT", request, true);
+                } else {
+                    MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8");
+                    int i = 0;
+                    while (i < requestParametersArray.length) {
+                        multipart.addFormField(typeServerSuffixNoS + "[" + requestParametersArray[i++] + "]",
+                                requestParametersArray[i++]);
+                    }
+                    for (String mediaFileName : evidenceAdapter.content) {
+                        String requestTag = mediaFileName.endsWith(CameraManager.JPG) ? "images" : "videos";
+                        multipart.addFilePart(typeServerSuffixNoS + "[" + requestTag + "][]", new File(mediaFileName));
+                    }
+                    List<String> responseList = multipart.finish();
+                    Log.e("Punisher", "SERVER REPLIED:");
+                    for (String line : responseList) {
+                        Log.e("Punisher", "Upload Files Response:::" + line);
+                        response.append(line);
+                    }
                 }
 
-            } catch (IOException e) {
-                Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
+            } catch (final IOException e){
+                ViolationActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
             }
             return response.toString();
         }
@@ -737,14 +783,20 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             progressBar.setVisibility(View.GONE);
+            if (mode == calculateRefusedStatus()){
+                DBHelper.deleteRequest(dbHelper.getWritableDatabase(), new BigDecimal(rowID).intValue());
+            }
             try {
                 JSONObject fullAnswer = new JSONObject(s);
                 if (fullAnswer.getString("status").equals(Globals.SERVER_SUCCESS)) {
-                    DBHelper.deleteRequest(dbHelper.getWritableDatabase(), id);
+                    if (mode != calculateRefusedStatus()) {
+                        DBHelper.deleteRequest(dbHelper.getWritableDatabase(), id);
+                    }
+                    Toast.makeText(context, R.string.requestSent, Toast.LENGTH_LONG).show();
                     finish();
                 }
             } catch (JSONException e){
-                Toast.makeText(context, e.getMessage()  , Toast.LENGTH_LONG).show();
+                Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
             }
         }
     }

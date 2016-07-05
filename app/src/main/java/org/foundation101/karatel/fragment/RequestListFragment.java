@@ -316,7 +316,6 @@ public class RequestListFragment extends Fragment {
             }
         }
 
-
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);

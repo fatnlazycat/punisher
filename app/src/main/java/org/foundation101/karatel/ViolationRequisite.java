@@ -17,7 +17,7 @@ public class ViolationRequisite {
 
     public static String[] getRequisites(Context context, String type){
         String[] common = new String[] {"user_id", "id_number", "complain_status_id", "longitude", "latitude",
-                "rating", "create_in_the_device", "type"};
+                "create_in_the_device", "type"};
         ArrayList<String> resultingList = new ArrayList<>(Arrays.asList(common));
 
         String packageName = context.getPackageName();

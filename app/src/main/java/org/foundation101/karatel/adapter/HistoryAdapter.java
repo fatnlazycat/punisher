@@ -49,6 +49,7 @@ public class HistoryAdapter extends BaseAdapter {
     Context context;
     String[] violationStatuses;
     private static final String googleDocsUrl = "http://docs.google.com/viewer?url=";
+    public static final String STATUS_CLOSED = "Закрито";
 
     public UpdateEntity[] getContent() {
         return content;
@@ -110,19 +111,22 @@ public class HistoryAdapter extends BaseAdapter {
                 + dateString.substring(11, dateString.length());
         holder.textViewRequestTimeStamp.setText(Html.fromHtml(formattedDateString));
 
+        String statusText = "";
         int statusIdOnServer = thisUpdate.complain_status_id;
         if (Globals.statusesMap.containsKey(statusIdOnServer)) {
             int status = Globals.statusesMap.get(statusIdOnServer);
-            String statusText = context.getResources().getStringArray(R.array.violationStatuses)[status];
+            statusText = context.getResources().getStringArray(R.array.violationStatuses)[status];
             holder.textViewRequestStatus.setText(statusText);
             holder.imageViewStatus.setImageResource(R.drawable.level_list_status);
             holder.imageViewStatus.setImageLevel(status);
         }
 
         if (thisUpdate.isCollapsed()){
+            holder.collapsableLayout.setVisibility(View.GONE);
             holder.textViewDetailsAction.setText(R.string.show_details);
             holder.textViewDetailsAction.setCompoundDrawablesWithIntrinsicBounds(0,0, R.drawable.ic_action_expand, 0);
         } else {
+            holder.collapsableLayout.setVisibility(View.VISIBLE);
             holder.textViewDetailsAction.setText(R.string.hide_details);
             holder.textViewDetailsAction.setCompoundDrawablesWithIntrinsicBounds(0,0, R.drawable.ic_action_collapse, 0);
             if (!thisUpdate.reply.isEmpty()) {
@@ -139,7 +143,7 @@ public class HistoryAdapter extends BaseAdapter {
                 holder.imageAnswer.setWebViewClient(new WebViewClient(){
                     @Override
                     public void onPageFinished(WebView view, String url) {
-                        view.scrollTo(0, view.getContentHeight());
+                        view.pageDown(true);
                     }
                 });
                 int progress = holder.imageAnswer.getProgress();
@@ -151,21 +155,29 @@ public class HistoryAdapter extends BaseAdapter {
                     holder.imageAnswer.scrollTo(0, 500);
                 }*/
 
-                holder.rateLayout.setVisibility(View.VISIBLE);
-                switch (request.rating){
-                    case -1 : {
-                        holder.buttonDislike.setEnabled(false);
-                        holder.buttonLike.setVisibility(View.INVISIBLE);
+                if (statusText.equals(STATUS_CLOSED)) {
+                    holder.rateLayout.setVisibility(View.VISIBLE);
+                    switch (request.rating) {
+                        case -1: {
+                            holder.buttonDislike.setEnabled(false);
+                            holder.buttonLike.setVisibility(View.INVISIBLE);
+                        }
+                        case 1: {
+                            holder.buttonLike.setEnabled(false);
+                            holder.buttonDislike.setVisibility(View.INVISIBLE);
+                        }
+                        default: { //not rated yet
+                            holder.buttonLike.setOnClickListener(new LikeDislike(thisUpdate.complain_id, true));
+                            holder.buttonDislike.setOnClickListener(new LikeDislike(thisUpdate.complain_id, false));
+                        }
                     }
-                    case 1 : {
-                        holder.buttonLike.setEnabled(false);
-                        holder.buttonDislike.setVisibility(View.INVISIBLE);
-                    }
-                    default: { //not rated yet
-                        holder.buttonLike.setOnClickListener(new LikeDislike(thisUpdate.complain_id, true));
-                        holder.buttonDislike.setOnClickListener(new LikeDislike(thisUpdate.complain_id, false));
-                    }
+                } else {
+                    holder.rateLayout.setVisibility(View.GONE);
                 }
+            } else {
+                holder.headerAnswer.setVisibility(View.GONE );
+                holder.imageAnswer.setVisibility(View.GONE );
+                holder.rateLayout.setVisibility(View.GONE);
             }
 
             if (!thisUpdate.name_of_authority.isEmpty()) {
@@ -178,7 +190,6 @@ public class HistoryAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
                 changeCollapseStatus(thisUpdate);
-                holder.collapsableLayout.setVisibility(thisUpdate.isCollapsed() ? View.GONE : View.VISIBLE);
             }
         });
         return convertView;
