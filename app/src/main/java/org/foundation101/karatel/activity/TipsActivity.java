@@ -10,12 +10,12 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
+import android.preference.PreferenceManager;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -43,7 +43,7 @@ import java.util.List;
 public class TipsActivity extends Activity {
     EditText editTextLoginEmail, editTextLoginPassword;
     FrameLayout progressBar;
-    SharedPreferences preferences;
+    SharedPreferences preferences, globalPreferences;
 
     // facebook part
     private CallbackManager fbCallbackManager;
@@ -51,13 +51,6 @@ public class TipsActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        //check connectivity
-        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Activity.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
-        if (networkInfo == null || !networkInfo.isConnected()){
-            Toast.makeText(this, "no internet connection", Toast.LENGTH_LONG).show();
-        }
 
         // facebook part
         FacebookSdk.sdkInitialize(getApplicationContext());
@@ -68,6 +61,11 @@ public class TipsActivity extends Activity {
 
         editTextLoginEmail = (EditText)findViewById(R.id.editTextLoginEmail);
         editTextLoginPassword = (EditText)findViewById(R.id.editTextLoginPassword);
+
+        globalPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        if (globalPreferences.contains(Globals.SESSION_TOKEN)){
+            startActivity(new Intent(this, MainActivity.class));
+        }
 
         preferences = getPreferences(MODE_PRIVATE);
         if (preferences.contains(Globals.LAST_LOGIN_EMAIL)) {
@@ -116,28 +114,32 @@ public class TipsActivity extends Activity {
     }
 
     public void facebookLogin(View view) {
-        List<String> permissionNeeds= Arrays.asList("user_photos", "email", "user_birthday", "user_friends");
-        fbCallbackManager = CallbackManager.Factory.create();
-        LoginManager.getInstance().logInWithReadPermissions(this,permissionNeeds);
-        LoginManager.getInstance().registerCallback(fbCallbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-                final AccessToken accessToken = loginResult.getAccessToken();
-                String uid = accessToken.getUserId();
-                String request = new HttpHelper("session").makeRequestString(new String[] {"uid", uid});
-                new LoginSender(TipsActivity.this ,true).execute(request);
-            }
+        if (HttpHelper.internetConnected(this)) {
+            List<String> permissionNeeds = Arrays.asList("user_photos", "email", "user_birthday", "user_friends");
+            fbCallbackManager = CallbackManager.Factory.create();
+            LoginManager.getInstance().logInWithReadPermissions(this, permissionNeeds);
+            LoginManager.getInstance().registerCallback(fbCallbackManager, new FacebookCallback<LoginResult>() {
+                @Override
+                public void onSuccess(LoginResult loginResult) {
+                    final AccessToken accessToken = loginResult.getAccessToken();
+                    String uid = accessToken.getUserId();
+                    String request = new HttpHelper("session").makeRequestString(new String[]{"uid", uid});
+                    new LoginSender(TipsActivity.this, true).execute(request);
+                }
 
-            @Override
-            public void onCancel() {
-                LoginManager.getInstance().logOut();
-            }
+                @Override
+                public void onCancel() {
+                    LoginManager.getInstance().logOut();
+                }
 
-            @Override
-            public void onError(FacebookException e) {
-                Globals.showError(TipsActivity.this, R.string.cannot_connect_server, e);
-            }
-        });
+                @Override
+                public void onError(FacebookException e) {
+                    Globals.showError(TipsActivity.this, R.string.cannot_connect_server, e);
+                }
+            });
+        } else {
+            Toast.makeText(this, R.string.no_internet_connection, Toast.LENGTH_LONG).show();
+        }
     }
 
     class LoginSender extends AsyncTask<String, Void, String> {
@@ -160,18 +162,20 @@ public class TipsActivity extends Activity {
 
         @Override
         protected String doInBackground(String... params) {
-            String api = viaFacebook ? "signin?provider=facebook" : "signin";
-            try {
-                return HttpHelper.proceedRequest(api, params[0], false);
-            } catch (final IOException e){
-                TipsActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(TipsActivity.this, R.string.cannot_connect_server, e);
-                    }
-                });
-                return "";
-            }
+            if (HttpHelper.internetConnected(context)) {
+                String api = viaFacebook ? "signin?provider=facebook" : "signin";
+                try {
+                    return HttpHelper.proceedRequest(api, params[0], false);
+                } catch (final IOException e) {
+                    TipsActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Globals.showError(TipsActivity.this, R.string.cannot_connect_server, e);
+                        }
+                    });
+                    return "";
+                }
+            } else return HttpHelper.ERROR_JSON;
         }
 
         @Override
@@ -195,9 +199,19 @@ public class TipsActivity extends Activity {
                             userJSON.getString("secondname"),
                             userJSON.getString("phone_number"));
                     Globals.user.id = userJSON.getInt("id");
+
+                    globalPreferences.edit()
+                            .putString(Globals.SESSION_TOKEN, dataJSON.getString("token"))
+                            .putString(Globals.USER_EMAIL, userJSON.getString("email"))
+                            .putString(Globals.USER_SURNAME, userJSON.getString("surname"))
+                            .putString(Globals.USER_NAME, userJSON.getString("firstname"))
+                            .putString(Globals.USER_SECOND_NAME, userJSON.getString("secondname"))
+                            .putString(Globals.USER_PHONE, userJSON.getString("phone_number"))
+                            .putInt(Globals.USER_ID, userJSON.getInt("id")).apply();
+
                     String avatarUrl = userJSON.getJSONObject("avatar").getString("url");
-                    if (avatarUrl != null) {
-                        new AvatarGetter().execute(avatarUrl);
+                    if (avatarUrl != null && !avatarUrl.equals("null")) {
+                        new AvatarGetter(TipsActivity.this).execute(avatarUrl);
                     }
                     startActivity(new Intent(context, MainActivity.class));
                 } else {
@@ -213,14 +227,34 @@ public class TipsActivity extends Activity {
                 Globals.showError(TipsActivity.this, R.string.error, e);
             }
             progressBar.setVisibility(View.GONE);
+            //Toast.makeText(TipsActivity.this, "end of LoginSender", Toast.LENGTH_SHORT).show();
         }
     }
 
-    class AvatarGetter extends AsyncTask<String, Void, Void>{
+    public static class AvatarGetter extends AsyncTask<String, Void, Void>{
+
+        Activity context;
+
+        public void setViewToSet(ImageView viewToSet) {
+            this.viewToSet = viewToSet;
+        }
+
+        ImageView viewToSet;
+
+        public AvatarGetter(Activity context){
+            this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            //Toast.makeText(TipsActivity.this, "start of AvaterGetter", Toast.LENGTH_SHORT).show();
+        }
+
         @Override
         protected Void doInBackground(String... params) {
             try {
-                Globals.user.avatarFileName = TipsActivity.this.getFilesDir() + "avatar" + Globals.user.id + CameraManager.PNG;
+                Globals.user.avatarFileName = context.getFilesDir() + "avatar" + Globals.user.id + CameraManager.PNG;
                 URL url = new URL(Globals.SERVER_URL.replace("/api/v1/", "") + params[0]);
                 Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
                 FileOutputStream fos = new FileOutputStream(Globals.user.avatarFileName);
@@ -228,14 +262,24 @@ public class TipsActivity extends Activity {
                 fos.close();
             } catch (final Exception e){
                 Globals.user.avatarFileName = "";
-                TipsActivity.this.runOnUiThread(new Runnable() {
+                context.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(TipsActivity.this, R.string.cannot_connect_server, e);
+                        Globals.showError(context, R.string.cannot_connect_server, e);
                     }
                 });
             }
+            PreferenceManager.getDefaultSharedPreferences(context).edit()
+                    .putString(Globals.USER_AVATAR, Globals.user.avatarFileName).apply();
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            if (context instanceof  MainActivity && viewToSet != null)
+                ((MainActivity) context).setAvatarImageView(viewToSet);
+            //Toast.makeText(TipsActivity.this, "end of AvatarGetter", Toast.LENGTH_SHORT).show();
         }
     }
 }

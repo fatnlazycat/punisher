@@ -2,19 +2,21 @@ package org.foundation101.karatel.fragment;
 
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.NewsActivity;
 import org.foundation101.karatel.adapter.NewsListAdapter;
@@ -36,7 +38,6 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
     ArrayList<NewsItem> newsListContent;
     NewsListAdapter newsListAdapter;
     FrameLayout progressBar;
-    Document docToGetImage;
     private static final String rssURL = "https://www.foundation101.org/rss.xml";
 
     public NewsFragment(){
@@ -51,7 +52,7 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_news, container, false);
 
-        progressBar = (FrameLayout) v.findViewById(R.id.frameLayoutProgress);
+        progressBar = (FrameLayout) v.findViewById(R.id.frameLayoutProgressNews);
 
         newsListContent = new ArrayList<>();
         newsListAdapter = new NewsListAdapter(newsListContent);
@@ -70,13 +71,18 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Intent intent = new Intent(getActivity(), NewsActivity.class);
+        //opens news in browser
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(newsListContent.get(position).link));
+        if (browserIntent.resolveActivity(getActivity().getPackageManager()) != null) startActivity(browserIntent);
+
+        //opens news in app activity
+        /*Intent intent = new Intent(getActivity(), NewsActivity.class);
         intent.putExtra(Globals.NEWS_ITEM, newsListContent.get(position).link);
         intent.putExtra(Globals.NEWS_TITLE, newsListContent.get(position).title);
-        startActivity(intent);
+        startActivity(intent);*/
     }
 
-    class AsyncDocFetcher extends AsyncTask<String, Void, Void> {
+    class AsyncDocFetcher extends AsyncTask<String, NewsItem, Void> {
 
         @Override
         protected void onPreExecute() {
@@ -86,33 +92,53 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
 
         @Override
         protected Void doInBackground(String... params) {
-            try {
-                Document doc = Jsoup.connect(params[0]).get();
-                Elements news = doc.select("item");
-                for (Element el : news) {
-                    String title = el.getElementsByTag("title").first().text();
-                    String description = el.getElementsByTag("description").first().text();
-                    String pubDate = el.getElementsByTag("pubDate").first().text();
-                    String link = el.getElementsByTag("link").first().text();
+            if (HttpHelper.internetConnected(getActivity())) {
+                try {
+                    Document doc = Jsoup.connect(params[0]).get();
+                    Elements news = doc.select("item");
+                    for (Element el : news) {
+                        String title = el.getElementsByTag("title").first().text();
+                        String description = el.getElementsByTag("description").first().text();
+                        String pubDate = el.getElementsByTag("pubDate").first().text();
+                        String link = el.getElementsByTag("link").first().text();
+                        String imageLink = el.getElementsByTag("enclosure").first().attr("url");
 
+                    /*this gets the image from inside the link. But the image exists in RSS, so we don't use this approach
+                    //but saved it as a Jsoup tutorial
                     Document docToGetImage = Jsoup.connect(link).get();
-                    String imageLink = docToGetImage.select("div.preview_img > img").first().attr("src");
-                    URLConnection urlConnection = new URL(imageLink).openConnection();
-                    InputStream is = urlConnection.getInputStream();
-                    Drawable image = Drawable.createFromStream(is, "newsImage");
-                    is.close();
+                    String imageLink = docToGetImage.select("div.preview_img > img").first().attr("src");*/
 
-                    newsListContent.add(new NewsItem(title, description, pubDate, link, image));
+                        URLConnection urlConnection = new URL(imageLink).openConnection();
+                        InputStream is = urlConnection.getInputStream();
+                        Drawable image = Drawable.createFromStream(is, "newsImage");
+                        is.close();
+
+                        publishProgress(new NewsItem(title, description, pubDate, link, image));
+                    }
+                } catch (final IOException e){
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                        }
+                    });
                 }
-            } catch (final IOException e){
+            } else {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                        Toast.makeText(getActivity(), R.string.no_internet_connection, Toast.LENGTH_LONG).show();
                     }
                 });
             }
             return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(NewsItem... values) {
+            super.onProgressUpdate(values);
+            newsListContent.add(values[0]);
+            newsListAdapter.notifyDataSetChanged();
         }
 
         @Override

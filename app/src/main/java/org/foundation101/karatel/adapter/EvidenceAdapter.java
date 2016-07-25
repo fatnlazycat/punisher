@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.ThumbnailUtils;
+import android.net.Uri;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -92,6 +93,12 @@ public class EvidenceAdapter extends BaseAdapter {
             convertView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    //show in Gallery (or whatever else media app)
+                    /*Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(Uri.parse(content.get(position)), "image/*");
+                    if (intent.resolveActivity(context.getPackageManager()) != null) context.startActivity(intent);*/
+
+                    //show in app activity
                     Intent newIntent = new Intent(parent.getContext(), ShowMediaActivity.class);
                     newIntent.putExtra(Globals.MEDIA_FILE, content.get(position));
                     parent.getContext().startActivity(newIntent);

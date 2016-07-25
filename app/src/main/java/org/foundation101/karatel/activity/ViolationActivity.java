@@ -41,6 +41,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Places;
 
@@ -49,6 +50,7 @@ import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.MultipartUtility;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Request;
@@ -110,7 +112,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     public Double latitude, longitude;
     boolean statusTabFirstShow = true;
 
-    FrameLayout progressBar;
+    public FrameLayout progressBar;
     TabHost tabs;
     Button punishButton, saveButton;
 
@@ -128,6 +130,12 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         validateSaveButton();
     }
 
+    /*@Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (requisitesAdapter != null) requisitesAdapter.getMapDataFromBundle(savedInstanceState);
+    }*/
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -137,7 +145,9 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         punishButton = (Button) findViewById(R.id.punishButton);
         saveButton = (Button) findViewById(R.id.saveButton);
 
-        if (checkGooglePlayServices()) buildGoogleApiClient();
+        if (checkGooglePlayServices()) { buildGoogleApiClient(); }
+
+        ((Karatel)getApplication()).restoreUserFromPreferences();
 
         //dimension of the thumbnail - the thumbnail should have the same size as MediaStore.Video.Thumbnails.MICRO_KIND
         thumbDimension = getResources().getDimensionPixelOffset(R.dimen.thumbnail_size);
@@ -359,13 +369,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        //No call for super(). Bug on API Level > 11.
-        // Fighting with java.lang.IllegalStateException: Can not perform this action after onSaveInstanceState
-    }
-
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
@@ -408,12 +411,12 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             }
             switch (mode) {
                 case MODE_CREATE: {
-                    String createdTimeStamp = new SimpleDateFormat(RequestListAdapter.INPUT_DATE_FORMAT, Locale.US)
+                    time_stamp = new SimpleDateFormat(RequestListAdapter.INPUT_DATE_FORMAT, Locale.US)
                             .format(new Date());
-                    if (createdTimeStamp == null) {
+                    /*if (time_stamp == null) {
                         throw new Exception("my exception: Date = null");
-                    } //TODO check why this happens
-                    cv.put(DBHelper.TIME_STAMP, createdTimeStamp);
+                    } //TODO check why this happens*/
+                    cv.put(DBHelper.TIME_STAMP, time_stamp);
                     rowID = db.insertOrThrow(DBHelper.VIOLATIONS_TABLE, null, cv);
                     id = new BigDecimal(rowID).intValue();
                     mode = MODE_EDIT; //once created the record we switch to edit mode
@@ -453,7 +456,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             } catch (Exception e) {
                 Globals.showError(this, R.string.cannot_write_file, e);
             }
-            Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -509,6 +512,20 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         //empty method to handle click events
     }
 
+    public void setFocusOnEditTextInRequisitesAdapter(final int position){
+        listViewRequisites.post(new Runnable() {
+            @Override
+            public void run() {
+                View layout = listViewRequisites.getChildAt(position);
+                TextView viewToFocus = (TextView)layout.findViewById(R.id.editTextRequisite);
+                viewToFocus.requestFocus();
+                /*if (viewToFocus instanceof EditText) {
+                    ((EditText)viewToFocus).setSelection(((EditText)viewToFocus).getText().length());
+                }*/
+            }
+        });
+    }
+
     public void validateSaveButton(){
         saveButton.setEnabled(!evidenceAdapter.isEmpty());
     }
@@ -530,7 +547,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 else return false;
             }
         } else {//inflation is conducted, check the values in EditTexts
-            for (int i = 0; i < requisitesAdapter.getCount(); i++) {
+            for (int i = 0; i < listViewRequisites.getChildCount(); i++) {
                 if (!result) return false; //to speed up the calculation - if anyone of the fields is empty no need to check others
                 EditText et = ((EditText) ((LinearLayout) listViewRequisites.getChildAt(i)).getChildAt(2));
                 String text = et.getText().toString();
@@ -563,7 +580,11 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
         }*/
-        Location locationGoogle = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        Location locationGoogle = null;
+        if (googleApiClient != null) {
+            locationGoogle = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        }
+
         return locationGoogle;
     }
 
@@ -606,10 +627,39 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         if (mode == MODE_CREATE) {
+            LocationRequest lr = LocationRequest.create()
+                    .setNumUpdates(1)
+                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                    .setInterval(1);
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, lr, this);
+
+            /*//get location from PlaceLikelihood API
+            PendingResult<PlaceLikelihoodBuffer> placeLikelihoodResult = Places.PlaceDetectionApi.getCurrentPlace(googleApiClient, null);
+            placeLikelihoodResult.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
+                @Override
+                public void onResult(PlaceLikelihoodBuffer placesResult) {
+                    ArrayList<PlaceLikelihood> list = new ArrayList<>();
+                    for (PlaceLikelihood placeLikelihood : placesResult) {
+                        list.add(placeLikelihood);
+                    }
+                    Collections.sort(list, new Comparator<PlaceLikelihood>() {
+                        @Override
+                        public int compare(PlaceLikelihood first, PlaceLikelihood second) {
+                            float a1 = first.getLikelihood();
+                            float a2 = second.getLikelihood();
+                            return a1 > a2 ? 1 : (a1 == a2 ? 0 : -1);
+                        }
+                    });
+
+                    placesResult.release();
+                }
+            });*/
+
             l = getLastLocation();
             if (l != null) {
                 latitude = l.getLatitude();
                 longitude = l.getLongitude();
+                requisitesAdapter.nullSavedLatLng();
                 requisitesAdapter.notifyDataSetChanged();
             }
         }
@@ -635,12 +685,27 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     @Override
     public void onLocationChanged(Location location) {
+        if (mode == MODE_CREATE){
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+            requisitesAdapter.nullSavedLatLng();
+            requisitesAdapter.notifyDataSetChanged();
+        }
 
     }
 
+    /*@Override
+    protected void onSaveInstanceState(Bundle outState) {
+        requisitesAdapter.putMapDataToBundle(outState);
+        super.onSaveInstanceState(outState);
+    }*/
+
     @Override //Activity method
     protected void onStop() {
-        if (googleApiClient != null) googleApiClient.disconnect();
+        if (googleApiClient != null && googleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+            googleApiClient.disconnect();
+        }
         super.onStop();
     }
 
@@ -657,7 +722,15 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             }
             Log.e("Punisher", "files deleted successfully " + deletedSuccessfully);
         }
+
+        requisitesAdapter.releaseMap();
+
         super.onDestroy();
+    }
+
+    public void setLatitudeAndLongitude(Location l){
+        latitude = l.getLatitude();
+        longitude = l.getLongitude();
     }
 
     class ViolationSender extends AsyncTask<Violation, Void, String> {
@@ -672,10 +745,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         protected void onPreExecute() {
             super.onPreExecute();
             progressBar.setVisibility(View.VISIBLE);
+            Globals.hideSoftKeyboard(ViolationActivity.this);
         }
 
         @Override
         protected String doInBackground(Violation... params) {
+            if (!HttpHelper.internetConnected(context)) return HttpHelper.ERROR_JSON;
+
             Violation violation = params[0];
             StringBuffer response = new StringBuffer();
 
@@ -749,21 +825,31 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     String request = new HttpHelper(typeServerSuffixNoS).makeRequestString(requestParametersArray);
                     return HttpHelper.proceedRequest(typeServerSuffix + "/" + id.toString(), "PUT", request, true);
                 } else {
-                    MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8");
-                    int i = 0;
-                    while (i < requestParametersArray.length) {
-                        multipart.addFormField(typeServerSuffixNoS + "[" + requestParametersArray[i++] + "]",
-                                requestParametersArray[i++]);
-                    }
-                    for (String mediaFileName : evidenceAdapter.content) {
-                        String requestTag = mediaFileName.endsWith(CameraManager.JPG) ? "images" : "videos";
-                        multipart.addFilePart(typeServerSuffixNoS + "[" + requestTag + "][]", new File(mediaFileName));
-                    }
-                    List<String> responseList = multipart.finish();
-                    Log.e("Punisher", "SERVER REPLIED:");
-                    for (String line : responseList) {
-                        Log.e("Punisher", "Upload Files Response:::" + line);
-                        response.append(line);
+                    int tries = 0; final int MAX_TRIES = 2;
+                    while (tries++ < MAX_TRIES) try {
+                        MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8");
+                        int i = 0;
+                        while (i < requestParametersArray.length) {
+                            multipart.addFormField(typeServerSuffixNoS + "[" + requestParametersArray[i++] + "]",
+                                    requestParametersArray[i++]);
+                        }
+                        for (String mediaFileName : evidenceAdapter.content) {
+                            String requestTag = mediaFileName.endsWith(CameraManager.JPG) ? "images" : "videos";
+                            multipart.addFilePart(typeServerSuffixNoS + "[" + requestTag + "][]", new File(mediaFileName));
+                        }
+                        List<String> responseList = multipart.finish();
+                        Log.e("Punisher", "SERVER REPLIED:");
+                        for (String line : responseList) {
+                            Log.e("Punisher", "Upload Files Response:::" + line);
+                            response.append(line);
+                        }
+                        return response.toString();
+                    } catch (IOException e) {
+                        if (tries == MAX_TRIES) {
+                            throw e;
+                        } else {
+                            Log.e("Punisher", "try # " + tries + " : " + e.toString());
+                        }
                     }
                 }
 
@@ -788,12 +874,17 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             }
             try {
                 JSONObject fullAnswer = new JSONObject(s);
-                if (fullAnswer.getString("status").equals(Globals.SERVER_SUCCESS)) {
-                    if (mode != calculateRefusedStatus()) {
-                        DBHelper.deleteRequest(dbHelper.getWritableDatabase(), id);
+                switch (fullAnswer.getString("status")) {
+                    case Globals.SERVER_SUCCESS: {
+                        if (mode != calculateRefusedStatus()) {
+                            DBHelper.deleteRequest(dbHelper.getWritableDatabase(), id);
+                        }
+                        Toast.makeText(context, R.string.requestSent, Toast.LENGTH_LONG).show();
+                        finish();
                     }
-                    Toast.makeText(context, R.string.requestSent, Toast.LENGTH_LONG).show();
-                    finish();
+                    case Globals.SERVER_ERROR: {
+                        Toast.makeText(context, fullAnswer.getString("error"), Toast.LENGTH_LONG).show();
+                    }
                 }
             } catch (JSONException e){
                 Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
@@ -827,25 +918,35 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     class RequestFetcher extends AsyncTask<Integer, Void, String>{
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+            Globals.hideSoftKeyboard(ViolationActivity.this);
+        }
+
+        @Override
         protected String doInBackground(Integer... params) {
             String result = null;
-            try {
-                result = HttpHelper.proceedRequest("complains/" + params[0], "GET", "", true);
-            } catch (final IOException e) {
-                ViolationActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
-                    }
-                });
-                return "";
-            }
+            if (HttpHelper.internetConnected(ViolationActivity.this)) {
+                try {
+                    result = HttpHelper.proceedRequest("complains/" + params[0], "GET", "", true);
+                } catch (final IOException e) {
+                    ViolationActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
+                        }
+                    });
+                    return "";
+                }
+            } else return HttpHelper.ERROR_JSON;
             return result;
         }
 
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
+            progressBar.setVisibility(View.GONE);
             try {
                 JSONArray updatesJSON = new JSONObject(s).getJSONArray("data").getJSONObject(1).getJSONArray("updates");
                 ObjectMapper objectMapper = new ObjectMapper();

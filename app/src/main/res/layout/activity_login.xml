@@ -34,8 +34,7 @@
             android:hint="@string/passw"
             style="@style/EditTextStyle"
             android:inputType="textPassword"
-            android:id="@+id/editTextLoginPassword"
-            android:text="qwerty"/>
+            android:id="@+id/editTextLoginPassword"/>
         <!--android:text="qwerty"-->
 
         <Button

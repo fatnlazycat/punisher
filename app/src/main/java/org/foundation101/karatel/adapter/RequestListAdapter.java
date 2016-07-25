@@ -3,6 +3,7 @@ package org.foundation101.karatel.adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
@@ -116,13 +118,17 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
 
     void openRequest(int requestPosition){
         Request thisRequest = content.get(requestPosition);
-        int id = thisRequest.id;
         int status = thisRequest.complain_status_id;
-        Intent intent = new Intent(context, ViolationActivity.class)
-                .putExtra(Globals.VIOLATION_ACTIVITY_MODE, status)
-                .putExtra(Globals.ITEM_ID, id) //the list items are 1-based, not 0-based
-                .putExtra(Globals.REQUEST_JSON, thisRequest);
-        context.startActivity(intent);
+        if (status <= ViolationActivity.MODE_EDIT || HttpHelper.internetConnected(context)) {
+            int id = thisRequest.id;
+            Intent intent = new Intent(context, ViolationActivity.class)
+                    .putExtra(Globals.VIOLATION_ACTIVITY_MODE, status)
+                    .putExtra(Globals.ITEM_ID, id) //the list items are 1-based, not 0-based
+                    .putExtra(Globals.REQUEST_JSON, thisRequest);
+            context.startActivity(intent);
+        } else {
+            Toast.makeText(context, R.string.no_internet_connection, Toast.LENGTH_LONG).show();
+        }
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

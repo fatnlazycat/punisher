@@ -1,9 +1,11 @@
 package org.foundation101.karatel.activity;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.content.Intent;
@@ -12,12 +14,12 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -30,10 +32,13 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.DrawerAdapter;
 import org.foundation101.karatel.fragment.AboutFragment;
@@ -51,11 +56,11 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String USER_NAME_PREFERENCE = "userName";
 
     public Toolbar toolbar;
     ImageView avatarImageView;
     TextView avatarTextView;
+    FrameLayout progressBar;
     FragmentManager fManager;
     FragmentTransaction ft;
     int currentFragment;
@@ -69,6 +74,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         fManager = getSupportFragmentManager();
+
+        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
+
+        ((Karatel)getApplication()).restoreUserFromPreferences();
 
         toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -99,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
                 initDrawerHeader();
             }
         };
-        drawerLayout.setDrawerListener(drawerToggle);
+        drawerLayout.addDrawerListener(drawerToggle);
         drawerToggle.syncState();
 
         drawerListView.setOnItemClickListener(new ListView.OnItemClickListener(){
@@ -144,7 +153,9 @@ public class MainActivity extends AppCompatActivity {
                                 .addToBackStack(tag).commit();
                         break;
                     }
-                    case 7 : finishAffinity();
+                    case 7 : {
+                        new SignOutSender().execute();
+                    }
                 }
                 toolbar.setTitle(tag);
                 drawerLayout.closeDrawer(Gravity.LEFT);
@@ -185,7 +196,6 @@ public class MainActivity extends AppCompatActivity {
         FacebookSdk.sdkInitialize(getApplicationContext());
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -218,8 +228,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /*
-     *the task is to add the first list item with the user's name
-     */
+         *the task is to add the first list item with the user's name
+         */
     String[] makeDrawerList(){
         String[] menuItems = getResources().getStringArray(R.array.drawerMenuItems);
         ArrayList<String> tempList = new ArrayList(Arrays.asList(menuItems));
@@ -261,20 +271,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void bindFacebook(View view) {
-        AccessToken fbToken = AccessToken.getCurrentAccessToken();
-        boolean loggedIn = fbToken != null;
-        if (loggedIn){
-            sendBindRequest(fbToken);
-        } else {
-            List<String> permissionNeeds= Arrays.asList("user_photos", "email", "user_birthday", "user_friends");
-            fbCallbackManager = CallbackManager.Factory.create();
-            LoginManager.getInstance().logInWithReadPermissions(this,permissionNeeds);
-            LoginManager.getInstance().registerCallback(fbCallbackManager, new FacebookCallback<LoginResult>() {
-                @Override
-                public void onSuccess(LoginResult loginResults) {
-                    AccessToken fbToken = AccessToken.getCurrentAccessToken();
-                    boolean loggedIn = fbToken != null;
-                    if (loggedIn) sendBindRequest(fbToken);
+        if (HttpHelper.internetConnected(this)) {
+            AccessToken fbToken = AccessToken.getCurrentAccessToken();
+            boolean loggedIn = fbToken != null;
+            if (loggedIn) {
+                sendBindRequest(fbToken);
+            } else {
+                List<String> permissionNeeds = Arrays.asList("user_photos", "email", "user_birthday", "user_friends");
+                fbCallbackManager = CallbackManager.Factory.create();
+                LoginManager.getInstance().logInWithReadPermissions(this, permissionNeeds);
+                LoginManager.getInstance().registerCallback(fbCallbackManager, new FacebookCallback<LoginResult>() {
+                    @Override
+                    public void onSuccess(LoginResult loginResults) {
+                        AccessToken fbToken = AccessToken.getCurrentAccessToken();
+                        boolean loggedIn = fbToken != null;
+                        if (loggedIn) sendBindRequest(fbToken);
                     /*GraphRequest request = GraphRequest.newMeRequest(loginResults.getAccessToken(),
                             new GraphRequest.GraphJSONObjectCallback() {
                                 @Override
@@ -286,17 +297,20 @@ public class MainActivity extends AppCompatActivity {
                     parameters.putString("fields", "id,name,email,gender, birthday");
                     request.setParameters(parameters);
                     request.executeAsync();*/
-                }
-                @Override
-                public void onCancel() {
-                    Globals.showError(MainActivity.this, R.string.operation_cancelled, null);
-                }
-                @Override
-                public void onError(FacebookException e) {
-                    Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
-                }
-            });
-        }
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        Globals.showError(MainActivity.this, R.string.operation_cancelled, null);
+                    }
+
+                    @Override
+                    public void onError(FacebookException e) {
+                        Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
+                    }
+                });
+            }
+        } else Toast.makeText(this, R.string.no_internet_connection, Toast.LENGTH_LONG).show();
     }
 
     void sendBindRequest(AccessToken fbToken){
@@ -308,6 +322,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initDrawerHeader(){
+        if (Globals.user == null) finish();
         String userName = Globals.user.name + " " + Globals.user.surname;
         setAvatarImageView(avatarImageView);
         avatarTextView.setText(userName);
@@ -323,6 +338,36 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void openSocialLink(View view) {
+        Uri socialUrl = Uri.parse((String)view.getTag());
+        String host = socialUrl.getHost();
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, socialUrl);
+        Uri socialUrlInApp = null;
+        switch (host){
+            case "www.facebook.com" : {
+                socialUrlInApp = Uri.parse("fb://facewebmodal/f?href=" + view.getTag());
+                break;
+            }
+        }
+        if (socialUrlInApp != null){
+            Intent appIntent = new Intent(Intent.ACTION_VIEW, socialUrlInApp);
+            if (appIntent.resolveActivity(getPackageManager()) != null)
+                startActivity(appIntent);
+            return;
+        }
+        if (browserIntent.resolveActivity(getPackageManager()) != null)
+            startActivity(browserIntent);
+    }
+
+    public void sendEmail(View view) {
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("mailto:"));
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[]{getString(R.string.office_mail)});
+        //intent.setType("text/plain");
+        if (intent.resolveActivity(getPackageManager()) != null)
+            startActivity(intent);
+    }
+
     class FacebookBinder extends AsyncTask<String, Void, String> {
         String fbUserId;
 
@@ -334,7 +379,9 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(String... params) {
             String result;
             try {
-                result = HttpHelper.proceedRequest("socials", params[0], true);
+                if (HttpHelper.internetConnected(MainActivity.this)) {
+                    result = HttpHelper.proceedRequest("socials", params[0], true);
+                } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
@@ -360,6 +407,59 @@ public class MainActivity extends AppCompatActivity {
             } catch (JSONException e){
                 Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
             }
+        }
+    }
+
+    class SignOutSender extends AsyncTask<Void, Void, String>{
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+            if (HttpHelper.internetConnected(MainActivity.this)) {
+                Toast.makeText(MainActivity.this, R.string.loggingOut, Toast.LENGTH_LONG).show();
+            }
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+            String result;
+            try {
+                String request = new HttpHelper("session").makeRequestString(new String[]{"token", Globals.pushToken});
+                if (HttpHelper.internetConnected(MainActivity.this)) {
+                    result = HttpHelper.proceedRequest("signout", "DELETE", request, true);
+                } else return HttpHelper.ERROR_JSON;
+            } catch (final IOException e){
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
+            }
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            progressBar.setVisibility(View.GONE);
+            if (!s.isEmpty()) {
+                try {
+                    JSONObject json = new JSONObject(s);
+                    if (json.getString("status").equals(Globals.SERVER_ERROR)) {
+                        Toast.makeText(MainActivity.this, json.getString("error"), Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                } catch (JSONException e) {
+                    Globals.showError(MainActivity.this, R.string.error, e);
+                }
+            }
+            PreferenceManager.getDefaultSharedPreferences(MainActivity.this).edit().clear().apply();
+            //Globals.user = null;
+            //Globals.sessionToken = null;
+            finishAffinity();
         }
     }
 }

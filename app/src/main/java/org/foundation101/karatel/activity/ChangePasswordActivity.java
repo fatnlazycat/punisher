@@ -158,7 +158,9 @@ public class ChangePasswordActivity extends AppCompatActivity {
             String request = new HttpHelper("user").makeRequestString(new String[]
                     {"password", oldPass, "new_user_password", newPass});
             try {
-                return HttpHelper.proceedRequest("password", request, true);
+                if (HttpHelper.internetConnected(ChangePasswordActivity.this)) {
+                    return HttpHelper.proceedRequest("change_password", request, true);
+                } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e) {
                 ChangePasswordActivity.this.runOnUiThread(new Runnable() {
                     @Override
@@ -177,15 +179,25 @@ public class ChangePasswordActivity extends AppCompatActivity {
             try {
                 JSONObject json = new JSONObject(s);
                 message = json.getString("status");
-                if (message.equals(Globals.SERVER_SUCCESS)) {
-                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ChangePasswordActivity.this);
-                    AlertDialog dialog = dialogBuilder.setTitle(R.string.password_change)
-                            .setMessage(R.string.your_password_is_changed_successfully)
-                            .setNegativeButton(R.string.ok, simpleListener).create();
-                    dialog.show();
-                } else {
-                    message = json.getString("errors");
-                    Toast.makeText(ChangePasswordActivity.this, message, Toast.LENGTH_LONG).show();
+                switch (message) {
+                    case Globals.SERVER_SUCCESS : {
+                        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ChangePasswordActivity.this);
+                        AlertDialog dialog = dialogBuilder.setTitle(R.string.password_change)
+                                .setMessage(R.string.your_password_is_changed_successfully)
+                                .setNegativeButton(R.string.ok, simpleListener).create();
+                        dialog.show();
+                        break;
+                    }
+                    case Globals.SERVER_ERROR : {
+                        JSONObject errorsJSON = json.optJSONObject("errors");
+                        if (errorsJSON != null && errorsJSON.has("password")) {
+                            message = errorsJSON.getJSONArray("password").getString(0);
+                        } else {
+                            message = json.getString("error");
+                        }
+                        Toast.makeText(ChangePasswordActivity.this, message, Toast.LENGTH_LONG).show();
+                        break;
+                    }
                 }
             } catch (JSONException e) {
                 Globals.showError(ChangePasswordActivity.this, R.string.cannot_connect_server, e);

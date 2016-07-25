@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:drawable="@color/lightGreen" />
+    <item android:left="2dp" android:drawable="@android:color/background_light" />
+</layer-list>
+
+<!--shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <gradient
         android:angle="0"
@@ -8,7 +13,7 @@
         android:centerX="0.01" />
 </shape>
 
-<!--    Change the angle to change border location:
+<    Change the angle to change border location:
     0 = left
     90 = bottom
     180 = right

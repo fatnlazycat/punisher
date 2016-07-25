@@ -1,21 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorPrimary">#5a7332</color>
-    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="veryDarkGreen">#4e642b</color>
+    <color name="darkGreen">#6c8c39</color>
+    <color name="lightGreen">#789646</color>
+
     <color name="colorAccent">#212121</color>
     <color name="colorBackground">#ececed</color>
     <color name="greyBackground">#e8e9ea</color>
     <color name="borderlessButtonText">#3e434a</color>
-    <color name="facebook_color">#4566a3</color>
-    <color name="darkGreen">#6c8c39</color>
-    <color name="slightlyDarkGreen">#789646</color>
-    <color name="darkGrey">#c4cad0</color>
-    <color name="error_color">#d0021b</color>
-    <color name="a_la_red">#f7233d</color>
+    <color name="darkGrey">#95989c</color>
+    <color name="lightGrey">#c4cad0</color>
     <color name="green_button_disabled">#b5b7ba</color>
     <color name="grey_button">#86888a</color>
     <color name="dark">#272b30</color>
-    <color name="a_la_yellow">#f7da01</color>
+
+    <color name="facebook_color">#4566a3</color>
     <color name="a_la_blue">#4a90e2</color>
+
+    <color name="error_color">#d0021b</color>
+    <color name="a_la_red">#f7233d</color>
+
+    <color name="a_la_yellow">#f7da01</color>
     <color name="a_la_orange">#ffa208</color>
 </resources>

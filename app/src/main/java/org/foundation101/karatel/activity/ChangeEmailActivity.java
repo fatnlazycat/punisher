@@ -3,6 +3,7 @@ package org.foundation101.karatel.activity;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -118,7 +119,9 @@ public class ChangeEmailActivity extends AppCompatActivity {
             email = params[0];
             String request = new HttpHelper("user").makeRequestString(new String[] {"email", email});
             try {
-                return HttpHelper.proceedRequest("email", request, true);
+                if (HttpHelper.internetConnected(ChangeEmailActivity.this)) {
+                    return HttpHelper.proceedRequest("email", request, true);
+                } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
                 ChangeEmailActivity.this.runOnUiThread(new Runnable() {
                     @Override
@@ -138,16 +141,22 @@ public class ChangeEmailActivity extends AppCompatActivity {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals(Globals.SERVER_SUCCESS)){
                     Globals.user.email = email;
+                    PreferenceManager.getDefaultSharedPreferences(ChangeEmailActivity.this).edit()
+                            .putString(Globals.USER_EMAIL, email).apply();
                     AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ChangeEmailActivity.this);
                     AlertDialog dialog = dialogBuilder.setTitle(R.string.email_changed)
                             .setNegativeButton(R.string.ok, simpleListener).create();
                     dialog.show();
                 } else {
-                    message = json.getString("errors");
+                    if (s.equals(HttpHelper.ERROR_JSON)) {
+                        message = json.getString("error");
+                    } else {
+                        message = ChangeEmailActivity.this.getString(R.string.invalid_email);
+                    }
                     Toast.makeText(ChangeEmailActivity.this, message, Toast.LENGTH_LONG).show();
                 }
             } catch (JSONException e) {
-                Globals.showError(ChangeEmailActivity.this, R.string.cannot_connect_server, e);
+                Globals.showError(ChangeEmailActivity.this, e.getMessage(), e);
             }
 
 

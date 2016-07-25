@@ -130,9 +130,15 @@ public class MultipartUtility {
 
         writer.append("--" + boundary + "--").append(LINE_FEED);
         writer.close();
+        outputStream.close();
 
         // checks server's status code first
-        int status = httpConn.getResponseCode();
+        int status = 0;
+        try {
+            status = httpConn.getResponseCode();
+        } catch (IOException e){
+            Log.e("Punisher", e.toString());
+        }
         if ((status == HttpURLConnection.HTTP_OK) || (status == HttpURLConnection.HTTP_CREATED)) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(httpConn.getInputStream()));
             String line = null;
@@ -142,14 +148,16 @@ public class MultipartUtility {
             reader.close();
             httpConn.disconnect();
         } else {
+            if (httpConn.getErrorStream() == null) {
+                throw new IOException("Server returned no ErrorStream. Status: " + status);
+            }
             BufferedReader reader = new BufferedReader(new InputStreamReader(httpConn.getErrorStream()));
             String line = null;
             while ((line = reader.readLine()) != null) {
                 response.add(line);
             }
             reader.close();
-
-            //throw new IOException("Server returned non-OK status: " + status);
+            httpConn.disconnect();
         }
         return response;
     }

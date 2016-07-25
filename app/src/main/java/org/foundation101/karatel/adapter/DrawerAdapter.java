@@ -51,13 +51,13 @@ public class DrawerAdapter extends BaseAdapter {
 
         switch (position) {
             case 0:
-                menuItemText.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.divider_drawable, 0, 0);
+                setDivider(menuItemText);
                 break;
             case 2:
-                menuItemText.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.divider_drawable, 0, 0);
+                setDivider(menuItemText);
                 break;
             case 5:
-                menuItemText.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.divider_drawable, 0, 0);
+                setDivider(menuItemText);
                 break;
         }
 
@@ -80,6 +80,12 @@ public class DrawerAdapter extends BaseAdapter {
         }
 
         return convertView;
+    }
+
+    void setDivider(TextView view){
+        view.setCompoundDrawablesRelativeWithIntrinsicBounds(0, R.drawable.divider_drawable, 0, 0);
+        view.setCompoundDrawablePadding(dpToPx(12));
+        view.setPadding(0, 0, 0, dpToPx(12));
     }
 
     public int dpToPx(int dp){

@@ -17,11 +17,12 @@ public class StartActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
-        Toast.makeText(this, R.string.tap_to_enter, Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, R.string.tap_to_enter, Toast.LENGTH_LONG).show();
 
         //start push notification service
         Intent intent = new Intent(this, RegistrationIntentService.class);
         startService(intent);
+        leaveStartPage(null);
     }
 
 

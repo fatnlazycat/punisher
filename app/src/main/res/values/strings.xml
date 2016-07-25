@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Punisher</string>
+    <string name="app_name">Каратєль</string>
     <string name="facebook_app_id">601206453369141</string>
 
     <!--GUI strings-->
@@ -35,7 +35,7 @@
     <!--texts-->
     <string name="violation_header">Успіх розгляду вашого звернення залежить від точності наданої інформації</string>
     <string name="about_1">За допомогою цього додатку Ви можете легко притягнути до відповідальності чиновників чи інших посадових осіб, які неналежно виконують свої службові обов’язки. Просто зафіксуйте цей факт, а ми зробимо все інше.</string>
-    <string name="about_2">Проект реалізує громадська організація «Фундація.101» за підтримки People\'s Project.</string>
+    <string name="about_2">Проект реалізує громадська організація «Фундація.101» за підтримки People’s Project.</string>
     <string name="personal_data_agree">Даю згоду на обробку та зберігання моїх персональних даних</string>
 
     <!-- violation disclaimers, should be present even if empty do avoid NullPointException-->
@@ -57,37 +57,31 @@
     <string name="WrongParking_server">wrong_parkings</string>
 
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="title_activity_main">MainActivity</string>
-    <string name="title_activity_bribery">ViolationActivity</string>
-    <string name="title_activity_about">AboutActivity</string>
     <string name="do_punish">Покарати за порушення</string>
     <string name="about_header">Про додаток</string>
-    <string name="title_activity_forgot_password">ForgotPasswordActivity</string>
     <string name="change_password">ЗМІНИТИ ПАРОЛЬ</string>
     <string name="text_forgot_password">Забули пароль? Введіть свій email і ми відправимо посилання для його відновлення.</string>
-    <string name="title_activity_forgot_password2">ForgotPassword2Activity</string>
     <string name="check_email">ПЕРЕВІРИТИ EMAIL</string>
     <string name="text_forgot_password2">Перевірте свій email. Ми надіслали інструкцію для відновлення пароля.</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="profile_header">Профіль</string>
-    <string name="tap_to_enter">Натисніть на єкран, щоб продовжити</string>
+    <string name="tap_to_enter">Натисніть на екран, щоб продовжити</string>
     <string name="user_created">Обліковий запис створено. Перевірте email.</string>
     <string name="you_have_made_no_requests_yet">Ви ще не створили жодної  заявки</string>
     <string name="create_request">СТВОРИТИ ЗАЯВКУ</string>
     <string name="punishment_requests">Заявки на покарання</string>
     <string name="contacts_header">Зворотній зв’язок</string>
-    <string name="contacts"><b>Якщо у вас є питання чи пропозиції — зв\'яжіться з нами</b></string>
+    <string name="contacts"><b>Якщо у вас є питання чи пропозиції — зв’яжіться з нами</b></string>
     <string name="office_phone">+38 (044) 209-69-33</string>
     <string name="office_mail">mail@foundation101.org</string>
-    <string name="office_address">04215, м. Київ, пр. Георгія Гонгадзе, 32-Б. Громадська організація «Фундація.101»</string>
+    <string name="office_address">04215, м. Київ, пр. Георгія Гонгадзе, 32-Б.\nГО «Фундація.101»</string>
     <string name="url_foundation101">https://www.foundation101.org</string>
     <string name="url_peoples_project">http://www.peoplesproject.com</string>
     <string name="change_profile_photo">Змінити фото профілю</string>
     <string name="cancel">СКАСУВАТИ</string>
     <string name="choose_picture">Оберіть картинку</string>
-    <string name="title_activity_change_email">ChangeEmailActivity</string>
     <string name="change_email">Змінити email</string>
     <string name="change">Змінити</string>
     <string name="new_email">Новий email</string>
@@ -104,10 +98,9 @@
     <string name="information">Інформація</string>
     <string name="request_status">Статус заявки</string>
     <string name="addedPhotoVideo">Додані фото, відео</string>
-    <string name="title_activity_news">NewsActivity</string>
     <string name="news_header">Новини</string>
-    <string name="bindProfile">Зв`язати профіль</string>
-    <string name="facebook_profile_binded">Профіль успішно зв`язаний!</string>
+    <string name="bindProfile">Зв’язати профіль</string>
+    <string name="facebook_profile_binded">Профіль успішно зв’язаний!</string>
     <string name="doSort"><b>Сортувати</b></string>
     <string name="byStatus">За статусом</string>
     <string name="byDate">За датою</string>
@@ -120,10 +113,16 @@
     <string name="show_details">Показати подробиці</string>
     <string name="hide_details">Сховати подробиці</string>
     <string name="chooseEmailClient">Яка поштова скринька?</string>
-    <string name="cannot_connect_server">Неможливо зв\'язатись з сервером. Спробуйте ще раз пізніше</string>
+    <string name="cannot_connect_server">Неможливо зв’язатись з сервером. Спробуйте ще раз пізніше</string>
     <string name="profile_changes_saved">Зміни до профілю збережено</string>
     <string name="error">помилка</string>
     <string name="operation_cancelled">Операцію відмінено</string>
     <string name="cannot_write_file">Неможливо записати файл</string>
     <string name="requestSent">Заявка відправлена</string>
+    <string name="invalid_email">Електронна адреса не є дійсною</string>
+    <string name="your_estimation">Ваша оцінка</string>
+    <string name="title_activity_doc_view">DocViewActivity</string>
+    <string name="weInSocials">Ми в соціальних мережах</string>
+    <string name="loggingOut">Почекайте, виконується вихід з додатку</string>
+    <string name="no_internet_connection">no internet connection</string>
 </resources>

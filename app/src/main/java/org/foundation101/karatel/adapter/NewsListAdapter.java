@@ -61,7 +61,8 @@ public class NewsListAdapter extends BaseAdapter {
         textViewNewsDate.setText(dateString);
 
         ImageView imageViewNews = (ImageView)convertView.findViewById(R.id.imageViewNews);
-        imageViewNews.setImageDrawable(thisNews.image);
+        imageViewNews.setBackground(thisNews.image);
+        //imageViewNews.setImageDrawable(thisNews.image);
 
         return convertView;
     }

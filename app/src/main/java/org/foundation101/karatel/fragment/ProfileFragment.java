@@ -10,6 +10,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -24,17 +25,21 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.MultipartUtility;
 import org.foundation101.karatel.PunisherUser;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
+import org.foundation101.karatel.activity.TipsActivity;
 import org.foundation101.karatel.activity.ViolationActivity;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -49,7 +54,8 @@ public class ProfileFragment extends Fragment {
 
     ImageView avatarView;
     ViewGroup memberEmail, memberPassword, memberSurname, memberName, memberSecondName, memberPhone;
-    EditText surnameEditText, nameEditText, secondNameEditText, phoneEditText;
+    EditText surnameEditText, nameEditText, secondNameEditText, phoneEditText, emailEditText, passwordEditText;
+    FrameLayout progressBar;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -79,19 +85,19 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_profile, container, false);
 
+        progressBar = (FrameLayout) v.findViewById(R.id.frameLayoutProgress);
+
         memberEmail = (ViewGroup) v.findViewById(R.id.profile_email);
         ((TextView)memberEmail.getChildAt(0)).setText(R.string.email);
         memberEmail.getChildAt(1).setVisibility(View.GONE);
-        TextView emailEditText = (TextView)memberEmail.getChildAt(2);
-        emailEditText.setText(Globals.user.email);
+        emailEditText = (EditText) memberEmail.getChildAt(2);
         emailEditText.setEnabled(false);
         //emailEditText.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
 
         memberPassword = (ViewGroup) v.findViewById(R.id.profile_password);
         ((TextView)memberPassword.getChildAt(0)).setText(R.string.passw);
         memberPassword.getChildAt(1).setVisibility(View.GONE);
-        EditText passwordEditText = (EditText)memberPassword.getChildAt(2);
-        passwordEditText.setText("qwerty"); //just to show 6 dots
+        passwordEditText = (EditText)memberPassword.getChildAt(2);
         passwordEditText.setEnabled(false);
         passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
 
@@ -99,28 +105,24 @@ public class ProfileFragment extends Fragment {
         ((TextView)memberSurname.getChildAt(0)).setText(R.string.surname);
         memberSurname.getChildAt(1).setVisibility(View.GONE);
         surnameEditText = (EditText)memberSurname.getChildAt(2);
-        surnameEditText.setText(Globals.user.surname);
         surnameEditText.setInputType(InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
 
         memberName = (ViewGroup) v.findViewById(R.id.profile_name);
         ((TextView)memberName.getChildAt(0)).setText(R.string.name);
         memberName.getChildAt(1).setVisibility(View.GONE);
         nameEditText = (EditText)memberName.getChildAt(2);
-        nameEditText.setText(Globals.user.name);
         nameEditText.setInputType(InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
 
         memberSecondName = (ViewGroup) v.findViewById(R.id.profile_second_name);
         ((TextView)memberSecondName.getChildAt(0)).setText(R.string.second_name);
         memberSecondName.getChildAt(1).setVisibility(View.GONE);
         secondNameEditText = (EditText)memberSecondName.getChildAt(2);
-        secondNameEditText.setText(Globals.user.secondName);
         secondNameEditText.setInputType(InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
 
         memberPhone = (ViewGroup) v.findViewById(R.id.profile_phone);
         ((TextView)memberPhone.getChildAt(0)).setText(R.string.phone);
         memberPhone.getChildAt(1).setVisibility(View.GONE);
         phoneEditText = (EditText)memberPhone.getChildAt(2);
-        phoneEditText.setText(Globals.user.phone);
         phoneEditText.setInputType(InputType.TYPE_CLASS_PHONE);
 
         TextView userNameTextView = (TextView)v.findViewById(R.id.userNameTextView);
@@ -135,8 +137,19 @@ public class ProfileFragment extends Fragment {
                 dialog.show(getChildFragmentManager(), "changeAvatar");
             }
         });
-        ((MainActivity)getActivity()).setAvatarImageView(avatarView);
+
         return v;
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        if (HttpHelper.internetConnected(getActivity())) {
+            new ProfileFetcher().execute(Globals.user.id);
+        }
+        fillTextFields();
+        ((MainActivity)getActivity()).setAvatarImageView(avatarView);
     }
 
     @Override
@@ -162,6 +175,15 @@ public class ProfileFragment extends Fragment {
         } catch (IOException e) {
             Globals.showError(getActivity(), R.string.error, e);
         }
+    }
+
+    void fillTextFields(){
+        surnameEditText.setText(Globals.user.surname);
+        nameEditText.setText(Globals.user.name);
+        secondNameEditText.setText(Globals.user.secondName);
+        phoneEditText.setText(Globals.user.phone);
+        emailEditText.setText(Globals.user.email);
+        passwordEditText.setText("qwerty"); //just to show 6 dots
     }
 
     public void setNewAvatar(Bitmap image) throws IOException {
@@ -200,35 +222,44 @@ public class ProfileFragment extends Fragment {
         @Override
         protected String doInBackground(Void... params) {
             StringBuilder response = new StringBuilder();
-            try {
-                String requestUrl = Globals.SERVER_URL + "users/" + Globals.user.id;
-                MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8", "PUT");
-                //multipart.addFormField("user[email]", Globals.user.email);
-                multipart.addFormField("user[firstname]", name);
-                multipart.addFormField("user[surname]", surname);
-                multipart.addFormField("user[secondname]", secondName);
-                multipart.addFormField("user[phone_number]", phone);
-                //multipart.addFormField("user[password]", "qwerty"); //Globals.user.password
-                //multipart.addFormField("user[password_confirmation]", "qwerty");//Globals.user.password
+            if (HttpHelper.internetConnected(getActivity())) {
+                int tries = 0;
+                final int MAX_TRIES = 2;
+                while (tries++ < MAX_TRIES) try {
+                    String requestUrl = Globals.SERVER_URL + "users/" + Globals.user.id;
+                    MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8", "PUT");
+                    //multipart.addFormField("user[email]", Globals.user.email);
+                    multipart.addFormField("user[firstname]", name);
+                    multipart.addFormField("user[surname]", surname);
+                    multipart.addFormField("user[secondname]", secondName);
+                    multipart.addFormField("user[phone_number]", phone);
+                    //multipart.addFormField("user[password]", "qwerty"); //Globals.user.password
+                    //multipart.addFormField("user[password_confirmation]", "qwerty");//Globals.user.password
 
-                if (Globals.user.avatarFileName != null && !Globals.user.avatarFileName.isEmpty()) {
-                    multipart.addFilePart("user[avatar]", new File(Globals.user.avatarFileName));
-                } else {
-                    multipart.addFormField("user[avatar]", ""); //delete avatar
-                }
-
-                List<String> responseList = multipart.finish();
-                for (String line : responseList) {
-                    Log.e("Punisher", "Upload Files Response:::" + line);
-                    response.append(line);
-                }
-            } catch (final IOException e) {
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                    if (Globals.user.avatarFileName != null && !Globals.user.avatarFileName.isEmpty()) {
+                        multipart.addFilePart("user[avatar]", new File(Globals.user.avatarFileName));
+                    } else {
+                        multipart.addFormField("user[avatar]", ""); //delete avatar
                     }
-                });
+
+                    List<String> responseList = multipart.finish();
+                    for (String line : responseList) {
+                        Log.e("Punisher", "Upload Files Response:::" + line);
+                        response.append(line);
+                    }
+                    return response.toString();
+                } catch (final IOException e) {
+                    if (tries == MAX_TRIES) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                            }
+                        });
+                    }
+                }
+            } else {
+                response.append(HttpHelper.ERROR_JSON);
             }
             return response.toString();
         }
@@ -237,15 +268,111 @@ public class ProfileFragment extends Fragment {
         protected void onPostExecute(String s) {
             try{
                 JSONObject json = new JSONObject(s);
-                if (json.getString("status").equals(Globals.SERVER_SUCCESS)){
-                    Toast.makeText(getContext(), R.string.profile_changes_saved, Toast.LENGTH_LONG).show();
-                    Globals.user.name = name;
-                    Globals.user.surname = surname;
-                    Globals.user.secondName = secondName;
+                switch (json.getString("status")){
+                    case Globals.SERVER_SUCCESS : {
+                        Toast.makeText(getContext(), R.string.profile_changes_saved, Toast.LENGTH_LONG).show();
+                        Globals.user.name = name;
+                        Globals.user.surname = surname;
+                        Globals.user.secondName = secondName;
+                        Globals.user.phone = phone;
+
+                        PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
+                                .putString(Globals.USER_SURNAME, surname)
+                                .putString(Globals.USER_NAME, name)
+                                .putString(Globals.USER_SECOND_NAME, secondName)
+                                .putString(Globals.USER_PHONE, phone)
+                                .putString(Globals.USER_AVATAR, Globals.user.avatarFileName).apply();
+                        break;
+                    }
+                    case Globals.SERVER_ERROR : {
+                        StringBuilder errorMessage = new StringBuilder();
+                        JSONObject errorJSON = json.getJSONObject(Globals.SERVER_ERROR);
+                        JSONArray errorNames = errorJSON.names();
+                        for (int i = 0; i < errorNames.length(); i++){
+                            //read only the first message in the array for each error type
+                            String oneMessage = errorJSON.getJSONArray(errorNames.getString(i)).getString(0);
+                            errorMessage.append(oneMessage + "\n");
+                        }
+                        Toast.makeText(getActivity(), errorMessage.toString(), Toast.LENGTH_LONG).show();
+                        break;
+                    }
+                    default:{
+
+                    }
                 }
             } catch (JSONException eJSON){
                 Globals.showError(getContext(), R.string.error, eJSON);
             }
+        }
+    }
+
+    class ProfileFetcher extends AsyncTask<Integer, Void, String>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected String doInBackground(Integer... params) {
+                try {
+                return HttpHelper.proceedRequest("users/" + params[0], "GET", "", true);
+            } catch (final IOException e){
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                    }
+                });
+                return "";
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            try {
+                JSONObject json = new JSONObject(s);
+                if (json.getString("status").equals("success")) {
+                    JSONObject dataJSON = json.getJSONObject("data");
+                    Globals.user = new PunisherUser(
+                            dataJSON.getString("email"),
+                            "", //for password
+                            dataJSON.getString("surname"),
+                            dataJSON.getString("firstname"),
+                            dataJSON.getString("secondname"),
+                            dataJSON.getString("phone_number"));
+                    Globals.user.id = dataJSON.getInt("id");
+
+                    PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
+                            .putString(Globals.USER_EMAIL, dataJSON.getString("email"))
+                            .putString(Globals.USER_SURNAME, dataJSON.getString("surname"))
+                            .putString(Globals.USER_NAME, dataJSON.getString("firstname"))
+                            .putString(Globals.USER_SECOND_NAME, dataJSON.getString("secondname"))
+                            .putString(Globals.USER_PHONE, dataJSON.getString("phone_number")).apply();
+
+                    String avatarUrl = dataJSON.getJSONObject("avatar").getString("url");
+                    if (avatarUrl != null && !avatarUrl.equals("null")) {
+                        TipsActivity.AvatarGetter avatarGetter = new TipsActivity.AvatarGetter(getActivity());
+                        avatarGetter.setViewToSet(avatarView);
+                        avatarGetter.execute(avatarUrl);
+                    }
+
+                    fillTextFields();
+
+                } else {
+                    String errorMessage;
+                    if (json.getString("status").equals("error")){
+                        errorMessage = json.getString("error");
+                    } else {
+                        errorMessage = s;
+                    }
+                    Toast.makeText(getActivity(), errorMessage, Toast.LENGTH_LONG).show();
+                }
+            } catch (JSONException e) {
+                Globals.showError(getActivity(), R.string.error, e);
+            }
+            progressBar.setVisibility(View.GONE);
         }
     }
 }

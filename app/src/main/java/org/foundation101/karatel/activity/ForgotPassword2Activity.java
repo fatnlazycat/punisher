@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.View;
+import android.widget.Toast;
 
 import org.foundation101.karatel.R;
 
@@ -18,9 +19,9 @@ public class ForgotPassword2Activity extends Activity {
     public void proceedWithPasswordRenovation(View view) {
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_APP_EMAIL);
-        startActivity(intent);
-        startActivity(Intent.createChooser(intent, getString(R.string.chooseEmailClient)));
-
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(Intent.createChooser(intent, getString(R.string.chooseEmailClient)));
+        }
         finishAffinity();
     }
 }

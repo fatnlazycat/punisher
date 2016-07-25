@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.foundation101.karatel">
 
-    <permission android:name="org.foundation101.karatel.permission.C2D_MESSAGE"
+    <permission
+        android:name="org.foundation101.karatel.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -10,12 +11,14 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-    <uses-permission android:name="org.foundation101.karatel.permission.C2D_MESSAGE"/>
+    <uses-permission android:name="org.foundation101.karatel.permission.C2D_MESSAGE" />
 
     <application
+        android:name=".Karatel"
         android:allowBackup="true"
-        android:icon="@mipmap/no_avatar"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="false"
         android:theme="@style/AppTheme">
@@ -27,21 +30,22 @@
             android:value="@integer/google_play_services_version" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAvOmKt5COzldoNnalypQJ5yYo_3o2XrvE"/>
+            android:value="AIzaSyAdfhkyHG6LXCoLD2KQJUpmXagsrKldxUk" />
 
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"
             android:exported="true"
-            android:permission="com.google.android.c2dm.permission.SEND" >
+            android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
                 <category android:name="org.foundation101.karatel" />
             </intent-filter>
         </receiver>
+
         <service
             android:name=".service.MyGcmListenerService"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
             </intent-filter>
@@ -53,26 +57,28 @@
                 <action android:name="com.google.android.gms.iid.InstanceID" />
             </intent-filter>
         </service>
-        <service android:name=".service.RegistrationIntentService"
-        android:exported="false" />
+        <service
+            android:name=".service.RegistrationIntentService"
+            android:exported="false" />
 
         <activity
-            android:name="org.foundation101.karatel.activity.StartActivity"
+            android:name=".activity.StartActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait"
             android:theme="@style/AppThemeWithoutDrawer">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name="org.foundation101.karatel.activity.TutorialActivity"
+            android:name=".activity.TutorialActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait"
             android:theme="@style/AppThemeWithoutDrawer" />
         <activity
-            android:name="org.foundation101.karatel.activity.TipsActivity"
+            android:name=".activity.TipsActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait"
             android:theme="@style/AppThemeWithoutDrawer" />
@@ -83,77 +89,66 @@
             android:screenOrientation="portrait"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity
-            android:name="org.foundation101.karatel.activity.MainActivity"
+            android:name=".activity.MainActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_main"
             android:screenOrientation="portrait" />
         <activity
-            android:name="org.foundation101.karatel.activity.ViolationActivity"
+            android:name=".activity.ViolationActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_bribery"
-            android:parentActivityName="org.foundation101.karatel.activity.MainActivity"
+            android:parentActivityName=".activity.MainActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.foundation101.karatel.activity.MainActivity" />
         </activity>
         <activity
-            android:name="org.foundation101.karatel.activity.SignUpActivity"
+            android:name=".activity.SignUpActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_sign_up"
-            android:parentActivityName="org.foundation101.karatel.activity.TipsActivity"
+            android:parentActivityName=".activity.TipsActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.foundation101.karatel.activity.TipsActivity" />
         </activity>
         <activity
-            android:name="org.foundation101.karatel.activity.ForgotPasswordActivity"
+            android:name=".activity.ForgotPasswordActivity"
             android:configChanges="orientation|screenSize"
-            android:screenOrientation="portrait">
-
-            <!--
-                meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.TipsActivity" /
-            -->
-        </activity>
+            android:screenOrientation="portrait"
+            android:theme="@style/AppThemeWithoutDrawer" />
         <activity
-            android:name="org.foundation101.karatel.activity.ForgotPassword2Activity"
+            android:name=".activity.ForgotPassword2Activity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_forgot_password2"
-            android:parentActivityName="org.foundation101.karatel.activity.ForgotPasswordActivity"
-            android:screenOrientation="portrait">
+            android:parentActivityName=".activity.ForgotPasswordActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppThemeWithoutDrawer" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.foundation101.karatel.activity.ForgotPasswordActivity" />
         </activity>
+        <activity android:name=".activity.ShowMediaActivity" />
         <activity
-            android:name="org.foundation101.karatel.activity.ShowMediaActivity"/>
-        <activity
-            android:name="org.foundation101.karatel.activity.ChangeEmailActivity"
+            android:name=".activity.ChangeEmailActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_change_email"
-            android:parentActivityName="org.foundation101.karatel.activity.MainActivity"
+            android:parentActivityName=".activity.MainActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.foundation101.karatel.activity.MainActivity" />
         </activity>
         <activity
-            android:name="org.foundation101.karatel.activity.ChangePasswordActivity"
+            android:name=".activity.ChangePasswordActivity"
             android:configChanges="orientation|screenSize"
-            android:parentActivityName="org.foundation101.karatel.activity.MainActivity"
+            android:parentActivityName=".activity.MainActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.foundation101.karatel.activity.MainActivity" />
         </activity>
         <activity
-            android:name="org.foundation101.karatel.activity.NewsActivity"
-            android:label="@string/title_activity_news"
+            android:name=".activity.NewsActivity"
             android:configChanges="orientation|screenSize"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

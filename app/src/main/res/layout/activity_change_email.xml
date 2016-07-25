@@ -15,10 +15,17 @@
         android:theme="@style/AppToolBar"
         app:titleTextAppearance="@style/TextSize16sp"/>
 
-    <include layout="@layout/item_violation_requisite"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/new_email"/>
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:background="@android:color/white">
+        <include layout="@layout/item_violation_requisite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/new_email"/>
+    </FrameLayout>
 
     <!--empty view to push the rest down the screen-->
     <View

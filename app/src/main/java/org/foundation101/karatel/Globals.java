@@ -30,6 +30,8 @@ public class Globals {
     public static final String MEDIA_FILE = "PUNISHER_MEDIA_FILE";
     public static final String NEWS_ITEM = "PUNISHER_NEWS_ITEM";
     public static final String NEWS_TITLE = "PUNISHER_NEWS_TITLE";
+    public static final String DOC_TO_VIEW = "PUNISHER_DOC_TO_VIEW";
+    public static final String DOC_TO_VIEW_TITLE = "PUNISHER_DOC_TO_VIEW_TITLE";
     public static final String REGISTRATION_COMPLETE = "PUNISHER_REGISTARTION_COMPLETE";
     public static final String MAIN_ACTIVITY_SAVED_INSTANCE_STATE = "PUNISHER_MAIN_ACTIVITY_SAVED_INSTANCE_STATE";
 
@@ -42,6 +44,7 @@ public class Globals {
 
     //user data tags
     public static final String LAST_LOGIN_EMAIL = "LAST_LOGIN_EMAIL";
+    public static final String SESSION_TOKEN = "SESSION_TOKEN";
     public static final String USER_EMAIL = "USER_EMAIL";
     public static final String USER_PASSWORD = "USER_PASSWORD";
     public static final String USER_SURNAME = "USER_SURNAME";
@@ -49,12 +52,14 @@ public class Globals {
     public static final String USER_SECOND_NAME = "USER_SECOND_NAME";
     public static final String USER_PHONE = "USER_PHONE";
     public static final String USER_ID = "USER_ID";
+    public static final String USER_AVATAR = "USER_AVATAR";
 
     //interaction with server api
     public static final String SERVER_URL = "https://karatel-test.foundation101.org/api/v1/";
     public static final String SERVER_SUCCESS = "success";
+    public static final String SERVER_ERROR = "error";
 
-    static final String GOOGLE_SENDER_ID = "301781387946";
+    //static final String GOOGLE_SENDER_ID = "301781387946";
 
     public static String sessionToken, pushToken;
     public static PunisherUser user;
@@ -82,6 +87,14 @@ public class Globals {
         }
     }
 
+
+    public static void hideSoftKeyboard(Activity activity) {
+        InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        View v = activity.getCurrentFocus();
+        if (v != null) imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+    }
+
+
     public static String translateDate(String inFormat, String outFormat, String inDate){
         String outDate = "";
         SimpleDateFormat inFormatter = new SimpleDateFormat(inFormat, Locale.US);
@@ -98,6 +111,14 @@ public class Globals {
 
     public static void showError(Context context, int errorMessageResId, Exception e){
         Toast.makeText(context, errorMessageResId, Toast.LENGTH_LONG).show();
+        if (e != null) {
+            String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
+            Log.e("Punisher error", logMessage);
+        }
+    }
+
+    public static void showError(Context context, String errorMessage, Exception e){
+        Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show();
         if (e != null) {
             String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
             Log.e("Punisher error", logMessage);

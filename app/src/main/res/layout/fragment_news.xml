@@ -8,12 +8,16 @@
     <ListView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:divider="@color/colorBackground"
+        android:dividerHeight="8dp"
         android:id="@+id/listViewNews" />
 
     <include layout="@layout/frame_progress_bar"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/frameLayoutProgress"
+        android:layout_below="@id/listViewNews"
+        android:id="@+id/frameLayoutProgressNews"
         android:onClick="empty"/>
 
 </RelativeLayout>

@@ -12,7 +12,7 @@
         android:id="@+id/imageView2" />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/contacts"
         android:id="@+id/textView3"
@@ -22,7 +22,7 @@
         android:paddingTop="@dimen/text_box_vertical_padding"
         android:paddingBottom="@dimen/text_box_vertical_padding" />
 
-    <TextView
+    <!--TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -31,7 +31,7 @@
         android:text="@string/office_phone"
         android:textColor="@color/darkGreen"
         android:drawableStart="@drawable/ic_phone"
-        android:drawablePadding="16dp"/>
+        android:drawablePadding="16dp"/-->
 
     <TextView
         android:layout_width="match_parent"
@@ -42,7 +42,8 @@
         android:text="@string/office_mail"
         android:textColor="@color/darkGreen"
         android:drawableStart="@drawable/ic_mail"
-        android:drawablePadding="16dp"/>
+        android:drawablePadding="2dp"
+        android:onClick="sendEmail"/>
 
     <TextView
         android:layout_width="match_parent"
@@ -50,9 +51,105 @@
         android:paddingBottom="16dp"
         android:background="@android:color/white"
         android:paddingLeft="@dimen/text_box_horizontal_padding"
-        android:paddingRight="@dimen/text_box_horizontal_padding"
         android:text="@string/office_address"
         android:textColor="@color/darkGreen"
+        android:letterSpacing="-0.05"
         android:drawableStart="@drawable/ic_location"
-        android:drawablePadding="16dp"/>
+        android:drawablePadding="2dp"
+        android:tag="https://goo.gl/maps/BVyFMya2QEK2"
+        android:onClick="openSocialLink"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@android:color/white">
+        
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/text_box_horizontal_padding"
+            android:paddingEnd="@dimen/text_box_horizontal_padding"
+            android:paddingTop="@dimen/text_box_vertical_padding"
+            android:paddingBottom="@dimen/text_box_vertical_padding"
+            android:text="@string/weInSocials"
+            android:id="@+id/weInSocialsTextView"/>
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fillViewport="true"
+            android:layout_below="@id/weInSocialsTextView">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="@dimen/text_box_horizontal_padding"
+                android:paddingRight="@dimen/text_box_horizontal_padding"
+                android:paddingBottom="18dp"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/buttonFacebook"
+                    android:tag="https://www.facebook.com/fund101"
+                    android:src="@mipmap/ic_fb"
+                    android:background="@drawable/selector_common_button"
+                    android:onClick="openSocialLink"/>
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:id="@+id/buttonVK"
+                    android:tag="https://vk.com/fund101"
+                    android:src="@mipmap/ic_vk"
+                    android:background="@drawable/selector_common_button"
+                    android:onClick="openSocialLink"/>
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:id="@+id/buttonTwitter"
+                    android:tag="https://twitter.com/fund101"
+                    android:src="@mipmap/ic_tw"
+                    android:background="@drawable/selector_common_button"
+                    android:onClick="openSocialLink"/>
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:id="@+id/buttonGooglePlus"
+                    android:tag="https://plus.google.com/+foundation101orgWWW"
+                    android:src="@mipmap/icg"
+                    android:background="@drawable/selector_common_button"
+                    android:onClick="openSocialLink"/>
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:id="@+id/buttonTelegram"
+                    android:tag="http://telegram.me/fund101"
+                    android:src="@mipmap/ic_tg"
+                    android:background="@drawable/selector_common_button"
+                    android:onClick="openSocialLink"/>
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:id="@+id/buttonYouTube"
+                    android:tag="https://www.youtube.com/c/foundation101orgWWW"
+                    android:src="@mipmap/ic_yt"
+                    android:background="@drawable/selector_common_button"
+                    android:onClick="openSocialLink"/>
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:id="@+id/buttonInstagram"
+                    android:tag="https://www.instagram.com/fund101/"
+                    android:src="@mipmap/ic_inst"
+                    android:background="@drawable/selector_common_button"
+                    android:onClick="openSocialLink"/>
+            </LinearLayout>
+        </HorizontalScrollView>
+    </RelativeLayout>
 </LinearLayout>

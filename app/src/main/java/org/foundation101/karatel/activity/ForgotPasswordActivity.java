@@ -67,7 +67,9 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         protected String doInBackground(String... params) {
             String request = new HttpHelper("user").makeRequestString(new String[]{"email", params[0]});
             try {
-                return HttpHelper.proceedRequest("password", request, false);
+                if (HttpHelper.internetConnected(ForgotPasswordActivity.this)) {
+                    return HttpHelper.proceedRequest("password", request, false);
+                } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
                 ForgotPasswordActivity.this.runOnUiThread(new Runnable() {
                     @Override
@@ -84,9 +86,17 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             super.onPostExecute(s);
             try {
                 JSONObject json = new JSONObject(s);
-                if (json.getString("status").equals(Globals.SERVER_SUCCESS)){
-                    startActivity(new Intent(ForgotPasswordActivity.this, ForgotPassword2Activity.class));
-                } else Toast.makeText(ForgotPasswordActivity.this, json.getString("errors"), Toast.LENGTH_LONG).show();
+                switch (json.getString("status")){
+                    case Globals.SERVER_SUCCESS : {
+                        startActivity(new Intent(ForgotPasswordActivity.this, ForgotPassword2Activity.class));
+                        break;
+                    }
+                    case Globals.SERVER_ERROR : {
+                        String message = json.has("error") ? json.getString("error") : json.getString("errors");
+                        Toast.makeText(ForgotPasswordActivity.this, message, Toast.LENGTH_LONG).show();
+                        break;
+                    }
+                }
             } catch (JSONException e) {
                 Globals.showError(ForgotPasswordActivity.this, R.string.cannot_connect_server, e);
             }

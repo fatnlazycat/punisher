@@ -53,13 +53,13 @@
                 android:layout_marginBottom="12dp"
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="16dp"
-                android:background="@mipmap/logo_101"/>
+                android:src="@mipmap/logo_101"/>
 
             <ImageButton
                 android:layout_width="50dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
-                android:src="@mipmap/btn_share"
+                android:background="@drawable/selector_connect_button"
                 android:onClick="open101"/>
         </LinearLayout>
 
@@ -74,23 +74,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="16dp"
-                android:background="@mipmap/logo_peoples_project"/>
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@android:color/white"/>
+                android:src="@mipmap/logo_peoples_project"/>
 
             <ImageButton
                 android:layout_width="50dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
-                android:src="@mipmap/btn_share"
+                android:background="@drawable/selector_connect_button"
                 android:onClick="openPeoplesProject"/>
         </LinearLayout>
 

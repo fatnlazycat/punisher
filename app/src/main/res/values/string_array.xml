@@ -72,7 +72,7 @@
         <item>Заявки</item>
         <item>Про додаток</item>
         <item>Новини</item>
-        <item>Зворотній зв`язок</item>
+        <item>Зворотній зв’язок</item>
         <item>Редагувати профіль</item>
         <item>Вийти</item>
     </string-array>
@@ -86,7 +86,7 @@
         <item>Bribe_all_name</item>
         <item>П.І.Б. ХАБАРНИКА</item>
         <item>Не обов’язково, але бажано заповнити</item>
-        <item>Вкажіть місце інциденту</item>
+        <item>П.І.Б.</item>
 
         <item>Bribe_position</item>
         <item>ПОСАДА ХАБАРНИКА</item>

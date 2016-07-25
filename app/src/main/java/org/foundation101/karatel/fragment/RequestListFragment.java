@@ -17,7 +17,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -304,7 +303,9 @@ public class RequestListFragment extends Fragment {
         @Override
         protected String doInBackground(Void... params) {
             try {
-                return HttpHelper.proceedRequest("complains", "GET", "", true);
+                if (HttpHelper.internetConnected(getActivity())) {
+                    return HttpHelper.proceedRequest("complains", "GET", "", true);
+                } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
                 getActivity().runOnUiThread(new Runnable() {
                     @Override

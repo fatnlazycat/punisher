@@ -1,123 +1,168 @@
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     tools:context="org.foundation101.karatel.fragment.ProfileFragment">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
+        android:layout_height="match_parent"
+        android:fillViewport="true">
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="90dp"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="20dp"
-                android:src="@mipmap/hex_grey"
-                android:id="@+id/avatarProfileImageView"/>
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:textSize="19sp"
-                android:gravity="center"
-                android:id="@+id/userNameTextView"/>
-        </LinearLayout>
+                android:layout_height="90dp"
+                android:orientation="horizontal">
 
-        <include layout="@layout/item_violation_requisite"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/profile_surname"/>
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="20dp"
+                    android:src="@mipmap/hex_grey"
+                    android:id="@+id/avatarProfileImageView"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textSize="19sp"
+                    android:gravity="center"
+                    android:id="@+id/userNameTextView"/>
+            </LinearLayout>
 
-        <include layout="@layout/item_violation_requisite"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/profile_name"/>
-
-        <include layout="@layout/item_violation_requisite"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/profile_second_name"/>
-
-        <include layout="@layout/item_violation_requisite"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/profile_phone"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal">
-
-            <include layout="@layout/item_violation_requisite"
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:id="@+id/profile_email"/>
-            <ImageButton
-                android:layout_width="50dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:layout_gravity="center_vertical"
-                android:src="@drawable/ic_arrow"
-                android:background="@android:color/white"
-                android:onClick="changeEmail"/>
-        </LinearLayout>
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:background="@android:color/white">
+                <include layout="@layout/item_violation_requisite"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/profile_surname"/>
+            </FrameLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal">
-
-            <include layout="@layout/item_violation_requisite"
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:id="@+id/profile_password"/>
-            <ImageButton
-                android:layout_width="50dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:layout_gravity="center_vertical"
-                android:src="@drawable/ic_arrow"
-                android:background="@android:color/white"
-                android:onClick="changePassword"/>
-        </LinearLayout>
+                android:layout_marginTop="1dp"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:background="@android:color/white">
+                <include layout="@layout/item_violation_requisite"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/profile_name"/>
+            </FrameLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal">
-            <TextView
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:paddingStart="24dp"
-                android:paddingTop="25dp"
-                android:paddingBottom="22dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:background="@android:color/white">
+                <include layout="@layout/item_violation_requisite"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/profile_second_name"/>
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:background="@android:color/white">
+                <include layout="@layout/item_violation_requisite"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/profile_phone"/>
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:background="@android:color/white"
-                android:text="@string/bindProfile"
-                android:textSize="16sp"
-                android:gravity="center"
-                android:drawableLeft="@mipmap/facebook"/>
-            <ImageButton
-                android:layout_width="50dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:layout_gravity="center_vertical"
-                android:src="@drawable/ic_arrow"
+                android:orientation="horizontal">
+
+                <include layout="@layout/item_violation_requisite"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/profile_email"/>
+                <ImageButton
+                    android:layout_width="50dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_arrow"
+                    android:background="@drawable/selector_common_button"
+                    android:onClick="changeEmail"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:background="@android:color/white"
-                android:onClick="bindFacebook" />
+                android:orientation="horizontal">
+
+                <include layout="@layout/item_violation_requisite"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/profile_password"/>
+                <ImageButton
+                    android:layout_width="50dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_arrow"
+                    android:background="@drawable/selector_common_button"
+                    android:onClick="changePassword"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:paddingStart="24dp"
+                    android:paddingTop="25dp"
+                    android:paddingBottom="22dp"
+                    android:background="@android:color/white"
+                    android:text="@string/bindProfile"
+                    android:textSize="16sp"
+                    android:gravity="center"
+                    android:drawableLeft="@mipmap/facebook"/>
+                <ImageButton
+                    android:layout_width="50dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_arrow"
+                    android:background="@drawable/selector_common_button"
+                    android:onClick="bindFacebook" />
+            </LinearLayout>
         </LinearLayout>
+    </ScrollView>
 
-    </LinearLayout>
-
-</ScrollView>
+    <include layout="@layout/frame_progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:id="@+id/frameLayoutProgress"/>
+</RelativeLayout>

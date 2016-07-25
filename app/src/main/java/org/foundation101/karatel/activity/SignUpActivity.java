@@ -8,7 +8,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -26,13 +25,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 public class SignUpActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -84,7 +77,11 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         if (textViewSignUpErrorMessage.getVisibility() == View.VISIBLE)
             textViewSignUpErrorMessage.setVisibility(View.GONE);
         newUser = new PunisherUser(email, password, surname, name, secondName, phone);
-        new SignUpSender(this).execute(newUser);
+        if (HttpHelper.internetConnected(this)) {
+            new SignUpSender(this).execute(newUser);
+        } else {
+            Toast.makeText(this, R.string.no_internet_connection, Toast.LENGTH_LONG).show();
+        }
     }
 
     void validateButton(){
@@ -164,7 +161,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
             });
             try {
                 return HttpHelper.proceedRequest("users", request, false);
-            } catch (final IOException e){
+            } catch (final IOException e) {
                 SignUpActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

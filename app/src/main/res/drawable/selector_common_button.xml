@@ -8,7 +8,7 @@
 
     <item android:state_pressed="true">
         <shape>
-            <solid android:color="@color/grey_button" />
+            <solid android:color="@color/lightGrey" />
         </shape>
     </item>
 
