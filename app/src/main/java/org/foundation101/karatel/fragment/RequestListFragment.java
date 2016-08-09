@@ -59,7 +59,7 @@ public class RequestListFragment extends Fragment {
     RequestListAdapter requestListAdapter;
     RelativeLayout sortMenu;
     TextView textViewByStatus, textViewByDate;
-    ImageView sortByStatusButton, sortByDateButton;
+    //ImageView sortByStatusButton, sortByDateButton;
 
     SQLiteDatabase db;
 
@@ -74,6 +74,7 @@ public class RequestListFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        punishPerformed = false;
         super.onCreate(savedInstanceState);
         db = new DBHelper(getContext(), DBHelper.DATABASE, 1).getReadableDatabase();
         setHasOptionsMenu(true);
@@ -105,12 +106,12 @@ public class RequestListFragment extends Fragment {
         progressBar = (FrameLayout) view.findViewById(R.id.frameLayoutProgress);
         sortMenu = (RelativeLayout) view.findViewById(R.id.sortingLayout);
 
-        sortByStatusButton = (ImageView)view.findViewById(R.id.sortByStatusButton);
-        sortByStatusButton.setOnClickListener(new View.OnClickListener() {
+        textViewByStatus = (TextView) view.findViewById(R.id.textViewByStatus);
+        textViewByStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sortByStatusButton.setImageResource(R.mipmap.ic_sort_by_status_selected);
-                sortByDateButton.setImageResource(R.mipmap.ic_sort_by_date);
+                textViewByStatus.setCompoundDrawablesWithIntrinsicBounds(R.mipmap.ic_sort_by_status_selected, 0, 0, 0);
+                textViewByDate.setCompoundDrawablesWithIntrinsicBounds(R.mipmap.ic_sort_by_date, 0, 0, 0);
                 textViewByStatus.setTextColor(COLOR_GREEN);
                 textViewByDate.setTextColor(COLOR_GREY);
 
@@ -118,14 +119,13 @@ public class RequestListFragment extends Fragment {
                 requestListAdapter.notifyDataSetChanged();
             }
         });
-        textViewByStatus = (TextView)view.findViewById(R.id.textViewByStatus);
 
-        sortByDateButton = (ImageView)view.findViewById(R.id.sortByDateButton);
-        sortByDateButton.setOnClickListener(new View.OnClickListener() {
+        textViewByDate = (TextView)view.findViewById(R.id.textViewByDate);
+        textViewByDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sortByStatusButton.setImageResource(R.mipmap.ic_sort_by_status);
-                sortByDateButton.setImageResource(R.mipmap.ic_sort_by_date_selected);
+                textViewByStatus.setCompoundDrawablesWithIntrinsicBounds(R.mipmap.ic_sort_by_status, 0, 0, 0);
+                textViewByDate.setCompoundDrawablesWithIntrinsicBounds(R.mipmap.ic_sort_by_date_selected, 0, 0, 0);
                 textViewByStatus.setTextColor(COLOR_GREY);
                 textViewByDate.setTextColor(COLOR_GREEN);
 
@@ -133,7 +133,6 @@ public class RequestListFragment extends Fragment {
                 requestListAdapter.notifyDataSetChanged();
             }
         });
-        textViewByDate = (TextView)view.findViewById(R.id.textViewByDate);
 
         mainView = view;
 

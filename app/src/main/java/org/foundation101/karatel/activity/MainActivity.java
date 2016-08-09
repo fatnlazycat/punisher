@@ -1,6 +1,9 @@
 package org.foundation101.karatel.activity;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -10,6 +13,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -67,6 +71,13 @@ public class MainActivity extends AppCompatActivity {
 
     //facebook part
     CallbackManager fbCallbackManager;
+
+    private final BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            new SignOutSender().execute();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -194,6 +205,9 @@ public class MainActivity extends AppCompatActivity {
         toolbar.setTitle(tag);
 
         FacebookSdk.sdkInitialize(getApplicationContext());
+
+        LocalBroadcastManager.getInstance(getApplicationContext())
+                .registerReceiver(myBroadcastReceiver, new IntentFilter("myBroadcastReceiver"));
     }
 
     @Override
@@ -227,9 +241,15 @@ public class MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
     }
 
+    @Override
+    protected void onDestroy() {
+        LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(myBroadcastReceiver);
+        super.onDestroy();
+    }
+
     /*
-         *the task is to add the first list item with the user's name
-         */
+             *the task is to add the first list item with the user's name
+             */
     String[] makeDrawerList(){
         String[] menuItems = getResources().getStringArray(R.array.drawerMenuItems);
         ArrayList<String> tempList = new ArrayList(Arrays.asList(menuItems));
@@ -351,9 +371,10 @@ public class MainActivity extends AppCompatActivity {
         }
         if (socialUrlInApp != null){
             Intent appIntent = new Intent(Intent.ACTION_VIEW, socialUrlInApp);
-            if (appIntent.resolveActivity(getPackageManager()) != null)
+            if (appIntent.resolveActivity(getPackageManager()) != null) {
                 startActivity(appIntent);
-            return;
+                return;
+            }
         }
         if (browserIntent.resolveActivity(getPackageManager()) != null)
             startActivity(browserIntent);
@@ -412,6 +433,8 @@ public class MainActivity extends AppCompatActivity {
 
     class SignOutSender extends AsyncTask<Void, Void, String>{
 
+        SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -425,7 +448,9 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(Void... params) {
             String result;
             try {
-                String request = new HttpHelper("session").makeRequestString(new String[]{"token", Globals.pushToken});
+                String gcmToken = globalPreferences.contains(Globals.PUSH_TOKEN) ?
+                        globalPreferences.getString(Globals.PUSH_TOKEN, "") : "";
+                String request = new HttpHelper("session").makeRequestString(new String[]{"token", gcmToken});
                 if (HttpHelper.internetConnected(MainActivity.this)) {
                     result = HttpHelper.proceedRequest("signout", "DELETE", request, true);
                 } else return HttpHelper.ERROR_JSON;
@@ -456,7 +481,7 @@ public class MainActivity extends AppCompatActivity {
                     Globals.showError(MainActivity.this, R.string.error, e);
                 }
             }
-            PreferenceManager.getDefaultSharedPreferences(MainActivity.this).edit().clear().apply();
+            globalPreferences.edit().clear().apply();
             //Globals.user = null;
             //Globals.sessionToken = null;
             finishAffinity();

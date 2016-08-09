@@ -5,14 +5,11 @@ import android.content.res.Resources;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.support.v4.app.FragmentManager;
+import android.os.Bundle;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.BaseAdapter;
@@ -27,18 +24,18 @@ import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMapOptions;
+import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.R;
+import org.foundation101.karatel.PunishButtonValidator;
 import org.foundation101.karatel.ViolationRequisite;
 import org.foundation101.karatel.activity.ViolationActivity;
-import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,34 +49,40 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
 
     public RequisitesListAdapter(Context context){
         this.context=context;
-        fm = ((ViolationActivity)context).getSupportFragmentManager();
-        supportMapFragment =  SupportMapFragment.newInstance();
         addressAdapter = new ArrayAdapter<>(context, android.R.layout.simple_dropdown_item_1line);
+        geoCoder = new Geocoder(context, Locale.getDefault());
+
+        mapView = new MapView(context, new GoogleMapOptions().liteMode(true));
+        mapView.getMapAsync(this);
+
+        PunishButtonValidator.init();
     }
 
-    static final float DEFAULT_ZOOM = 17;//zoom values are floats from 2 to 21
+    public static final float DEFAULT_ZOOM = 17;//zoom values are floats from 2 to 21
     //tags for save instance state
     static final String MAP_CENTER = "MAP_CENTER";
     static final String MAP_ZOOM = "MAP_ZOOM";
     static final String MAP_HAS_MARKER = "MAP_HAS_MARKER";
 
+    public ArrayList<ViewHolder> holders = new ArrayList<>();
+
     LatLng savedLatLng;
     float savedZoom;
     boolean savedHasMarker;
 
-    private Context context;
+    public Context context;
     public ArrayList<ViolationRequisite> content;
 
-    boolean editTrigger = true;
-    boolean hasMarker = false;
+    public boolean editTrigger = true;
+    public boolean hasMarker = false;
 
-    FragmentManager fm;
-    SupportMapFragment supportMapFragment;
-    private GoogleMap mMap;
+    public EditText addressEditText;
+    Geocoder geoCoder;
+    MapView mapView;
+    public GoogleMap mMap;
     PlaceLikelihoodBuffer likelyPlaces;
     PendingResult<PlaceLikelihoodBuffer> placeLikelihoodResult;
-    ArrayAdapter<PlaceLikelihoodHolder> addressAdapter;
-    String addressForEditText = "";
+    public ArrayAdapter<PlaceLikelihoodHolder> addressAdapter;
 
     public void setEditTrigger(boolean editTrigger) {
         this.editTrigger = editTrigger;
@@ -98,9 +101,20 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
             requisite.name = array[i++];
             requisite.description = array[i++];
             requisite.hint = array[i++];
+            requisite.necessary = Boolean.valueOf(array[i++]);
             result.add(requisite);
         }
         return result;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return position;
+    }
+
+    @Override
+    public int getViewTypeCount() {
+        return getCount();
     }
 
     @Override
@@ -120,80 +134,13 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        if (convertView==null) {
-            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            convertView = inflater.inflate(R.layout.item_violation_requisite, parent, false);
-        }
-
-        ViolationRequisite thisRequisite = content.get(position);
-
-        TextView textViewRequisiteHeader=(TextView)convertView.findViewById(R.id.textViewRequisiteHeader);
-        textViewRequisiteHeader.setText(thisRequisite.name);
-
-        TextView textViewRequisiteDescription=(TextView)convertView.findViewById(R.id.textViewRequisiteDescription);
-        if (thisRequisite.description.isEmpty()) {
-            textViewRequisiteDescription.setVisibility(View.GONE);
-        } else {
-            textViewRequisiteDescription.setVisibility(View.VISIBLE);
-            textViewRequisiteDescription.setText(thisRequisite.description);
-        }
-
-        //work with map & autocomplete textview
-        EditText editTextRequisite;
-        String requisiteValue;
-        if (thisRequisite.dbTag.endsWith("_address")){
-            FrameLayout mapContainer = (FrameLayout)convertView.findViewById(R.id.mapContainer);
-            fm.beginTransaction().replace(R.id.mapContainer, supportMapFragment).commitAllowingStateLoss();// allowingStateLoss - Fighting with java.lang.IllegalStateException: Can not perform this action after onSaveInstanceState
-            supportMapFragment.getMapAsync(this);
-            mapContainer.setVisibility(View.VISIBLE);
-
-            editTextRequisite = (AutoCompleteTextView)convertView.findViewById(R.id.editTextRequisite);
-            ((AutoCompleteTextView)editTextRequisite).setThreshold(0);
-            ((AutoCompleteTextView)editTextRequisite).setAdapter(addressAdapter);
-            ((AutoCompleteTextView)editTextRequisite).setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    if (mMap != null) {
-                        mMap.clear();
-                        PlaceLikelihoodHolder placeHolder= (PlaceLikelihoodHolder) parent.getAdapter().getItem(position);
-                        LatLng place = placeHolder.field.getPlace().getLatLng();
-                        MarkerOptions marker = new MarkerOptions().position(place);
-                        mMap.addMarker(marker);
-                        hasMarker = true;
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place, 17));
-                    }
-                }
-            });
-            requisiteValue = addressForEditText.isEmpty() ? thisRequisite.value : addressForEditText;
-        } else { //it's not autocomplete - ordinary EditText
-            editTextRequisite = (EditText) convertView.findViewById(R.id.editTextRequisite);
-            requisiteValue = thisRequisite.value;
-        }
-        if ((requisiteValue == null) || (requisiteValue.isEmpty())){
-            editTextRequisite.setHint(thisRequisite.hint);
-        } else {
-            editTextRequisite.setText(requisiteValue);
-        }
-        editTextRequisite.setEnabled(editTrigger);
-        editTextRequisite.setFocusable(editTrigger);
-        if (editTrigger) {
-            editTextRequisite.addTextChangedListener(new MyTextWatcher(editTextRequisite, position));
-            editTextRequisite.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    if (hasFocus) {
-                        ((TextView) v).setText(((TextView) v).getText().toString());
-                        ((EditText) v).setSelection(((EditText) v).getText().length());
-                    }
-                }
-            });
-        }
         return convertView;
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
         float zoom = DEFAULT_ZOOM;
         double latitude = 0;
         double longitude = 0;
@@ -213,16 +160,38 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
             if (((ViolationActivity) context).getMode() == ViolationActivity.MODE_CREATE)
                 ((ViolationActivity) context).blockButtons(false);
         }
-        LatLng here = new LatLng(latitude, longitude);
-        /*if (hasMarker){
-            mMap.clear();
-        }*/
 
-        if (((ViolationActivity) context).getMode() > ViolationActivity.MODE_EDIT){
-            MarkerOptions markerOptions = new MarkerOptions().position(here);
-            Marker marker = mMap.addMarker(markerOptions);
+        LatLng here = new LatLng(latitude, longitude);
+
+        if (((ViolationActivity) context).getMode() > ViolationActivity.MODE_CREATE){
+
+
+            /*//after defining coordinates we check if it's not in edit mode & text field address is filled in
+            // then try to display address from that text field
+            if (editTrigger && (!userEnteredAddress.equals(userEnteredAddressOldValue))) {
+                //userEnteredAddressOldValue = userEnteredAddress;
+                List<Address> addresses;
+                int i = 0;
+                try {
+                    do {
+                        addresses = geoCoder.getFromLocationName(addressEditText.getText().toString(), 1);
+                        i++;
+                    } while (addresses.size() == 0 && i < 10);
+                    Address address = addresses.get(0);
+                    markerOptions = new MarkerOptions().position(new LatLng(address.getLongitude(), address.getLatitude()));
+                } catch (NullPointerException | IOException | IndexOutOfBoundsException e) {
+                    markerOptions = new MarkerOptions().position(here);
+                    e.printStackTrace();
+                }
+            } else {
+                markerOptions = new MarkerOptions().position(here);
+            }*/
+            if (((ViolationActivity) context).getMode() != ViolationActivity.MODE_EDIT) {
+                MarkerOptions markerOptions = new MarkerOptions().position(here);
+                Marker marker = mMap.addMarker(markerOptions);
+                hasMarker = true;
+            }
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, DEFAULT_ZOOM));
-            hasMarker = true;
         } else {
             mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
                 @Override
@@ -233,7 +202,6 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
                     hasMarker = true;
 
                     //reverse geocoding
-                    Geocoder geoCoder = new Geocoder(context, Locale.getDefault());
                     try {
                         List<Address> addresses = geoCoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
                         if (addresses.size() > 0) {
@@ -241,8 +209,7 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
                             for (int i=0; i < addresses.get(0).getMaxAddressLineIndex(); i++){
                                 sb.append(addresses.get(0).getAddressLine(i) + " ");
                             }
-                            addressForEditText = sb.toString();
-                            notifyDataSetChanged();
+                            if (addressEditText != null) addressEditText.setText(sb.toString());
                         }
                     } catch (IOException e) {
                         Globals.showError(context, "can't find address", e);
@@ -272,7 +239,7 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
             zoom = savedZoom;
         }
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, zoom));
-
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         if (placeLikelihoodResult == null
                 && ((ViolationActivity) context).googleApiClient != null) {
             placeLikelihoodResult = Places.PlaceDetectionApi.getCurrentPlace(((ViolationActivity) context).googleApiClient, null);
@@ -297,6 +264,12 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
         }
     }
 
+
+
+    public void reclaimMap(){
+        if (mMap != null) onMapReady(mMap);
+    }
+
     public void releaseMap(){
         if (likelyPlaces != null) likelyPlaces.release();
     }
@@ -305,7 +278,7 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
         savedLatLng = null;
     }
 
-    /*public void getMapDataFromBundle(Bundle savedState) {
+    public void getMapDataFromBundle(Bundle savedState) {
         if (mMap != null){
             LatLng latLng = savedState.getParcelable(MAP_CENTER);
             float zoom = savedState.getFloat(MAP_ZOOM);
@@ -323,17 +296,14 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
             outState.putFloat(MAP_ZOOM, mMap.getCameraPosition().zoom);
             outState.putBoolean(MAP_HAS_MARKER, hasMarker);
         }
-    }*/
+    }
 
     class MyTextWatcher implements TextWatcher{
-        TextView textView;
-        int position, linesNumber;
+        /*int position;
 
-        MyTextWatcher(TextView view, int position){
-            textView = view;
+        MyTextWatcher(int position){
             this.position = position;
-            linesNumber = textView.getLineCount();
-        }
+        }*/
 
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -343,20 +313,14 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
 
         @Override
         public void afterTextChanged(Editable s) {
-            content.get(position).value = textView.getText().toString();
-            addressForEditText = "";
-            int newLinesNumber = textView.getLineCount();
-            if (linesNumber !=  newLinesNumber) {
-                linesNumber = newLinesNumber;
-                notifyDataSetChanged();
-                ((ViolationActivity) context).setFocusOnEditTextInRequisitesAdapter(position);
-            }
-            ((ViolationActivity) context).validatePunishButton();
+            //addressForEditText = "";
+
+            //content.get(position).value = s.toString();
         }
     }
 
-    class PlaceLikelihoodHolder{
-        PlaceLikelihood field;
+    public class PlaceLikelihoodHolder{
+        public PlaceLikelihood field;
         PlaceLikelihoodHolder(PlaceLikelihood field){
             this.field = field;
         }
@@ -365,5 +329,11 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
         public String toString() {
             return (field != null) ? field.getPlace().getAddress().toString() : super.toString();
         }
+    }
+
+    public static class ViewHolder{
+        public TextView textViewRequisiteHeader, textViewRequisiteDescription;
+        public AutoCompleteTextView editTextRequisite;
+        public FrameLayout mapContainer;
     }
 }

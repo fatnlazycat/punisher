@@ -1,7 +1,9 @@
 package org.foundation101.karatel.view;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -9,12 +11,19 @@ import android.widget.ScrollView;
 
 import org.foundation101.karatel.Globals;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Dima on 07.07.2016.
  */
 public class MyScrollView extends ScrollView{
 
-    @Override
+    /*
+     *peace of code that fights the problem when keyboard gets focused and this throws exception
+     */
+
+    /*@Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         if (!isFocusDescendantOfThis()){
             View viewToFocus = getFirstFocusableInHierarchy(this);
@@ -53,7 +62,8 @@ public class MyScrollView extends ScrollView{
             }
         }
         return null;
-    }
+    }*/
+
 
     public MyScrollView(Context context) {
         super(context);
@@ -67,4 +77,36 @@ public class MyScrollView extends ScrollView{
         super(context, attrs, defStyleAttr);
     }
 
+    //this is used to enable internal scrolling of views within this ScrollView
+    List<View> mInterceptScrollViews = new ArrayList<>();
+
+    public void addInterceptScrollView(View view) {
+        mInterceptScrollViews.add(view);
+    }
+
+    public void removeInterceptScrollView(View view) {
+        mInterceptScrollViews.remove(view);
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent event) {
+
+        // check if we have any views that should use their own scrolling
+        if (mInterceptScrollViews.size() > 0) {
+            int x = (int) event.getX();
+            int y = (int) event.getY();
+            Rect bounds = new Rect();
+
+            for (View view : mInterceptScrollViews) {
+                view.getHitRect(bounds);
+                if (bounds.contains(x, y)) {
+                    //were touching a view that should intercept scrolling
+                    return false;
+                }
+            }
+        }
+
+        return super.onInterceptTouchEvent(event);
+    }
 }
+

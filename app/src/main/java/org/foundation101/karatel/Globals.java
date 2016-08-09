@@ -40,6 +40,7 @@ public class Globals {
     public static final int MAIN_ACTIVITY_NEWS_FRAGMENT = 4;
     public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 6;
 
+    public static final String PUSH_TOKEN = "PUSH_TOKEN";
     public static boolean MAIN_ACTIVITY_FROM_PUSH = false;
 
     //user data tags
@@ -61,7 +62,7 @@ public class Globals {
 
     //static final String GOOGLE_SENDER_ID = "301781387946";
 
-    public static String sessionToken, pushToken;
+    public static String sessionToken;
     public static PunisherUser user;
 
     //preferences
@@ -112,16 +113,16 @@ public class Globals {
     public static void showError(Context context, int errorMessageResId, Exception e){
         Toast.makeText(context, errorMessageResId, Toast.LENGTH_LONG).show();
         if (e != null) {
-            String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
-            Log.e("Punisher error", logMessage);
+            //String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
+            Log.d("Punisher error", "", e);
         }
     }
 
     public static void showError(Context context, String errorMessage, Exception e){
         Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show();
         if (e != null) {
-            String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
-            Log.e("Punisher error", logMessage);
+            //String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
+            Log.d("Punisher error", "", e);
         }
     }
 }

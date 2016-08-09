@@ -77,7 +77,8 @@ public class TipsActivity extends Activity {
     public void login(View view) {
         String email = editTextLoginEmail.getText().toString();
         String passw = editTextLoginPassword.getText().toString();
-        String gcmToken = Globals.pushToken == null ? "" : Globals.pushToken;
+        String gcmToken = globalPreferences.contains(Globals.PUSH_TOKEN) ?
+                globalPreferences.getString(Globals.PUSH_TOKEN, "") : "";
         String request = new HttpHelper("session").makeRequestString(new String[] {
                 "email", email,
                 "password", passw,

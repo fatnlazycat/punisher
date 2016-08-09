@@ -1,6 +1,7 @@
 package org.foundation101.karatel.service;
 
 import android.app.IntentService;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -12,6 +13,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 
 import java.io.IOException;
@@ -27,6 +29,7 @@ public class RegistrationIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        Log.e("Punisher", intent.toString());
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         try {
@@ -39,7 +42,7 @@ public class RegistrationIntentService extends IntentService {
             InstanceID instanceID = InstanceID.getInstance(this);
             String token = instanceID.getToken(getString(R.string.gcm_defaultSenderId),
                     GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-            Globals.pushToken = token;
+            sharedPreferences.edit().putString(Globals.PUSH_TOKEN, token).apply();
             // [END get_token]
             Log.i(TAG, "GCM Registration Token: " + token);
 
@@ -56,6 +59,17 @@ public class RegistrationIntentService extends IntentService {
             // [END register_for_gcm]
         } catch (Exception e) {
             Log.d(TAG, "Failed to complete token refresh", e);
+            ((Karatel)getApplication()).showOneButtonDialogFromService(
+                    "Помилка отримання токена",
+                    "Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    }
+            );
+
             // If an exception happens while fetching the new token or updating our registration data
             // on a third-party server, this ensures that we'll attempt the update at a later time.
             sharedPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, false).apply();

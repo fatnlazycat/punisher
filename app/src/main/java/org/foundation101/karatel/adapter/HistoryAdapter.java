@@ -37,7 +37,6 @@ import java.io.IOException;
 public class HistoryAdapter extends BaseAdapter {
     public HistoryAdapter(Context context){
         this.context = context;
-        request = ((ViolationActivity)context).request;
         violationStatuses = context.getResources().getStringArray(R.array.violationStatuses);
     }
 
@@ -46,6 +45,7 @@ public class HistoryAdapter extends BaseAdapter {
     Context context;
     String[] violationStatuses;
     private static final String googleDocsUrl = "http://docs.google.com/viewer?url=";
+    public static final String PDF = ".pdf";
     public static final String STATUS_CLOSED = "Закрито";
 
     public UpdateEntity[] getContent() {
@@ -138,13 +138,16 @@ public class HistoryAdapter extends BaseAdapter {
             if (thisUpdate.documents != null && thisUpdate.documents.length > 0) {
                 holder.headerAnswer.setVisibility(View.VISIBLE );
                 holder.answerLayout.setVisibility(View.VISIBLE );
-                final String docUrl = googleDocsUrl + Globals.SERVER_URL.replace("/api/v1/", "")
+                holder.imageAnswer.getSettings().setLoadWithOverviewMode(true);
+                holder.imageAnswer.getSettings().setUseWideViewPort(true);
+                String suffix = thisUpdate.documents[0].url.endsWith(PDF) ? googleDocsUrl : "";
+                final String docUrl = suffix + Globals.SERVER_URL.replace("/api/v1/", "")
                         + thisUpdate.documents[0].url;
                 holder.imageAnswer.loadUrl(docUrl);
                 holder.imageAnswer.setWebViewClient(new WebViewClient(){
                     @Override
                     public void onPageFinished(WebView view, String url) {
-                        view.pageDown(true);
+                        //view.pageDown(true);
                     }
                 });
                 int progress = holder.imageAnswer.getProgress();
@@ -170,7 +173,7 @@ public class HistoryAdapter extends BaseAdapter {
 
                 if (statusText.equals(STATUS_CLOSED)) {
                     holder.rateLayout.setVisibility(View.VISIBLE);
-                    switch (request.rating) {
+                    switch (((ViolationActivity)context).request.rating) {
                         case -1: {
                             holder.textRate.setText(R.string.your_estimation);
                             holder.buttonDislike.setClickable(false);
@@ -284,7 +287,7 @@ public class HistoryAdapter extends BaseAdapter {
                 JSONObject json = new JSONObject(s);
                 switch (json.getString("status")) {
                     case Globals.SERVER_SUCCESS: {
-                        request.rating = rate;
+                        ((ViolationActivity)context).request.rating = rate;
                         notifyDataSetChanged();
                         break;
                     }

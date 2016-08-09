@@ -1,64 +1,69 @@
 package org.foundation101.karatel.activity;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.fragment.TutorialFragment;
 
-public class TutorialActivity extends Activity {
-    private int stage;
+public class TutorialActivity extends FragmentActivity {
     final int MAX_STAGE=4;
     public static final String FIRST_TIME_TUTORIAL = "firstTimeTutorial";
-    private String[] texts;
 
-    ImageView tutorialImage;
-    ImageView[] circles;
-    TextView tutorialText;
+    ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tutorial);
 
-        tutorialImage = (ImageView)findViewById(R.id.imageViewTutorial);
-        tutorialImage.setImageResource(R.drawable.level_list_tutorial);
-
-        tutorialText = (TextView)findViewById(R.id.textViewTutorial);
-        texts=getResources().getStringArray(R.array.tutorialStringArray);
-        tutorialText.setText(texts[0]);
-
-        //setting the small circles
-        circles = new ImageView[]{
-            (ImageView)findViewById(R.id.small_circle0),
-            (ImageView)findViewById(R.id.small_circle1),
-            (ImageView)findViewById(R.id.small_circle2),
-            (ImageView)findViewById(R.id.small_circle3),
-            (ImageView)findViewById(R.id.small_circle4),
-        };
-        for (int i=0; i < circles.length; i++){
-            if (i==stage) circles[i].setImageResource(R.drawable.small_green_circle);
-                else circles[i].setImageResource(R.drawable.small_grey_circle);
-        }
+        // Instantiate a ViewPager and a PagerAdapter.
+        viewPager = (ViewPager) findViewById(R.id.viewPager);
+        ScreenSlidePagerAdapter adapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
+        viewPager.setAdapter(adapter);
     }
 
     public void proceedWithTutorial(View view) {
-        if (stage++ < MAX_STAGE) {
-            tutorialText.setText(texts[stage]);
-            tutorialImage.setImageLevel(stage);
-            for (int i=0; i < circles.length; i++){
-                if (i==stage) circles[i].setImageResource(R.drawable.small_green_circle);
-                else circles[i].setImageResource(R.drawable.small_grey_circle);
-            }
+        int stage = viewPager.getCurrentItem();
+        if (stage < MAX_STAGE) {
+            viewPager.setCurrentItem(stage + 1);
         } else {
             if (getIntent().getBooleanExtra(FIRST_TIME_TUTORIAL, true)) {
                 startActivity(new Intent(this, TipsActivity.class));
             } else {
                 finish();
             }
+        }
+    }
+
+    /**
+     * A simple pager adapter
+     */
+    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
+        public ScreenSlidePagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            Fragment fragment = new TutorialFragment();
+            Bundle arg = new Bundle();
+            arg.putInt(TutorialFragment.STAGE, position);
+            fragment.setArguments(arg);
+            return fragment;
+        }
+
+        @Override
+        public int getCount() {
+            return MAX_STAGE + 1;
         }
     }
 }

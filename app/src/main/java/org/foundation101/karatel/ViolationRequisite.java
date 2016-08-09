@@ -14,6 +14,7 @@ import java.util.Map;
  */
 public class ViolationRequisite {
     public String dbTag, name, description, hint, value;
+    public boolean necessary;
 
     public static String[] getRequisites(Context context, String type){
         String[] common = new String[] {"user_id", "id_number", "complain_status_id", "longitude", "latitude",
@@ -25,7 +26,7 @@ public class ViolationRequisite {
         int arrayId = res.getIdentifier(type + "Requisites", "array", packageName);
         String[] array = res.getStringArray(arrayId);
 
-        for (int i=0; i < array.length; i+=4){
+        for (int i=0; i < array.length; i += DBHelper.DB_TAG_STEP){
             String dbTag = array[i].replace(type + "_", "");
             resultingList.add(dbTag);
         }

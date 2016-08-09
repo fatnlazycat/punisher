@@ -32,6 +32,8 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String LATITUDE = "latitude";
     public static final String FILE_NAME = "file_name";
 
+    public static final int DB_TAG_STEP = 5;
+
     public DBHelper(Context context, String name, int version) {
         super(context, name, null, version);
         this.context = context;
@@ -45,7 +47,7 @@ public class DBHelper extends SQLiteOpenHelper {
         for (String violation : violations){
             int arrayId = res.getIdentifier(violation + "Requisites", "array", context.getPackageName());
             String[] requisites = res.getStringArray(arrayId);
-            for (int i = 0; i < requisites.length; i += 4){
+            for (int i = 0; i < requisites.length; i += DB_TAG_STEP){
                 sb.append(requisites[i] + " TEXT,");
             }
         }

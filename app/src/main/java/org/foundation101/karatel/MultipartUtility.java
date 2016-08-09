@@ -2,6 +2,7 @@ package org.foundation101.karatel;
 
 import android.util.Log;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,6 +23,7 @@ public class MultipartUtility {
     private HttpURLConnection httpConn;
 
     private OutputStream outputStream;
+    BufferedOutputStream bos;
     private PrintWriter writer;
 
     public MultipartUtility(String requestURL, String charset) throws IOException {
@@ -52,6 +54,7 @@ public class MultipartUtility {
         httpConn.setRequestProperty( "Accept-Encoding", "" );
         httpConn.setRequestProperty("Authorization", Globals.sessionToken);
         outputStream = httpConn.getOutputStream();
+        bos = new BufferedOutputStream(outputStream, 4096);
         writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
     }
 
@@ -98,8 +101,13 @@ public class MultipartUtility {
         int bytesRead = -1;
         int i = 0;
         while ((bytesRead = inputStream.read(buffer)) != -1) {
-            outputStream.write(buffer, 0, bytesRead);
-            Log.e("Punisher", "#" + bytesRead + " # " + i++);
+            try {
+                bos.write(buffer, 0, bytesRead);
+                bos.flush();
+                Log.e("Punisher", "#" + bytesRead + " # " + i++);
+            } catch (OutOfMemoryError e){
+                Runtime.getRuntime().gc();
+            }
         }
         outputStream.flush();
         inputStream.close();

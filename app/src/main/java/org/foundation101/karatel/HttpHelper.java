@@ -41,6 +41,7 @@ public class HttpHelper {
     }
 
     public static boolean internetConnected(Context context){
+        if (context == null) return true; //this line is needed to avoid crash if the user started AsyncTask operation & aborted it during execution
         ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Activity.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
         return (networkInfo != null && networkInfo.isConnected());

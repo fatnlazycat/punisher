@@ -82,26 +82,31 @@
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
+        <item>true</item>
 
         <item>Bribe_all_name</item>
         <item>П.І.Б. ХАБАРНИКА</item>
         <item>Не обов’язково, але бажано заповнити</item>
         <item>П.І.Б.</item>
+        <item>false</item>
 
         <item>Bribe_position</item>
         <item>ПОСАДА ХАБАРНИКА</item>
         <item>Не обов’язково, але бажано заповнити</item>
         <item>Вкажіть посаду</item>
+        <item>false</item>
 
         <item>Bribe_name_of_authority</item>
         <item>НАЗВА ОРГАНУ ВЛАДИ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
+        <item>true</item>
 
         <item>Bribe_description</item>
         <item>ЩО СТАЛОСЬ?</item>
         <item>Коротко описати обставини, за яких стався інцидент</item>
         <item>Детально вкажіть обставини</item>
+        <item>true</item>
     </string-array>
 
     <string-array name="InsultRequisites">
@@ -109,31 +114,37 @@
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
+        <item>true</item>
 
         <item>Insult_all_name</item>
         <item>П.І.Б. ТОГО, ХТО ВАС ОБРАЗИВ</item>
         <item>Не обов’язково, але бажано заповнити</item>
-        <item>Вкажіть місце інциденту</item>
+        <item>Вкажіть П.І.Б.</item>
+        <item>false</item>
 
         <item>Insult_position</item>
         <item>ПОСАДА ТОГО, ХТО ВАС ОБРАЗИВ</item>
         <item>Не обов’язково, але бажано заповнити</item>
         <item>Вкажіть посаду</item>
+        <item>false</item>
 
         <item>Insult_name_of_authority</item>
         <item>НАЗВА ОРГАНУ ВЛАДИ АБО ПРИВАТНОГО ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
+        <item>true</item>
 
         <item>Insult_name_of_institution</item>
         <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>
         <item>Виключно для приватних закладів; подивитись в кутку споживача</item>
         <item>Виключно для приватних закладів</item>
+        <item>false</item>
 
         <item>Insult_description</item>
         <item>ЩО СТАЛОСЬ?</item>
         <item>Коротко описати обставини, за яких стався інцидент</item>
         <item>Детально вкажіть обставини</item>
+        <item>true</item>
     </string-array>
 
     <string-array name="WrongParkingRequisites">
@@ -141,16 +152,19 @@
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
+        <item>true</item>
 
         <item>WrongParking_vehicle_number</item>
         <item>НОМЕР АВТОМОБІЛЯ</item>
         <item></item>
         <item>Номер автомобіля</item>
+        <item>true</item>
 
         <item>WrongParking_description</item>
         <item>ОПИС ПОРУШЕННЯ</item>
         <item>Якомога точніше: паркування на газоні, тротуарі, пішоходному переході тощо</item>
         <item>Наприклад: Паркування на газоні</item>
+        <item>true</item>
     </string-array>
 
     <string-array name="PitRoadRequisites">
@@ -158,16 +172,19 @@
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
+        <item>true</item>
 
         <item>PitRoad_the_closest_landmark</item>
         <item>НАЙБЛИЖЧИЙ ОРІЄНТИР</item>
         <item>Заклад, зупинка, будинок, кіоск тощо</item>
         <item>Вкажіть найближчий орієнтір</item>
+        <item>true</item>
 
         <item>PitRoad_description</item>
         <item>ОПИС ЯМИ</item>
         <item>Якомога детальніше: розмір, де знаходиться, чим саме заважає тощо</item>
         <item>Детально вкажіть характеристики</item>
+        <item>true</item>
     </string-array>
 
     <string-array name="DamageRequisites">
@@ -175,16 +192,19 @@
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
+        <item>true</item>
 
         <item>Damage_the_closest_landmark</item>
         <item>НАЙБЛИЖЧИЙ ОРІЄНТИР</item>
         <item>Заклад, зупинка, будинок, кіоск тощо</item>
         <item>Вкажіть найближчий орієнтір</item>
+        <item>true</item>
 
         <item>Damage_description</item>
         <item>ОПИС ПОРУШЕННЯ</item>
         <item>Якомога детальніше: сміття на вулиці, відсутність урни біля кіоску тощо</item>
         <item>Детально вкажіть обставини</item>
+        <item>true</item>
     </string-array>
 
     <string-array name="NoSmokingRequisites">
@@ -192,21 +212,25 @@
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
+        <item>true</item>
 
         <item>NoSmoking_name_of_institution</item>
         <item>НАЗВА ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
+        <item>true</item>
 
         <item>NoSmoking_name_of_entity</item>
         <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>
         <item>Юридична особа або підприємець; подивитись в кутку споживача</item>
         <item>Юридична особа або підприємець</item>
+        <item>true</item>
 
         <item>NoSmoking_description</item>
         <item>ОПИС ПОРУШЕННЯ</item>
         <item>Якомога детальніше: в якому залі, що курили (сигарети, електронні сигарети, кальян тощо)</item>
         <item>Детально вкажіть обставини</item>
+        <item>true</item>
     </string-array>
 
     <string-array name="SaleOfGoodRequisites">
@@ -214,26 +238,31 @@
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
         <item>Вкажіть місце інциденту</item>
+        <item>true</item>
 
         <item>SaleOfGood_name_of_institution</item>
         <item>НАЗВА ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
         <item>Вкажіть напіс на вивісці</item>
+        <item>true</item>
 
         <item>SaleOfGood_name_of_entity</item>
         <item>НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ</item>
         <item>Юридична особа або підприємець; подивитись в кутку споживача</item>
         <item>Юридична особа або підприємець</item>
+        <item>true</item>
 
         <item>SaleOfGood_product_name</item>
         <item>НАЗВА ТОВАРУ</item>
         <item></item>
         <item>Вкажіть назву товару</item>
+        <item>true</item>
 
         <item>SaleOfGood_name_producer</item>
         <item>НАЗВА ВИРОБНИКА ТОВАРУ</item>
         <item>Юридична особа або підприємець</item>
         <item>Юридична особа або підприємець</item>
+        <item>true</item>
     </string-array>
 
     <string-array name="change_avatar_dialog_items">

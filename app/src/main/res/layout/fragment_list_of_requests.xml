@@ -29,30 +29,35 @@
             android:gravity="center"
             android:layout_below="@id/textViewDoSort">
 
-            <ImageView
+            <!--ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@mipmap/ic_sort_by_status"
-                android:id="@+id/sortByStatusButton"/>
+                android:id="@+id/sortByStatusButton"/-->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="15dp"
+                android:gravity="center_vertical"
+                android:drawableStart="@mipmap/ic_sort_by_status"
+                android:drawablePadding="15dp"
                 android:text="@string/byStatus"
                 android:textAllCaps="true"
                 android:textColor="@color/grey_button"
                 android:id="@+id/textViewByStatus"/>
 
-            <ImageView
+            <!--ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="47dp"
                 android:src="@mipmap/ic_sort_by_date"
-                android:id="@+id/sortByDateButton"/>
+                android:id="@+id/sortByDateButton"/-->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="15dp"
+                android:layout_marginLeft="47dp"
+                android:gravity="center_vertical"
+                android:drawableStart="@mipmap/ic_sort_by_date"
+                android:drawablePadding="15dp"
                 android:text="@string/byDate"
                 android:textAllCaps="true"
                 android:textColor="@color/grey_button"
