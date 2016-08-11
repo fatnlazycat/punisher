@@ -1,5 +1,10 @@
 package org.foundation101.karatel.fragment;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
@@ -10,9 +15,12 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -58,7 +66,9 @@ public class RequestListFragment extends Fragment {
     FrameLayout progressBar;
     RequestListAdapter requestListAdapter;
     RelativeLayout sortMenu;
+    SwipeRefreshLayout swipeRefreshLayout;
     TextView textViewByStatus, textViewByDate;
+    Snackbar snackbar;
     //ImageView sortByStatusButton, sortByDateButton;
 
     SQLiteDatabase db;
@@ -136,27 +146,43 @@ public class RequestListFragment extends Fragment {
 
         mainView = view;
 
+        swipeRefreshLayout = (SwipeRefreshLayout)view.findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                if (snackbar.isShownOrQueued()) {
+                    swipeRefreshLayout.setRefreshing(false);
+                } else {
+                    new RefreshListOfRequestsDialog(getActivity()).get().show();
+                }
+            }
+        });
+
         recycler = (RecyclerView)view.findViewById(R.id.recyclerViewRequests);
         recycler.setHasFixedSize(true);
         recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         requestListAdapter = new RequestListAdapter(getContext(), progressBar);
-        requestListAdapter.setContent(getDraftRequests());
+
+        makeRequestListAdapterContent();
+
         recycler.setAdapter(requestListAdapter);
         ItemTouchHelper.Callback callback = new MyItemTouchHelperCallback(requestListAdapter);
         ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
         touchHelper.attachToRecyclerView(recycler);
-
-        new RequestListFetcher().execute();
     }
 
     @Override
     public void onResume() {
         if (punishPerformed) {
-            requestListAdapter.setContent(getDraftRequests());
-            new RequestListFetcher().execute();
+            makeRequestListAdapterContent();
             punishPerformed = false;
         }
         super.onResume();
+    }
+
+    void makeRequestListAdapterContent(){
+        requestListAdapter.setContent(getDraftRequests());
+        new RequestListFetcher().execute();
     }
 
     ArrayList<Request> getDraftRequests(){
@@ -246,8 +272,7 @@ public class RequestListFragment extends Fragment {
 
             final Request requestToDelete = requestListAdapter.getContent().get(position);
             touchAdapter.onItemDismiss(position);
-            Snackbar snackbar = Snackbar
-                    .make(recycler, "Видалено", Snackbar.LENGTH_LONG)
+            snackbar = Snackbar.make(recycler, "Видалено", Snackbar.LENGTH_LONG)
                     .setAction("UNDO", new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
@@ -339,6 +364,7 @@ public class RequestListFragment extends Fragment {
                     }
                     requestListAdapter.getContent().addAll(requestsFromServer);
                     requestListAdapter.notifyDataSetChanged();
+                    swipeRefreshLayout.setRefreshing(false);
                 }
                 if (requestListAdapter.getItemCount() == 0) { //there are no requests
                     showNoRequestsLayout();
@@ -406,6 +432,38 @@ public class RequestListFragment extends Fragment {
                 }
             }
             return 0;
+        }
+    }
+
+    class RefreshListOfRequestsDialog  extends AlertDialog {
+
+        protected RefreshListOfRequestsDialog(Context context) {
+            super(context);
+        }
+
+        public Dialog get() {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle(R.string.refresh).
+                    setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            makeRequestListAdapterContent();
+                        }
+                    }).
+                    setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                    }).
+                    setOnCancelListener(new DialogInterface.OnCancelListener() {
+                        @Override
+                        public void onCancel(DialogInterface dialog) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                    }).
+                    setCancelable(true);
+            return builder.create();
         }
     }
 }

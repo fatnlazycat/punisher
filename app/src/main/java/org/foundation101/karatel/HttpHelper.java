@@ -14,6 +14,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * Created by Dima on 17.05.2016.
@@ -28,13 +30,24 @@ public class HttpHelper {
     }
 
     public String makeRequestString(String[] args){
+        final LinkedHashMap<String, String> SPECIAL_CHARACTERS = new LinkedHashMap<String, String>(){
+            {
+                put("%", "%25"); //this should go first to avoid double replacing '%'
+                put("@", "%40");
+            }
+        };
         String result = "";
         int i = 0;
         while (i < args.length){
             if (args[i] == null) args[i] = "";
             if (args[i+1] == null) args[i+1] = "";
-            if (args[i].contains("@")) args[i] = args[i].replace("@", "%40");
-            if (args[i+1].contains("@")) args[i+1] = args[i+1].replace("@", "%40");
+
+            //replacing special characters
+            for (String key : SPECIAL_CHARACTERS.keySet()) {
+                if (args[i].contains(key)) args[i] = args[i].replace(key, SPECIAL_CHARACTERS.get(key));
+                if (args[i + 1].contains(key)) args[i + 1] = args[i + 1].replace(key, SPECIAL_CHARACTERS.get(key));
+            }
+
             result = result.concat(fixed).concat("%5B"+args[i++]+"%5D=").concat(args[i++]+"&");
         }
         return result.substring(0, result.length()-1); //remove trailing "&"

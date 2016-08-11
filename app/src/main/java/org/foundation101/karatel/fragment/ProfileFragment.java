@@ -3,7 +3,6 @@ package org.foundation101.karatel.fragment;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -16,7 +15,6 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -38,7 +36,6 @@ import org.foundation101.karatel.PunisherUser;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.TipsActivity;
-import org.foundation101.karatel.activity.ViolationActivity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,7 +71,7 @@ public class ProfileFragment extends Fragment {
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                new ProfileSaver().execute();
+                new ProfileSaver(getActivity()).execute();
                 return false;
             }
         });
@@ -146,7 +143,7 @@ public class ProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         if (HttpHelper.internetConnected(getActivity())) {
-            new ProfileFetcher().execute(Globals.user.id);
+            new ProfileFetcher(getActivity()).execute(Globals.user.id);
         }
         fillTextFields();
         ((MainActivity)getActivity()).setAvatarImageView(avatarView);
@@ -209,6 +206,11 @@ public class ProfileFragment extends Fragment {
 
     class ProfileSaver extends AsyncTask<Void, Void, String>{
         String name, surname, secondName, phone;
+        Activity activity;
+
+        ProfileSaver(Activity a){
+            this.activity = a;
+        }
 
         @Override
         protected void onPreExecute() {
@@ -250,7 +252,7 @@ public class ProfileFragment extends Fragment {
                     return response.toString();
                 } catch (final IOException e) {
                     if (tries == MAX_TRIES) {
-                        getActivity().runOnUiThread(new Runnable() {
+                        activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 Globals.showError(getActivity(), R.string.cannot_connect_server, e);
@@ -276,7 +278,7 @@ public class ProfileFragment extends Fragment {
                         Globals.user.secondName = secondName;
                         Globals.user.phone = phone;
 
-                        PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
+                        PreferenceManager.getDefaultSharedPreferences(activity).edit()
                                 .putString(Globals.USER_SURNAME, surname)
                                 .putString(Globals.USER_NAME, name)
                                 .putString(Globals.USER_SECOND_NAME, secondName)
@@ -293,7 +295,7 @@ public class ProfileFragment extends Fragment {
                             String oneMessage = errorJSON.getJSONArray(errorNames.getString(i)).getString(0);
                             errorMessage.append(oneMessage + "\n");
                         }
-                        Toast.makeText(getActivity(), errorMessage.toString(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(activity, errorMessage.toString(), Toast.LENGTH_LONG).show();
                         break;
                     }
                     default:{
@@ -301,12 +303,18 @@ public class ProfileFragment extends Fragment {
                     }
                 }
             } catch (JSONException eJSON){
-                Globals.showError(getContext(), R.string.error, eJSON);
+                Globals.showError(activity, R.string.error, eJSON);
             }
         }
     }
 
     class ProfileFetcher extends AsyncTask<Integer, Void, String>{
+        Activity activity;
+
+        ProfileFetcher(Activity a){
+            this.activity = a;
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -315,10 +323,10 @@ public class ProfileFragment extends Fragment {
 
         @Override
         protected String doInBackground(Integer... params) {
-                try {
+            try {
                 return HttpHelper.proceedRequest("users/" + params[0], "GET", "", true);
             } catch (final IOException e){
-                getActivity().runOnUiThread(new Runnable() {
+                activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         Globals.showError(getActivity(), R.string.cannot_connect_server, e);
@@ -344,7 +352,7 @@ public class ProfileFragment extends Fragment {
                             dataJSON.getString("phone_number"));
                     Globals.user.id = dataJSON.getInt("id");
 
-                    PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
+                    PreferenceManager.getDefaultSharedPreferences(activity).edit()
                             .putString(Globals.USER_EMAIL, dataJSON.getString("email"))
                             .putString(Globals.USER_SURNAME, dataJSON.getString("surname"))
                             .putString(Globals.USER_NAME, dataJSON.getString("firstname"))
@@ -353,7 +361,7 @@ public class ProfileFragment extends Fragment {
 
                     String avatarUrl = dataJSON.getJSONObject("avatar").getString("url");
                     if (avatarUrl != null && !avatarUrl.equals("null")) {
-                        TipsActivity.AvatarGetter avatarGetter = new TipsActivity.AvatarGetter(getActivity());
+                        TipsActivity.AvatarGetter avatarGetter = new TipsActivity.AvatarGetter(activity);
                         avatarGetter.setViewToSet(avatarView);
                         avatarGetter.execute(avatarUrl);
                     }
@@ -367,10 +375,10 @@ public class ProfileFragment extends Fragment {
                     } else {
                         errorMessage = s;
                     }
-                    Toast.makeText(getActivity(), errorMessage, Toast.LENGTH_LONG).show();
+                    Toast.makeText(activity, errorMessage, Toast.LENGTH_LONG).show();
                 }
             } catch (JSONException e) {
-                Globals.showError(getActivity(), R.string.error, e);
+                Globals.showError(activity, R.string.error, e);
             }
             progressBar.setVisibility(View.GONE);
         }

@@ -193,7 +193,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
                         if (errorsJSON != null && errorsJSON.has("password")) {
                             message = errorsJSON.getJSONArray("password").getString(0);
                         } else {
-                            message = json.getString("error");
+                            message = json.getString("errors");
                         }
                         Toast.makeText(ChangePasswordActivity.this, message, Toast.LENGTH_LONG).show();
                         break;

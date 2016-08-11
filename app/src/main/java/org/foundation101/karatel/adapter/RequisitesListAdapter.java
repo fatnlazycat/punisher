@@ -1,11 +1,13 @@
 package org.foundation101.karatel.adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -36,6 +38,9 @@ import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.PunishButtonValidator;
 import org.foundation101.karatel.ViolationRequisite;
 import org.foundation101.karatel.activity.ViolationActivity;
+import org.foundation101.karatel.fragment.ChangeAvatarFragment;
+import org.foundation101.karatel.fragment.OpenSettingsFragment;
+import org.foundation101.karatel.fragment.ProfileFragment;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -148,6 +153,8 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
             Location l = ((ViolationActivity) context).getOldAndroidLocation();
             if (l == null) {
                 ((ViolationActivity) context).blockButtons(true);
+                DialogFragment dialog = new OpenSettingsFragment();
+                dialog.show(((ViolationActivity)context).getSupportFragmentManager(), "openSettingsFragment");
             } else {
                 latitude = l.getLatitude();
                 longitude = l.getLongitude();

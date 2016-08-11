@@ -36,8 +36,6 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
 
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
@@ -57,9 +55,12 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    HashMap<Integer, String> fragmentTags;
 
     public Toolbar toolbar;
     ImageView avatarImageView;
@@ -117,49 +118,49 @@ public class MainActivity extends AppCompatActivity {
                 super.onDrawerOpened(drawerView);
                 drawerAdapter.notifyDataSetChanged();
                 initDrawerHeader();
+                Globals.hideSoftKeyboard(MainActivity.this);
             }
         };
         drawerLayout.addDrawerListener(drawerToggle);
         drawerToggle.syncState();
 
+        fragmentTags = getFragmentTags();
+
         drawerListView.setOnItemClickListener(new ListView.OnItemClickListener(){
             public void onItemClick(AdapterView parent, View view, int position, long id){
-                String tag = "";
+                drawerLayout.closeDrawer(Gravity.LEFT);
+                if (currentFragment == position) {//do not create duplicates
+                    return;
+                }
                 currentFragment = position;
+                String tag = fragmentTags.get(position);
                 switch (position){
                     case 1 : {
-                        tag = getResources().getString(R.string.do_punish);
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new MainFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
                     }
                     case 2 : {
-                        tag = getResources().getString(R.string.punishment_requests);
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new RequestListFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
                     }
                     case 3 : {
-                        tag = getResources().getString(R.string.about_header);
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new AboutFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
                     }
                     case 4 : {
-                        tag = getResources().getString(R.string.news_header);
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new NewsFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
                     }
                         case 5 : {
-                        tag = getResources().getString(R.string.contacts_header);
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new ContactsFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
                     }
                     case 6 : {
-                        tag = getResources().getString(R.string.profile_header);
-                        //do not add profile fragment to back stack because of its strange behavior
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new ProfileFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
@@ -169,7 +170,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 toolbar.setTitle(tag);
-                drawerLayout.closeDrawer(Gravity.LEFT);
             }
         });
 
@@ -178,27 +178,42 @@ public class MainActivity extends AppCompatActivity {
         String tag = "";
         if (Globals.MAIN_ACTIVITY_FROM_PUSH){
             Globals.MAIN_ACTIVITY_FROM_PUSH = false;
-            tag = getResources().getString(R.string.punishment_requests);
+            currentFragment = Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT;
+            tag = fragmentTags.get(currentFragment);
             ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
         } else {
             if (savedInstanceState != null) {
-                int action = savedInstanceState.getInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, 0);
-                switch (action){
-                    case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT:{
-                        tag = getResources().getString(R.string.punishment_requests);
-                        ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
+                currentFragment = savedInstanceState.getInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, 0);
+                tag = fragmentTags.get(currentFragment);
+                switch (currentFragment){
+                    case 1 :{
+                        ft.add(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
+                        break;
                     }
-                    case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT:{//profile fragment not added to back stack due to its strange behavior
-                        tag = getResources().getString(R.string.profile_header);
+                    case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT:{
+                        ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
+                        break;
+                    }
+                    case 3 :{
+                        ft.add(R.id.frameLayoutMain, new AboutFragment(), tag).addToBackStack(tag).commit();
+                        break;
+                    }
+                    case 5 :{
+                        ft.add(R.id.frameLayoutMain, new ContactsFragment(), tag).addToBackStack(tag).commit();
+                        break;
+                    }
+                    case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT:{
                         ft.add(R.id.frameLayoutMain, new ProfileFragment(), tag).addToBackStack(tag).commit();
+                        break;
                     }
                     case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT:{
-                        tag = getResources().getString(R.string.news_header);
                         ft.add(R.id.frameLayoutMain, new NewsFragment(), tag).addToBackStack(tag).commit();
+                        break;
                     }
                 }
             } else {
-                tag = getResources().getString(R.string.do_punish);
+                currentFragment = 1;
+                tag = fragmentTags.get(currentFragment);
                 ft.add(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
             }
         }
@@ -227,6 +242,14 @@ public class MainActivity extends AppCompatActivity {
             String tag = fManager.getBackStackEntryAt(entryNumber).getName();
             if (tag.equals(getResources().getString(R.string.profile_header))) {//skip the profile page
                 tag = getResources().getString(R.string.do_punish);//& go to main page
+                currentFragment = 1;
+            } else {
+                for (int i : fragmentTags.keySet()){
+                    if (tag.equals(fragmentTags.get(i))) {
+                        currentFragment = i;
+                        break;
+                    }
+                }
             }
             toolbar.setTitle(tag);
             fManager.popBackStackImmediate(tag, 0);
@@ -245,6 +268,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(myBroadcastReceiver);
         super.onDestroy();
+    }
+
+    //prepares final map of fragment tags
+    HashMap<Integer, String> getFragmentTags(){
+        HashMap<Integer, String> result = new HashMap<>();
+
+        result.put(1, getResources().getString(R.string.do_punish));
+        result.put(2, getResources().getString(R.string.punishment_requests));
+        result.put(3, getResources().getString(R.string.about_header));
+        result.put(4, getResources().getString(R.string.news_header));
+        result.put(5, getResources().getString(R.string.contacts_header));
+        result.put(6, getResources().getString(R.string.profile_header));
+        result.put(7, "");//exit - no tag
+
+        return result;
     }
 
     /*

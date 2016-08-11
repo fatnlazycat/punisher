@@ -102,10 +102,12 @@ public class Karatel extends Application {
             isMock = !Settings.Secure.getString(getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("0");
         }
 
+        /*
         //debug block
         String message = isMock ? "mock" : "good!";
         Toast.makeText(this, "georesult = "+message, Toast.LENGTH_LONG).show();
         Log.e("Punisher","georesult = "+message);
+        */
 
         return isMock;
     }

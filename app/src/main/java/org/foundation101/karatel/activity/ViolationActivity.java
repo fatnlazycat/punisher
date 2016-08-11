@@ -33,7 +33,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -50,12 +49,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMapOptions;
-import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -69,7 +64,6 @@ import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.MultipartUtility;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Request;
-import org.foundation101.karatel.UpdateEntity;
 import org.foundation101.karatel.Violation;
 import org.foundation101.karatel.ViolationRequisite;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
@@ -119,6 +113,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     FragmentManager fm;
     Geocoder geoCoder;
     SupportMapFragment supportMapFragment;
+    final Double REFRESH_ACCURACY = 0.001;
 
     public int getMode() {
         return mode;
@@ -137,7 +132,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     Button punishButton, saveButton;
 
     public GoogleApiClient googleApiClient;
-    Location l;
+    Location location;
 
     @Override
     protected void onStart() {
@@ -750,10 +745,16 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     .setInterval(1);
             LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, lr, this);
 
-            l = getLastLocation();
-            if (l != null) {
-                latitude = l.getLatitude();
-                longitude = l.getLongitude();
+            location = getLastLocation();
+            if (location != null && !((Karatel)getApplicationContext()).locationIsMock(location)) {
+                Double absLat = Math.abs(latitude - location.getLatitude());
+                Double absLon = Math.abs(longitude - location.getLongitude());
+                if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
+                    latitude = location.getLatitude();
+                    longitude = location.getLongitude();
+                    requisitesAdapter.nullSavedLatLng();
+                    requisitesAdapter.reclaimMap();
+                }
             }
         }
     }
@@ -767,10 +768,10 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     public void onConnectionFailed(@NonNull ConnectionResult result) {
         Log.e("Punisher", "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
         if (mode == MODE_CREATE) {
-            l = getOldAndroidLocation();
-            if (l != null) {
-                latitude = l.getLatitude();
-                longitude = l.getLongitude();
+            location = getOldAndroidLocation();
+            if (location != null) {
+                latitude = location.getLatitude();
+                longitude = location.getLongitude();
                 requisitesAdapter.reclaimMap();
             }
         }
@@ -778,7 +779,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     @Override
     public void onLocationChanged(Location location) {
-        final Double REFRESH_ACCURACY = 0.001;
         if (mode == MODE_CREATE && !((Karatel)getApplicationContext()).locationIsMock(location)){
             Double absLat = Math.abs(latitude - location.getLatitude());
             Double absLon = Math.abs(longitude - location.getLongitude());
