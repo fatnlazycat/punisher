@@ -58,6 +58,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
         textViewPassword.setText(R.string.current_password);
         viewGroupPassword.getChildAt(1).setVisibility(View.GONE);
         oldPassword = (EditText)viewGroupPassword.getChildAt(2);
+        oldPassword.setHint(R.string.enter_current_password);
         oldPassword.addTextChangedListener(textWatcher);
         oldPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
 
@@ -67,6 +68,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
         textViewNewPassword.setText(R.string.new_password);
         viewGroupNewPassword.getChildAt(1).setVisibility(View.GONE);
         newPassword = (EditText)viewGroupNewPassword.getChildAt(2);
+        newPassword.setHint(R.string.enter_new_password);
         newPassword.addTextChangedListener(textWatcher);
         newPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
 

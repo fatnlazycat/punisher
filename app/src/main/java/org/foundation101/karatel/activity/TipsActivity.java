@@ -1,8 +1,11 @@
 package org.foundation101.karatel.activity;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,6 +14,7 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
@@ -28,6 +32,7 @@ import com.facebook.login.LoginResult;
 
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.PunisherUser;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.HttpHelper;
@@ -47,6 +52,24 @@ public class TipsActivity extends Activity {
 
     // facebook part
     private CallbackManager fbCallbackManager;
+
+    private final BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            ((Karatel)getApplication()).showOneButtonDialogFromService(
+                    "Помилка отримання токена",
+                    "Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            finishAffinity();
+                        }
+                    }
+            );
+        }
+    };
+    public static final String BROADCAST_RECEIVER_TAG = "myBroadcastReceiver_TipsActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +95,15 @@ public class TipsActivity extends Activity {
             editTextLoginEmail.setText(preferences.getString(Globals.LAST_LOGIN_EMAIL, ""));
             editTextLoginPassword.requestFocus();
         }
+
+        LocalBroadcastManager.getInstance(getApplicationContext())
+                .registerReceiver(myBroadcastReceiver, new IntentFilter(BROADCAST_RECEIVER_TAG));
+    }
+
+    @Override
+    protected void onDestroy() {
+        LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(myBroadcastReceiver);
+        super.onDestroy();
     }
 
     public void login(View view) {
@@ -123,8 +155,14 @@ public class TipsActivity extends Activity {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
                     final AccessToken accessToken = loginResult.getAccessToken();
+                    String gcmToken = globalPreferences.contains(Globals.PUSH_TOKEN) ?
+                            globalPreferences.getString(Globals.PUSH_TOKEN, "") : "";
                     String uid = accessToken.getUserId();
-                    String request = new HttpHelper("session").makeRequestString(new String[]{"uid", uid});
+                    String request = new HttpHelper("session").makeRequestString(new String[]{
+                            "uid", uid,
+                            "token", gcmToken,
+                            "platform", "android"
+                    });
                     new LoginSender(TipsActivity.this, true).execute(request);
                 }
 

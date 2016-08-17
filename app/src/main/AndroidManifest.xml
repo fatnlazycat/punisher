@@ -47,6 +47,7 @@
         </receiver-->
         <receiver
             android:name="org.foundation101.karatel.receiver.GcmBroadcastReceiver"
+            android:enabled="true"
             android:exported="true"
             android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>

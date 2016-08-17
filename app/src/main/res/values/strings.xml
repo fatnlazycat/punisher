@@ -127,4 +127,7 @@
     <string name="no_internet_connection">no internet connection</string>
     <string name="open_settings">Відкрити опції для налаштування служб місцезнаходження?</string>
     <string name="refresh">Оновити?</string>
+    <string name="enter_current_password">Введіть поточний пароль</string>
+    <string name="enter_new_password">Введіть новий пароль</string>
+    <string name="turn_off_mock_locations">Вимкніть емуляцію місцезнаходження</string>
 </resources>

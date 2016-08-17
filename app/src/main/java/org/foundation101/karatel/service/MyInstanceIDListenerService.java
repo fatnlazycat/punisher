@@ -7,6 +7,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.google.android.gms.iid.InstanceIDListenerService;
 
 import org.foundation101.karatel.Karatel;
+import org.foundation101.karatel.activity.MainActivity;
 
 
 public class MyInstanceIDListenerService extends InstanceIDListenerService {
@@ -28,7 +29,7 @@ public class MyInstanceIDListenerService extends InstanceIDListenerService {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent("myBroadcastReceiver"));
+                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(MainActivity.BROADCAST_RECEIVER_TAG));
                     }
                 }
         );

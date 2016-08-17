@@ -150,7 +150,7 @@ public class RequestListFragment extends Fragment {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if (snackbar.isShownOrQueued()) {
+                if (snackbar!=null && snackbar.isShownOrQueued()) {
                     swipeRefreshLayout.setRefreshing(false);
                 } else {
                     new RefreshListOfRequestsDialog(getActivity()).get().show();

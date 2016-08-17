@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
             new SignOutSender().execute();
         }
     };
+    public static final String BROADCAST_RECEIVER_TAG = "myBroadcastReceiver_MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -222,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
         FacebookSdk.sdkInitialize(getApplicationContext());
 
         LocalBroadcastManager.getInstance(getApplicationContext())
-                .registerReceiver(myBroadcastReceiver, new IntentFilter("myBroadcastReceiver"));
+                .registerReceiver(myBroadcastReceiver, new IntentFilter(BROADCAST_RECEIVER_TAG));
     }
 
     @Override

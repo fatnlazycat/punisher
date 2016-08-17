@@ -149,18 +149,16 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
         float zoom = DEFAULT_ZOOM;
         double latitude = 0;
         double longitude = 0;
-        if (((ViolationActivity) context).latitude == null){
+        if (((ViolationActivity) context).latitude == null){/*
             Location l = ((ViolationActivity) context).getOldAndroidLocation();
-            if (l == null) {
+            if (l == null) {*/
                 ((ViolationActivity) context).blockButtons(true);
-                DialogFragment dialog = new OpenSettingsFragment();
-                dialog.show(((ViolationActivity)context).getSupportFragmentManager(), "openSettingsFragment");
-            } else {
+            /*} else {
                 latitude = l.getLatitude();
                 longitude = l.getLongitude();
                 ((ViolationActivity) context).setLatitudeAndLongitude(l);
                 ((ViolationActivity) context).blockButtons(false);
-            }
+            }*/
         } else {
             latitude = ((ViolationActivity) context).latitude;
             longitude = ((ViolationActivity) context).longitude;

@@ -15,6 +15,7 @@ import com.google.android.gms.iid.InstanceID;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.activity.TipsActivity;
 
 import java.io.IOException;
 
@@ -57,26 +58,18 @@ public class RegistrationIntentService extends IntentService {
             // otherwise your server should have already received the token.
             sharedPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, true).apply();
             // [END register_for_gcm]
+
+            // Notify UI that registration has completed, so the progress indicator can be hidden.
+            Intent registrationComplete = new Intent(Globals.REGISTRATION_COMPLETE);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(registrationComplete);
         } catch (Exception e) {
             Log.d(TAG, "Failed to complete token refresh", e);
-            ((Karatel)getApplication()).showOneButtonDialogFromService(
-                    "Помилка отримання токена",
-                    "Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.",
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    }
-            );
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(TipsActivity.BROADCAST_RECEIVER_TAG));
 
             // If an exception happens while fetching the new token or updating our registration data
             // on a third-party server, this ensures that we'll attempt the update at a later time.
             sharedPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, false).apply();
         }
-        // Notify UI that registration has completed, so the progress indicator can be hidden.
-        Intent registrationComplete = new Intent(Globals.REGISTRATION_COMPLETE);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(registrationComplete);
     }
 
     /**

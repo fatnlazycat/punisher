@@ -2,13 +2,14 @@ package org.foundation101.karatel.activity;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
@@ -16,6 +17,7 @@ import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
@@ -46,9 +48,15 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -114,6 +122,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     Geocoder geoCoder;
     SupportMapFragment supportMapFragment;
     final Double REFRESH_ACCURACY = 0.001;
+    boolean mockLocationDialogShown = false;
 
     public int getMode() {
         return mode;
@@ -133,6 +142,11 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     public GoogleApiClient googleApiClient;
     Location location;
+    LocationManager locationManager;
+    LocationRequest locationRequest;
+    android.location.LocationListener locationListener;
+    static final int REQUEST_CHECK_SETTINGS = 1000;
+    //boolean discardLocationUpdate = false; //for the first location update if location services are disabled
 
     @Override
     protected void onStart() {
@@ -162,6 +176,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         saveButton = (Button) findViewById(R.id.saveButton);
 
         if (checkGooglePlayServices()) { buildGoogleApiClient(); }
+        initOldAndroidLocation();
+
+        //check location availability
+        /*if ( !locationManager.isProviderEnabled( LocationManager.GPS_PROVIDER ) && !HttpHelper.internetConnected(this)) {
+            DialogFragment dialog = new OpenSettingsFragment();
+            dialog.show(getSupportFragmentManager(), "openSettingsFragment");
+        }*/
 
         ((Karatel)getApplication()).restoreUserFromPreferences();
 
@@ -465,6 +486,15 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 Globals.showError(this, R.string.error, e);
             }
         }
+
+        if (requestCode == REQUEST_CHECK_SETTINGS){
+            /*switch (resultCode){
+                case RESULT_OK : {*/
+                    LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+                    /*break;
+                }
+            }*/
+        }
         super.onActivityResult(requestCode, resultCode, intent);
     }
 
@@ -666,10 +696,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         saveButton.setVisibility((visibility));
     }
 
-    /**
-     * @return the last known best location
-     */
-    private Location getLastLocation() throws NullPointerException {
+    /*private Location getLastLocation() throws NullPointerException {
         //permission check required by the system
         /*if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
                 PackageManager.PERMISSION_GRANTED &&
@@ -682,7 +709,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
-        }*/
+        }
         Location locationGoogle = null;
         if (googleApiClient != null) {
             locationGoogle = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
@@ -693,20 +720,73 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         } else {
             return locationGoogle;
         }
+    }*/
+
+    /*
+    old Android package location code
+    */
+    void initOldAndroidLocation(){
+        locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
+        locationListener = new MyOldAndroidLocationListener();
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
     }
 
-    public Location getOldAndroidLocation() throws NullPointerException {
-        //old Android package location code
-        LocationManager lm = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-        //lm.removeTestProvider(LocationManager.GPS_PROVIDER);
-        String best = lm.getBestProvider(new Criteria(), true);
-        Location locationAndroid = lm.getLastKnownLocation(best);
+    class MyOldAndroidLocationListener implements android.location.LocationListener{
+        @Override
+        public void onLocationChanged(Location location) {
+            if (latitude == null || latitude == 0) {//use this only if no result from FusedLocationAPI
+
+                if (((Karatel)getApplicationContext()).locationIsMock(location)){
+                    if (!mockLocationDialogShown) {
+                        mockLocationDialogShown = true;
+                        AlertDialog.Builder builder = new AlertDialog.Builder(ViolationActivity.this);
+                        AlertDialog dialog = builder
+                                .setTitle(R.string.turn_off_mock_locations)
+                                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
+                                        if (intent.resolveActivity(getPackageManager()) != null) {
+                                            startActivity(intent);
+                                        }
+                                    }
+                                })
+                                .setNegativeButton(R.string.cancel, null).create();
+                        dialog.show();
+                    }
+                } else if (mode == MODE_CREATE) {
+                    Double latToCheck = latitude != null ? latitude : 0;
+                    Double lonToCheck = longitude != null ? longitude : 0;
+                    Double absLat = Math.abs(latToCheck - location.getLatitude());
+                    Double absLon = Math.abs(lonToCheck - location.getLongitude());
+                    if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
+                        latitude = location.getLatitude();
+                        longitude = location.getLongitude();
+                        requisitesAdapter.nullSavedLatLng();
+                        requisitesAdapter.reclaimMap();
+                    }
+                }
+            }
+            locationManager.removeUpdates(locationListener);
+            //locationListener = null;
+        }
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {}
+        @Override
+        public void onProviderEnabled(String provider) {}
+        @Override
+        public void onProviderDisabled(String provider) {}
+    }
+
+    /*public Location getOldAndroidLocation() throws NullPointerException {
+        String best = locationManager.getBestProvider(new Criteria(), true);
+        Location locationAndroid = locationManager.getLastKnownLocation(best);
         if (((Karatel)getApplicationContext()).locationIsMock(locationAndroid)) {
             return null;
         } else {
             return locationAndroid;
         }
-    }
+    }*/
 
     private boolean checkGooglePlayServices(){
         GoogleApiAvailability gaa = GoogleApiAvailability.getInstance();
@@ -739,23 +819,61 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         if (mode == MODE_CREATE) {
-            LocationRequest lr = LocationRequest.create()
-                    .setNumUpdates(1)
+            locationRequest = LocationRequest.create()
+                    .setNumUpdates(3)
                     .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                     .setInterval(1);
-            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, lr, this);
+            LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                    .addLocationRequest(locationRequest);
+            PendingResult<LocationSettingsResult> result =
+                    LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
 
-            location = getLastLocation();
+            result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+                @Override
+                public void onResult(LocationSettingsResult result) {
+                    final Status status = result.getStatus();
+                    //final LocationSettingsStates states = result.getLocationSettingsStates();
+                    switch (status.getStatusCode()) {
+                        case LocationSettingsStatusCodes.SUCCESS:
+                            // All location settings are satisfied. The client can initialize location requests here.
+                            if (googleApiClient != null && googleApiClient.isConnected()) {
+                                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient,
+                                        locationRequest, ViolationActivity.this);
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            // Location settings are not satisfied. But could be fixed by showing the user a dialog.
+                            try {
+                                // Show the dialog by calling startResolutionForResult(),
+                                // and check the result in onActivityResult().
+                                status.startResolutionForResult(ViolationActivity.this, REQUEST_CHECK_SETTINGS);
+                            } catch (IntentSender.SendIntentException e) {
+                                // Ignore the error.
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            // Location settings are not satisfied. However, we have no way to fix the
+                            // settings so we won't show the dialog.
+                            Toast.makeText(ViolationActivity.this,  "location settings not available", Toast.LENGTH_LONG).show();
+                            ViolationActivity.this.finish();
+                            break;
+                    }
+                }
+            });
+
+            /*location = getLastLocation();
             if (location != null && !((Karatel)getApplicationContext()).locationIsMock(location)) {
-                Double absLat = Math.abs(latitude - location.getLatitude());
-                Double absLon = Math.abs(longitude - location.getLongitude());
+                Double latToCheck = latitude!=null ? latitude : 0;
+                Double lonToCheck = longitude!=null ? longitude : 0;
+                Double absLat = Math.abs(latToCheck - location.getLatitude());
+                Double absLon = Math.abs(lonToCheck - location.getLongitude());
                 if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
                     latitude = location.getLatitude();
                     longitude = location.getLongitude();
                     requisitesAdapter.nullSavedLatLng();
                     requisitesAdapter.reclaimMap();
                 }
-            }
+            }*/
         }
     }
 
@@ -767,21 +885,23 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult result) {
         Log.e("Punisher", "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
-        if (mode == MODE_CREATE) {
+        /*if (mode == MODE_CREATE) {
             location = getOldAndroidLocation();
             if (location != null) {
                 latitude = location.getLatitude();
                 longitude = location.getLongitude();
                 requisitesAdapter.reclaimMap();
             }
-        }
+        }*/
     }
 
     @Override
     public void onLocationChanged(Location location) {
         if (mode == MODE_CREATE && !((Karatel)getApplicationContext()).locationIsMock(location)){
-            Double absLat = Math.abs(latitude - location.getLatitude());
-            Double absLon = Math.abs(longitude - location.getLongitude());
+            Double latToCheck = latitude!=null ? latitude : 0;
+            Double lonToCheck = longitude!=null ? longitude : 0;
+            Double absLat = Math.abs(latToCheck - location.getLatitude());
+            Double absLon = Math.abs(lonToCheck - location.getLongitude());
             if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
                 latitude = location.getLatitude();
                 longitude = location.getLongitude();
@@ -789,7 +909,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 requisitesAdapter.reclaimMap();
             }
         }
-
     }
 
     @Override
@@ -837,6 +956,11 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 deletedSuccessfully = new File(fileToDelete).delete() && deletedSuccessfully;
             }
             Log.e("Punisher", "files deleted successfully " + deletedSuccessfully);
+
+            if (locationListener != null) {
+                locationManager.removeUpdates(locationListener);
+                //locationListener = null;
+            }
         }
 
         requisitesAdapter.releaseMap();
@@ -844,10 +968,10 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         super.onDestroy();
     }
 
-    public void setLatitudeAndLongitude(Location l){
+    /*public void setLatitudeAndLongitude(Location l){
         latitude = l.getLatitude();
         longitude = l.getLongitude();
-    }
+    }*/
 
     class ViolationSender extends AsyncTask<Violation, Void, String> {
 
@@ -997,9 +1121,11 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                         }
                         Toast.makeText(context, R.string.requestSent, Toast.LENGTH_LONG).show();
                         finish();
+                        break;
                     }
                     case Globals.SERVER_ERROR: {
                         Toast.makeText(context, fullAnswer.getString("error"), Toast.LENGTH_LONG).show();
+                        break;
                     }
                 }
             } catch (JSONException e){

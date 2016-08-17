@@ -7,9 +7,7 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Window;
 import android.view.WindowManager;
@@ -77,7 +75,8 @@ public class Karatel extends Application {
         final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.AppTheme);
         dialogBuilder.setTitle(title)
             .setMessage(message)
-            .setNegativeButton(R.string.ok, action);
+            .setNegativeButton(R.string.ok, action)
+            .setCancelable(false);
         final AlertDialog dialog = dialogBuilder.create();
         final Window dialogWindow = dialog.getWindow();
         final WindowManager.LayoutParams dialogWindowAttributes = dialogWindow.getAttributes();
@@ -95,12 +94,12 @@ public class Karatel extends Application {
     }
 
     public boolean locationIsMock(Location location){
-        boolean isMock = false;
-        if (android.os.Build.VERSION.SDK_INT >= 18) {
+        boolean isMock = !Settings.Secure.getString(getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("0");
+        /*if (android.os.Build.VERSION.SDK_INT >= 18) {
             isMock = (location==null || location.isFromMockProvider());
         } else {
             isMock = !Settings.Secure.getString(getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("0");
-        }
+        }*/
 
         /*
         //debug block
