@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -119,6 +120,13 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
 
     public void empty(View view) {
         //empty method to handle click events
+    }
+
+    //hides the software keyboard
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        Globals.hideSoftKeyboard(this, event);
+        return super.dispatchTouchEvent( event );
     }
 
     class SignUpSender extends AsyncTask<PunisherUser, Void, String> {

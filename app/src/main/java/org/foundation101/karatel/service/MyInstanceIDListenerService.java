@@ -22,17 +22,8 @@ public class MyInstanceIDListenerService extends InstanceIDListenerService {
     // [START refresh_token]
     @Override
     public void onTokenRefresh() {
-        ((Karatel)getApplication()).showOneButtonDialogFromService(
-                "Увага! Змінився токен Google Cloud Messaging.",
-                "Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(MainActivity.BROADCAST_RECEIVER_TAG));
-                    }
-                }
-        );
+        Intent intent = new Intent(this, RegistrationIntentService.class);
+        startService(intent);
 
         /* Fetch updated Instance ID token and notify our app's server of any changes (if applicable).
         Intent intent = new Intent(this, RegistrationIntentService.class);

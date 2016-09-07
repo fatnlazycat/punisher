@@ -75,7 +75,7 @@
     <string name="contacts_header">Зворотній зв’язок</string>
     <string name="contacts"><b>Якщо у вас є питання чи пропозиції — зв’яжіться з нами</b></string>
     <string name="office_phone">+38 (044) 209-69-33</string>
-    <string name="office_mail">mail@foundation101.org</string>
+    <string name="office_mail">karatel@foundation101.org</string>
     <string name="office_address">04215, м. Київ, пр. Георгія Гонгадзе, 32-Б.\nГО «Фундація.101»</string>
     <string name="url_foundation101">https://www.foundation101.org</string>
     <string name="url_peoples_project">http://www.peoplesproject.com</string>
@@ -93,7 +93,6 @@
     <string name="ok">OK</string>
     <string name="current_password">ПОТОЧНИЙ ПАРОЛЬ</string>
     <string name="new_password">НОВИЙ ПАРОЛЬ</string>
-    <string name="password_change">Зміна паролю</string>
     <string name="your_password_is_changed_successfully">Ваш пароль успішно змінений</string>
     <string name="information">Інформація</string>
     <string name="request_status">Статус заявки</string>
@@ -109,7 +108,7 @@
     <string name="answerBy">Відповідь надана</string>
     <string name="estimateGivenAnswer">Оцініть надану відповідь</string>
     <string name="cannot_define_location">Пристрій не може визначити Ваше місцезнаходження. Збереження буде неможливе.</string>
-    <string name="requestSaved">Ваша заявка успішно створена</string>
+    <string name="requestSaved">Заявка збережена</string>
     <string name="show_details">Показати подробиці</string>
     <string name="hide_details">Сховати подробиці</string>
     <string name="chooseEmailClient">Яка поштова скринька?</string>
@@ -121,7 +120,6 @@
     <string name="requestSent">Заявка відправлена</string>
     <string name="invalid_email">Електронна адреса не є дійсною</string>
     <string name="your_estimation">Ваша оцінка</string>
-    <string name="title_activity_doc_view">DocViewActivity</string>
     <string name="weInSocials">Ми в соціальних мережах</string>
     <string name="loggingOut">Почекайте, виконується вихід з додатку</string>
     <string name="no_internet_connection">no internet connection</string>
@@ -130,4 +128,6 @@
     <string name="enter_current_password">Введіть поточний пароль</string>
     <string name="enter_new_password">Введіть новий пароль</string>
     <string name="turn_off_mock_locations">Вимкніть емуляцію місцезнаходження</string>
+    <string name="create_new_bases_on_this">Створити нову на базі цієї</string>
+    <string name="check_email_to_approve">Для підтвердження змін перевірте свою електронну пошту</string>
 </resources>

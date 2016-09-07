@@ -19,7 +19,7 @@ public class TutorialFragment extends Fragment {
 
     public static final String STAGE = "tutorialFragmentStage";
 
-    private String[] texts;
+    private CharSequence[] texts;
 
     ImageView tutorialImage;
     ImageView[] circles;
@@ -39,7 +39,7 @@ public class TutorialFragment extends Fragment {
         tutorialImage.setImageLevel(stage);
 
         tutorialText = (TextView)rootView.findViewById(R.id.textViewTutorial);
-        texts=getResources().getStringArray(R.array.tutorialStringArray);
+        texts=getResources().getTextArray(R.array.tutorialStringArray);
         tutorialText.setText(texts[stage]);
 
         //setting the small circles

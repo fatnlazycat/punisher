@@ -36,6 +36,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.DBHelper;
@@ -348,23 +349,29 @@ public class RequestListFragment extends Fragment {
             ArrayList<Request> requestsFromServer = new ArrayList<>();
             try {
                 JSONObject json = new JSONObject(s);
-                if (json.getString("status").equals("success")){
-                    JSONArray dataJSON = json.getJSONArray("data");
-                    ObjectMapper mapper = new ObjectMapper();
-                    for (int i = 0; i < dataJSON.length(); i++) {
-                        JSONArray oneRequest = dataJSON.getJSONArray(i);
-                        JSONObject requestBody = oneRequest.getJSONObject(1);
-                        String requestBodyString = requestBody.toString();
-                        Request request = mapper.readValue(requestBodyString, Request.class);
+                switch (json.getString("status")) {
+                    case Globals.SERVER_SUCCESS : {
+                        JSONArray dataJSON = json.getJSONArray("data");
+                        ObjectMapper mapper = new ObjectMapper();
+                        for (int i = 0; i < dataJSON.length(); i++) {
+                            JSONArray oneRequest = dataJSON.getJSONArray(i);
+                            JSONObject requestBody = oneRequest.getJSONObject(1);
+                            String requestBodyString = requestBody.toString();
+                            Request request = mapper.readValue(requestBodyString, Request.class);
 
-                        request.type = oneRequest.getString(0);
+                            request.type = oneRequest.getString(0);
 
-                        requestsFromServer.add(request);
+                            requestsFromServer.add(request);
 
+                        }
+                        requestListAdapter.getContent().addAll(requestsFromServer);
+                        requestListAdapter.notifyDataSetChanged();
+                        break;
                     }
-                    requestListAdapter.getContent().addAll(requestsFromServer);
-                    requestListAdapter.notifyDataSetChanged();
-                    swipeRefreshLayout.setRefreshing(false);
+                    case Globals.SERVER_ERROR : {
+                        Toast.makeText(getContext(), json.getString(Globals.SERVER_ERROR), Toast.LENGTH_LONG).show();
+                        break;
+                    }
                 }
                 if (requestListAdapter.getItemCount() == 0) { //there are no requests
                     showNoRequestsLayout();
@@ -447,6 +454,7 @@ public class RequestListFragment extends Fragment {
                     setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            swipeRefreshLayout.setRefreshing(false);
                             makeRequestListAdapterContent();
                         }
                     }).

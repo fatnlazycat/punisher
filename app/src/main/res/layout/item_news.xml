@@ -9,7 +9,7 @@
         android:layout_height="104dp"
         android:id="@+id/imageViewNews"
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentLeft="true" />
     <!--android:layout_width="104dp"
         android:layout_height="118dp"-->
 
@@ -20,8 +20,8 @@
         android:textStyle="bold"
         android:id="@+id/textViewNewsHeader"
         android:layout_alignParentTop="true"
-        android:layout_toEndOf="@+id/imageViewNews"
-        android:layout_marginStart="16dp"
+        android:layout_toRightOf="@+id/imageViewNews"
+        android:layout_marginLeft="16dp"
         android:layout_marginTop="8dp"/>
 
     <TextView
@@ -29,7 +29,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/textViewNewsDate"
         android:layout_below="@+id/textViewNewsHeader"
-        android:layout_toEndOf="@+id/imageViewNews"
+        android:layout_toRightOf="@+id/imageViewNews"
         android:layout_marginTop="4dp"
-        android:layout_marginStart="16dp"/>
+        android:layout_marginLeft="16dp"/>
 </RelativeLayout>

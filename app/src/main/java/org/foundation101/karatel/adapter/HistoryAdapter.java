@@ -40,7 +40,6 @@ public class HistoryAdapter extends BaseAdapter {
         violationStatuses = context.getResources().getStringArray(R.array.violationStatuses);
     }
 
-    Request request;
     public UpdateEntity[] content = new UpdateEntity[0];
     Context context;
     String[] violationStatuses;

@@ -27,7 +27,7 @@
             android:paddingBottom="@dimen/text_box_vertical_padding" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/about_2"
             android:id="@+id/textView4"
@@ -51,9 +51,10 @@
                 android:layout_weight="1"
                 android:layout_marginTop="12dp"
                 android:layout_marginBottom="12dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginEnd="16dp"
-                android:src="@mipmap/logo_101"/>
+                android:layout_marginLeft="24dp"
+                android:layout_marginRight="16dp"
+                android:src="@mipmap/logo_101"
+                android:onClick="open101"/>
 
             <ImageButton
                 android:layout_width="50dp"
@@ -76,9 +77,10 @@
                 android:layout_weight="1"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginEnd="16dp"
-                android:src="@mipmap/logo_peoples_project"/>
+                android:layout_marginLeft="24dp"
+                android:layout_marginRight="16dp"
+                android:src="@mipmap/logo_peoples_project"
+                android:onClick="openPeoplesProject"/>
 
             <ImageButton
                 android:layout_width="50dp"

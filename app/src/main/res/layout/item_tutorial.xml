@@ -37,31 +37,31 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/small_circle_size"
+            android:layout_marginLeft="@dimen/small_circle_size"
             android:src="@drawable/small_grey_circle"
             android:id="@+id/small_circle0"/>
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/small_circle_size"
+            android:layout_marginLeft="@dimen/small_circle_size"
             android:src="@drawable/small_grey_circle"
             android:id="@+id/small_circle1"/>
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/small_circle_size"
+            android:layout_marginLeft="@dimen/small_circle_size"
             android:src="@drawable/small_grey_circle"
             android:id="@+id/small_circle2"/>
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/small_circle_size"
+            android:layout_marginLeft="@dimen/small_circle_size"
             android:src="@drawable/small_grey_circle"
             android:id="@+id/small_circle3"/>
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/small_circle_size"
+            android:layout_marginLeft="@dimen/small_circle_size"
             android:src="@drawable/small_grey_circle"
             android:id="@+id/small_circle4"/>
     </LinearLayout>

@@ -3,6 +3,7 @@ package org.foundation101.karatel.activity;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
@@ -16,12 +17,16 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -37,7 +42,9 @@ import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.CameraManager;
+import org.foundation101.karatel.CreationResponse;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.Karatel;
@@ -49,6 +56,7 @@ import org.foundation101.karatel.fragment.MainFragment;
 import org.foundation101.karatel.fragment.NewsFragment;
 import org.foundation101.karatel.fragment.ProfileFragment;
 import org.foundation101.karatel.fragment.RequestListFragment;
+import org.foundation101.karatel.retrofit.RetrofitSignOutSender;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -57,6 +65,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -76,7 +88,19 @@ public class MainActivity extends AppCompatActivity {
     private final BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            new SignOutSender().execute();
+            final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(MainActivity.this, R.style.AppTheme);
+            dialogBuilder.setTitle("Увага! Змінився токен Google Cloud Messaging.")
+                    .setMessage("Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.")
+                    .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            new SignOutSender().execute();
+                        }
+                    })
+                    .setCancelable(false);
+            final AlertDialog dialog = dialogBuilder.create();
+            dialog.show();
         }
     };
     public static final String BROADCAST_RECEIVER_TAG = "myBroadcastReceiver_MainActivity";
@@ -138,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
                 switch (position){
                     case 1 : {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new MainFragment(), tag)
+                                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
                                 .addToBackStack(tag).commit();
                         break;
                     }
@@ -158,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                         case 5 : {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new ContactsFragment(), tag)
+                                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                                 .addToBackStack(tag).commit();
                         break;
                     }
@@ -177,45 +203,49 @@ public class MainActivity extends AppCompatActivity {
         //select fragment to start with (from savedInstanceState)
         ft = fManager.beginTransaction();
         String tag = "";
-        if (Globals.MAIN_ACTIVITY_FROM_PUSH){
-            Globals.MAIN_ACTIVITY_FROM_PUSH = false;
-            currentFragment = Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT;
-            tag = fragmentTags.get(currentFragment);
-            ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
+        if (!loggedIn()){ //this happens when we tap push notification icon after logging out - we are not signed in so close the app
+            finish();
         } else {
-            if (savedInstanceState != null) {
-                currentFragment = savedInstanceState.getInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, 0);
+            if (Karatel.MAIN_ACTIVITY_FROM_PUSH) {
+                Karatel.MAIN_ACTIVITY_FROM_PUSH = false;
+                currentFragment = Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT;
                 tag = fragmentTags.get(currentFragment);
-                switch (currentFragment){
-                    case 1 :{
-                        ft.add(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
-                        break;
-                    }
-                    case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT:{
-                        ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
-                        break;
-                    }
-                    case 3 :{
-                        ft.add(R.id.frameLayoutMain, new AboutFragment(), tag).addToBackStack(tag).commit();
-                        break;
-                    }
-                    case 5 :{
-                        ft.add(R.id.frameLayoutMain, new ContactsFragment(), tag).addToBackStack(tag).commit();
-                        break;
-                    }
-                    case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT:{
-                        ft.add(R.id.frameLayoutMain, new ProfileFragment(), tag).addToBackStack(tag).commit();
-                        break;
-                    }
-                    case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT:{
-                        ft.add(R.id.frameLayoutMain, new NewsFragment(), tag).addToBackStack(tag).commit();
-                        break;
-                    }
-                }
+                ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
             } else {
-                currentFragment = 1;
-                tag = fragmentTags.get(currentFragment);
-                ft.add(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
+                if (savedInstanceState != null) {
+                    currentFragment = savedInstanceState.getInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, 0);
+                    tag = fragmentTags.get(currentFragment);
+                    switch (currentFragment) {
+                        case 1: {
+                            ft.add(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
+                            break;
+                        }
+                        case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT: {
+                            ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
+                            break;
+                        }
+                        case 3: {
+                            ft.add(R.id.frameLayoutMain, new AboutFragment(), tag).addToBackStack(tag).commit();
+                            break;
+                        }
+                        case 5: {
+                            ft.add(R.id.frameLayoutMain, new ContactsFragment(), tag).addToBackStack(tag).commit();
+                            break;
+                        }
+                        case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT: {
+                            ft.add(R.id.frameLayoutMain, new ProfileFragment(), tag).addToBackStack(tag).commit();
+                            break;
+                        }
+                        case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT: {
+                            ft.add(R.id.frameLayoutMain, new NewsFragment(), tag).addToBackStack(tag).commit();
+                            break;
+                        }
+                    }
+                } else {
+                    currentFragment = 1;
+                    tag = fragmentTags.get(currentFragment);
+                    ft.add(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
+                }
             }
         }
         toolbar.setTitle(tag);
@@ -259,6 +289,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //hides the software keyboard
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        Globals.hideSoftKeyboard(this, event);
+        return super.dispatchTouchEvent( event );
+    }
+
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, currentFragment);
@@ -297,6 +334,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void empty(View view) {
         //empty method to handle click events
+    }
+
+
+    boolean loggedIn(){
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        return preferences.contains(Globals.SESSION_TOKEN);
+        //Globals.sessionToken != null;
     }
 
     public void startTutorial(View view) {
@@ -400,23 +444,25 @@ public class MainActivity extends AppCompatActivity {
     public void openSocialLink(View view) {
         Uri socialUrl = Uri.parse((String)view.getTag());
         String host = socialUrl.getHost();
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, socialUrl);
-        Uri socialUrlInApp = null;
+        Intent appIntent = new Intent(Intent.ACTION_VIEW);
         switch (host){
             case "www.facebook.com" : {
-                socialUrlInApp = Uri.parse("fb://facewebmodal/f?href=" + view.getTag());
+                appIntent.setData(Uri.parse("fb://facewebmodal/f?href=" + view.getTag()));
+                break;
+            }
+            case "www.instagram.com" : {
+                appIntent.setData(Uri.parse("http://instagram.com/_u/" + socialUrl.getLastPathSegment()));
+                appIntent.setPackage("com.instagram.android");
                 break;
             }
         }
-        if (socialUrlInApp != null){
-            Intent appIntent = new Intent(Intent.ACTION_VIEW, socialUrlInApp);
-            if (appIntent.resolveActivity(getPackageManager()) != null) {
-                startActivity(appIntent);
-                return;
-            }
+        if ((appIntent.getData() != null) && (appIntent.resolveActivity(getPackageManager()) != null)){
+            startActivity(appIntent);
+        } else {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, socialUrl);
+            if (browserIntent.resolveActivity(getPackageManager()) != null)
+                startActivity(browserIntent);
         }
-        if (browserIntent.resolveActivity(getPackageManager()) != null)
-            startActivity(browserIntent);
     }
 
     public void sendEmail(View view) {
@@ -471,6 +517,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     class SignOutSender extends AsyncTask<Void, Void, String>{
+        final String BANNED = "banned";
 
         SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
 
@@ -487,12 +534,31 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(Void... params) {
             String result;
             try {
-                String gcmToken = globalPreferences.contains(Globals.PUSH_TOKEN) ?
+                if (HttpHelper.internetConnected(MainActivity.this)){
+                    String gcmToken = globalPreferences.contains(Globals.PUSH_TOKEN) ?
                         globalPreferences.getString(Globals.PUSH_TOKEN, "") : "";
-                String request = new HttpHelper("session").makeRequestString(new String[]{"token", gcmToken});
-                if (HttpHelper.internetConnected(MainActivity.this)) {
-                    result = HttpHelper.proceedRequest("signout", "DELETE", request, true);
+
+
+                    RetrofitSignOutSender api = Karatel.getClient().create(RetrofitSignOutSender.class);
+                    Call<String> call = api.signOut(Globals.sessionToken, gcmToken);
+                    Response<String> json = call.execute();
+                    if (json.isSuccessful()) {
+                        result = json.body();
+                    } else {
+                        if (json.code() == 403) {//this code will be returned is the user is banned - agreed with Nazar
+                            return BANNED; //& check this in postExecute()
+                        }
+                        ResponseBody errorBody = json.errorBody();
+                        result = json.errorBody().string();
+                        errorBody.close();
+                    }
+
+                    /* old code with HttpHelper
+String request = new HttpHelper("session").makeRequestString(new String[]{"token", gcmToken});
+                        result = HttpHelper.proceedRequest("signout", "DELETE", request, true);
+                    */
                 } else return HttpHelper.ERROR_JSON;
+
             } catch (final IOException e){
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
@@ -500,25 +566,25 @@ public class MainActivity extends AppCompatActivity {
                         Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
                     }
                 });
-                return "";
+                return HttpHelper.ERROR_JSON;
             }
-            return result;
+            return result == null ? "" : result;
         }
 
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             progressBar.setVisibility(View.GONE);
-            if (!s.isEmpty()) {
+            if (!s.isEmpty() && !s.equals(BANNED)) {
                 try {
                     JSONObject json = new JSONObject(s);
                     if (json.getString("status").equals(Globals.SERVER_ERROR)) {
                         Toast.makeText(MainActivity.this, json.getString("error"), Toast.LENGTH_LONG).show();
-                        return;
                     }
                 } catch (JSONException e) {
                     Globals.showError(MainActivity.this, R.string.error, e);
                 }
+                return;
             }
             globalPreferences.edit().clear().apply();
             //Globals.user = null;

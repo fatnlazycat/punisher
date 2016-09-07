@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -184,9 +185,17 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 switch (message) {
                     case Globals.SERVER_SUCCESS : {
                         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ChangePasswordActivity.this);
-                        AlertDialog dialog = dialogBuilder.setTitle(R.string.password_change)
-                                .setMessage(R.string.your_password_is_changed_successfully)
-                                .setNegativeButton(R.string.ok, simpleListener).create();
+                        AlertDialog dialog = dialogBuilder.setTitle(R.string.your_password_is_changed_successfully)
+                                .setMessage(R.string.check_email_to_approve)
+                                .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        LocalBroadcastManager.getInstance(getApplicationContext())
+                                                .sendBroadcast(new Intent(MainActivity.BROADCAST_RECEIVER_TAG));
+                                        finish();
+                                    }
+                                }).create();
                         dialog.show();
                         break;
                     }

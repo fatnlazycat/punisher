@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "project_number": "561972246328",
+    "project_id": "firebase-karatel"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:561972246328:android:d999169b87a355f9",
+        "android_client_info": {
+          "package_name": "org.foundation101.karatel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdfhkyHG6LXCoLD2KQJUpmXagsrKldxUk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 2,
+          "analytics_property": {
+            "tracking_id": "UA-3789523-30"
+          }
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

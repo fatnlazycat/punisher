@@ -10,7 +10,7 @@
         android:layout_height="54dp"
         android:theme="@style/AppToolBar"
         app:titleTextAppearance="@style/TextSize16sp"
-        android:layout_alignParentStart="true"/>
+        android:layout_alignParentLeft="true"/>
 
     <TabHost
         android:id="@android:id/tabhost"
@@ -36,7 +36,6 @@
                 <org.foundation101.karatel.view.MyScrollView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:fillViewport="true"
                     android:id="@+id/tabInfo">
 
                     <LinearLayout
@@ -54,7 +53,7 @@
                             android:paddingRight="@dimen/activity_horizontal_margin"
                             android:text="@string/violation_header"
                             android:id="@+id/textViewViolationHeader"
-                            android:drawableStart="@mipmap/ic_target"
+                            android:drawableLeft="@mipmap/ic_target"
                             android:drawablePadding="12dp"/>
 
                         <TextView

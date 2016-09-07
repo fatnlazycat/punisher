@@ -41,7 +41,6 @@ public class Globals {
     public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 6;
 
     public static final String PUSH_TOKEN = "PUSH_TOKEN";
-    public static boolean MAIN_ACTIVITY_FROM_PUSH = false;
 
     //user data tags
     public static final String LAST_LOGIN_EMAIL = "LAST_LOGIN_EMAIL";
@@ -56,7 +55,7 @@ public class Globals {
     public static final String USER_AVATAR = "USER_AVATAR";
 
     //interaction with server api
-    public static final String SERVER_URL = "https://karatel-test.foundation101.org/api/v1/";
+    public static final String SERVER_URL = "https://karatel-api.foundation101.org/api/v1/";
     public static final String SERVER_SUCCESS = "success";
     public static final String SERVER_ERROR = "error";
 

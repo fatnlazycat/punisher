@@ -16,6 +16,7 @@ import android.util.Log;
 import com.google.android.gms.gcm.GcmListenerService;
 
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.TipsActivity;
@@ -70,7 +71,7 @@ public class MyGcmListenerService extends GcmListenerService {
         Class activityClass;
         if (loggedIn()){
             activityClass = MainActivity.class;
-            Globals.MAIN_ACTIVITY_FROM_PUSH = true;
+            Karatel.MAIN_ACTIVITY_FROM_PUSH = true;
         } else {
             activityClass = TipsActivity.class;
         }

@@ -15,6 +15,7 @@ import com.google.android.gms.iid.InstanceID;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.TipsActivity;
 
 import java.io.IOException;
@@ -31,7 +32,9 @@ public class RegistrationIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         Log.e("Punisher", intent.toString());
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        String oldToken = globalPreferences.getString(Globals.PUSH_TOKEN, "");
 
         try {
             // [START register_for_gcm]
@@ -43,33 +46,39 @@ public class RegistrationIntentService extends IntentService {
             InstanceID instanceID = InstanceID.getInstance(this);
             String token = instanceID.getToken(getString(R.string.gcm_defaultSenderId),
                     GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-            sharedPreferences.edit().putString(Globals.PUSH_TOKEN, token).apply();
-            // [END get_token]
             Log.i(TAG, "GCM Registration Token: " + token);
 
-            // TODO: Implement this method to send any registration to your app's servers.
-            sendRegistrationToServer(token);
+            if (!oldToken.equals("") && !oldToken.equals(token)) {
+                logoutToChangeToken();
+            } else {
+                globalPreferences.edit().putString(Globals.PUSH_TOKEN, token).apply();
+                // [END get_token]
 
-            // Subscribe to topic channels
-            subscribeTopics(token);
+                // TODO: Implement this method to send any registration to your app's servers.
+                sendRegistrationToServer(token);
 
-            // You should store a boolean that indicates whether the generated token has been
-            // sent to your server. If the boolean is false, send the token to your server,
-            // otherwise your server should have already received the token.
-            sharedPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, true).apply();
-            // [END register_for_gcm]
+                // Subscribe to topic channels
+                subscribeTopics(token);
 
-            // Notify UI that registration has completed, so the progress indicator can be hidden.
-            Intent registrationComplete = new Intent(Globals.REGISTRATION_COMPLETE);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(registrationComplete);
+                // You should store a boolean that indicates whether the generated token has been
+                // sent to your server. If the boolean is false, send the token to your server,
+                // otherwise your server should have already received the token.
+                globalPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, true).apply();
+                // [END register_for_gcm]
+
+                // Notify UI that registration has completed, so the progress indicator can be hidden.
+                Intent registrationComplete = new Intent(Globals.REGISTRATION_COMPLETE);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(registrationComplete);
+            }
         } catch (Exception e) {
             Log.d(TAG, "Failed to complete token refresh", e);
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(TipsActivity.BROADCAST_RECEIVER_TAG));
 
             // If an exception happens while fetching the new token or updating our registration data
             // on a third-party server, this ensures that we'll attempt the update at a later time.
-            sharedPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, false).apply();
+            globalPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, false).apply();
         }
+
     }
 
     /**
@@ -98,6 +107,22 @@ public class RegistrationIntentService extends IntentService {
         }
     }
     // [END subscribe_topics]
+
+    public void logoutToChangeToken(){
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(MainActivity.BROADCAST_RECEIVER_TAG));
+        /*
+        ((Karatel)getApplication()).showOneButtonDialogFromService(
+                "Увага! Змінився токен Google Cloud Messaging.",
+                "Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(MainActivity.BROADCAST_RECEIVER_TAG));
+                    }
+                }
+        );*/
+    }
 
 }
 

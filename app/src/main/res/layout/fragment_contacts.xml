@@ -41,7 +41,7 @@
         android:paddingLeft="@dimen/text_box_horizontal_padding"
         android:text="@string/office_mail"
         android:textColor="@color/darkGreen"
-        android:drawableStart="@drawable/ic_mail"
+        android:drawableLeft="@drawable/ic_mail"
         android:drawablePadding="2dp"
         android:onClick="sendEmail"/>
 
@@ -54,7 +54,7 @@
         android:text="@string/office_address"
         android:textColor="@color/darkGreen"
         android:letterSpacing="-0.05"
-        android:drawableStart="@drawable/ic_location"
+        android:drawableLeft="@drawable/ic_location"
         android:drawablePadding="2dp"
         android:tag="https://goo.gl/maps/BVyFMya2QEK2"
         android:onClick="openSocialLink"/>

@@ -18,11 +18,17 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.splunk.mint.Mint;
 
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
+
 //import org.acra.*;
 //import org.acra.annotation.*;
 
 //@ReportsCrashes(formUri = "http://www.yourselectedbackend.com/reportpath")
 public class Karatel extends Application {
+    public static boolean MAIN_ACTIVITY_FROM_PUSH = false;
+
+    private static Retrofit retrofit = null;
 
     //Google Analytics part
     private Tracker mTracker;
@@ -109,5 +115,16 @@ public class Karatel extends Application {
         */
 
         return isMock;
+    }
+
+
+    public static Retrofit getClient() {
+        if (retrofit==null) {
+            retrofit = new Retrofit.Builder()
+                    .baseUrl(Globals.SERVER_URL)
+                    .addConverterFactory(JacksonConverterFactory.create())
+                    .build();
+        }
+        return retrofit;
     }
 }

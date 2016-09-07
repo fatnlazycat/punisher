@@ -2,14 +2,14 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    buildToolsVersion '24.0.2'
 
     defaultConfig {
         applicationId "org.foundation101.karatel"
-        minSdkVersion 17
+        minSdkVersion 16
         targetSdkVersion 22
-        versionCode 4
-        versionName "1.03"
+        versionCode 6
+        versionName "1.05"
     }
     buildTypes {
         release {
@@ -17,7 +17,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    packagingOptions{
+    packagingOptions {
         exclude 'META-INF/ASL2.0'
     }
 }
@@ -25,21 +25,22 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.8.2'
-
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:support-v4:23.4.0'
     compile 'com.android.support:recyclerview-v7:23.4.0'
     compile 'com.android.support:design:23.4.0'
     compile 'org.jsoup:jsoup:1.9.1'
-    compile group: 'com.fasterxml', name: 'jackson-module-json-org', version: '0.9.1'
-    compile "com.google.android.gms:play-services-gcm:9.2.1"
+    compile 'com.fasterxml:jackson-module-json-org:0.9.1'
+    compile 'com.google.android.gms:play-services-gcm:9.2.1'
     compile 'com.google.android.gms:play-services-maps:9.2.1'
     compile 'com.google.android.gms:play-services-places:9.2.1'
     compile 'com.google.android.gms:play-services-location:9.2.1'
     compile 'com.google.android.gms:play-services-analytics:9.2.1'
     compile 'com.facebook.android:facebook-android-sdk:4.13.2'
     compile 'ch.acra:acra:4.9.0'
-    compile "com.splunk.mint:mint:5.0.0"
+    compile 'com.splunk.mint:mint:5.0.0'
+    compile 'com.squareup.retrofit2:retrofit:2.1.0'
+    compile 'com.squareup.retrofit2:converter-jackson:2.1.0'
 }
 repositories {
     mavenCentral()

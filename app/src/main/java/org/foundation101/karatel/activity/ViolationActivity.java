@@ -10,7 +10,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.media.ThumbnailUtils;
@@ -31,6 +30,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
@@ -65,13 +65,14 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.CameraManager;
+import org.foundation101.karatel.CreationResponse;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.Karatel;
-import org.foundation101.karatel.MultipartUtility;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Request;
+import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
 import org.foundation101.karatel.Violation;
 import org.foundation101.karatel.ViolationRequisite;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
@@ -94,9 +95,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Response;
 
 public class ViolationActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
@@ -107,7 +114,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     public static final int MODE_EDIT = 0;
     public static final String STATUS_REFUSED = "Відмовлено в розгляді";
 
-    //ListView listViewRequisites;
     RequisitesListAdapter requisitesAdapter;
     LinearLayout requisitesList;
     EvidenceAdapter evidenceAdapter = new EvidenceAdapter(this);
@@ -119,7 +125,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     Long rowID;
 
     FragmentManager fm;
-    Geocoder geoCoder;
     SupportMapFragment supportMapFragment;
     final Double REFRESH_ACCURACY = 0.001;
     boolean mockLocationDialogShown = false;
@@ -141,12 +146,10 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     Button punishButton, saveButton;
 
     public GoogleApiClient googleApiClient;
-    Location location;
     LocationManager locationManager;
     LocationRequest locationRequest;
     android.location.LocationListener locationListener;
-    static final int REQUEST_CHECK_SETTINGS = 1000;
-    //boolean discardLocationUpdate = false; //for the first location update if location services are disabled
+    static final int REQUEST_CHECK_SETTINGS = 2000;
 
     @Override
     protected void onStart() {
@@ -292,6 +295,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             //first check if the status is "refused" which means we can edit the data & re-send the request
             if (mode == calculateRefusedStatus()){
                 saveButton.setVisibility(View.GONE);
+                punishButton.setText(R.string.create_new_bases_on_this);
             } else { //the request is already filed & not refused - > no edit anymore
                 blockButtons(true);
                 requisitesAdapter.setEditTrigger(false);
@@ -328,7 +332,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         for (int i=0; i<requisitesAdapter.getCount(); i++){
             RequisitesListAdapter.ViewHolder holder = new RequisitesListAdapter.ViewHolder();
 
-            LinearLayout item = new LinearLayout(this);
             View v = LayoutInflater.from(this).inflate(R.layout.item_violation_requisite, requisitesList, false);
 
             ViolationRequisite thisRequisite = requisitesAdapter.content.get(i);
@@ -399,7 +402,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 });
             }
 
-
             requisitesAdapter.holders.add(holder);
             requisitesList.addView(v);
         }
@@ -433,8 +435,10 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     String evidenceFileName = _cursor.getString(_cursor.getColumnIndex(DBHelper.FILE_NAME));
                     Bitmap thumbnail;
                     if (evidenceFileName.endsWith(CameraManager.JPG)) {
-                        thumbnail = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(evidenceFileName),
-                                thumbDimension, thumbDimension);
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inSampleSize = 4;
+                        thumbnail = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(evidenceFileName, options),
+                            thumbDimension, thumbDimension);
                     } else { //it's video
                         thumbnail = ThumbnailUtils.createVideoThumbnail(evidenceFileName, MediaStore.Video.Thumbnails.MICRO_KIND);
                     }
@@ -488,9 +492,12 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         }
 
         if (requestCode == REQUEST_CHECK_SETTINGS){
+
             /*switch (resultCode){
                 case RESULT_OK : {*/
-                    LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+            if (googleApiClient != null && googleApiClient.isConnected()) {
+                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+            }
                     /*break;
                 }
             }*/
@@ -508,6 +515,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         return super.onOptionsItemSelected(item);
     }
 
+    //hides the software keyboard
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        Globals.hideSoftKeyboard(this, event);
+        return super.dispatchTouchEvent( event );
+    }
+
     //called from onCreate to set the tabs
     private void setupTab(final int contentViewId, String tag){
         TabHost.TabSpec tabBuilder=tabs.newTabSpec(tag);
@@ -519,7 +533,9 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     }
 
     public void saveToBase(View view) throws Exception {
-        //first check if location is available - show error dialog if not
+        /*first check if location is available - show error dialog if not
+        this is made to prevent saving request with zero LatLng -> leads to crash.
+         */
         if (checkLocation()) {
 
             //db actions
@@ -545,6 +561,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     cv.put(DBHelper.TIME_STAMP, time_stamp);
                     rowID = db.insertOrThrow(DBHelper.VIOLATIONS_TABLE, null, cv);
                     id = new BigDecimal(rowID).intValue();
+                    idInDbString = rowID.toString();
                     mode = MODE_EDIT; //once created the record we switch to edit mode
                     break;
                 }
@@ -564,8 +581,9 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         /*actions with the media table: if in edit mode - we delete all previously written records
          *& fill the table again, because the user could add or delete something
          */
-            if (mode == MODE_EDIT) //this condition works only in edit mode - delete all records previously added to db
-                db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idInDbString});
+            if (mode == MODE_EDIT) {//this condition works only in edit mode - delete all records previously added to db
+                int i = db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idInDbString});
+            }
             for (int i = 0; i < evidenceAdapter.content.size(); i++) {
                 cv.put(DBHelper.ID, rowID);
                 cv.put(DBHelper.FILE_NAME, evidenceAdapter.content.get(i));
@@ -582,7 +600,9 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             } catch (Exception e) {
                 Globals.showError(this, R.string.cannot_write_file, e);
             }
-            //Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_LONG).show();
+
+            //show toast only if the method is called by Save button
+            if (view != null ) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -627,7 +647,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     public void punish(View view) {
         try {
             RequestListFragment.punishPerformed = true;
-            saveToBase(null);
+            saveToBase(null); //we pass null to point that it's called from punish()
             new ViolationSender(this).execute(violation);
         } catch (Exception e){
             Globals.showError(this,  R.string.error, e);
@@ -637,18 +657,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     public void empty(View view) {
         //empty method to handle click events
     }
-
-    /*public void setFocusOnEditTextInRequisitesAdapter(final int position){
-        listViewRequisites.post(new Runnable() {
-            @Override
-            public void run() {
-                View layout = listViewRequisites.getChildAt(position);
-                TextView viewToFocus = (TextView)layout.findViewById(R.id.editTextRequisite);
-                viewToFocus.requestFocus();
-
-            }
-        });
-    }*/
 
     public void validateSaveButton(){
         saveButton.setEnabled(!evidenceAdapter.isEmpty());
@@ -660,25 +668,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     public boolean allDataEntered(){
         boolean result = !evidenceAdapter.isEmpty();
-
-        /*if the inflation of the view is not conducted yet -> we have just opened the activity & do not need to
-         * check EditText values, but check adapter's content values instead
-         */
-//        if (listViewRequisites.getChildAt(0) == null) {
-/*            for (ViolationRequisite requisite : requisitesAdapter.content) {
-                if (!result) return false; //to speed up the calculation - if anyone of the fields is empty no need to check others
-                if (requisite.necessary) result = ((requisite.value != null) && !requisite.value.isEmpty());
-            }
-/*        } else {//inflation is conducted, check the values in EditTexts
-            for (int i = 0; i < listViewRequisites.getChildCount(); i++) {
-                if (!result) return false; //to speed up the calculation - if anyone of the fields is empty no need to check others
-                EditText et = ((EditText) ((LinearLayout) listViewRequisites.getChildAt(i)).getChildAt(2));
-                String text = et.getText().toString();
-                result = !text.isEmpty();
-            }*/
-//        }
-
-        //result = PunishButtonValidator.validate() && result;
 
         int i=0;
         while (i < requisitesAdapter.getCount() && result){
@@ -778,16 +767,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         public void onProviderDisabled(String provider) {}
     }
 
-    /*public Location getOldAndroidLocation() throws NullPointerException {
-        String best = locationManager.getBestProvider(new Criteria(), true);
-        Location locationAndroid = locationManager.getLastKnownLocation(best);
-        if (((Karatel)getApplicationContext()).locationIsMock(locationAndroid)) {
-            return null;
-        } else {
-            return locationAndroid;
-        }
-    }*/
-
     private boolean checkGooglePlayServices(){
         GoogleApiAvailability gaa = GoogleApiAvailability.getInstance();
         int resultCode = gaa.isGooglePlayServicesAvailable(getApplicationContext());
@@ -860,20 +839,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     }
                 }
             });
-
-            /*location = getLastLocation();
-            if (location != null && !((Karatel)getApplicationContext()).locationIsMock(location)) {
-                Double latToCheck = latitude!=null ? latitude : 0;
-                Double lonToCheck = longitude!=null ? longitude : 0;
-                Double absLat = Math.abs(latToCheck - location.getLatitude());
-                Double absLon = Math.abs(lonToCheck - location.getLongitude());
-                if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
-                    latitude = location.getLatitude();
-                    longitude = location.getLongitude();
-                    requisitesAdapter.nullSavedLatLng();
-                    requisitesAdapter.reclaimMap();
-                }
-            }*/
         }
     }
 
@@ -885,14 +850,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult result) {
         Log.e("Punisher", "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
-        /*if (mode == MODE_CREATE) {
-            location = getOldAndroidLocation();
-            if (location != null) {
-                latitude = location.getLatitude();
-                longitude = location.getLongitude();
-                requisitesAdapter.reclaimMap();
-            }
-        }*/
     }
 
     @Override
@@ -916,24 +873,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         requisitesAdapter.putMapDataToBundle(outState);
         super.onSaveInstanceState(outState);
     }
-
-    /*@Override
-    public void onLowMemory() {
-        requisitesAdapter.doMapViewLifecycle("lowMemory", null);
-        super.onLowMemory();
-    }
-
-    @Override
-    protected void onPause() {
-        requisitesAdapter.doMapViewLifecycle("pause", null);
-        super.onPause();
-    }*/
-
-    /*@Override
-    protected void onResume() {
-        super.onResume();
-        requisitesAdapter.reclaimMap();
-    }*/
 
     @Override //Activity method
     protected void onStop() {
@@ -968,12 +907,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         super.onDestroy();
     }
 
-    /*public void setLatitudeAndLongitude(Location l){
-        latitude = l.getLatitude();
-        longitude = l.getLongitude();
-    }*/
-
-    class ViolationSender extends AsyncTask<Violation, Void, String> {
+    class ViolationSender extends AsyncTask<Violation, Void, CreationResponse> {
 
         Context context;
 
@@ -989,11 +923,11 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         }
 
         @Override
-        protected String doInBackground(Violation... params) {
-            if (!HttpHelper.internetConnected(context)) return HttpHelper.ERROR_JSON;
+        protected CreationResponse doInBackground(Violation... params) {
+            if (!HttpHelper.internetConnected(context)) return null;
 
             Violation violation = params[0];
-            StringBuffer response = new StringBuffer();
+            CreationResponse result;
 
             SQLiteDatabase db = dbHelper.getReadableDatabase();
             //query to data table
@@ -1061,10 +995,47 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 }
                 String[] requestParametersArray = requestParameters.toArray(new String[0]);
 
+                // this commented out part is to update existing declined request instead of creating new one
                 if (mode == calculateRefusedStatus()){
                     String request = new HttpHelper(typeServerSuffixNoS).makeRequestString(requestParametersArray);
-                    return HttpHelper.proceedRequest(typeServerSuffix + "/" + id.toString(), "PUT", request, true);
+                    String response = HttpHelper.proceedRequest(typeServerSuffix + "/" + id.toString(), "PUT", request, true);
+                    result = new ObjectMapper().readValue(response, CreationResponse.class);
                 } else {
+
+                    //Retrofit request
+                    MultipartBody.Builder requestBodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+                    int i = 0;
+                    while (i < requestParametersArray.length) {
+                        requestBodyBuilder.addFormDataPart(typeServerSuffixNoS + "[" + requestParametersArray[i++] + "]",
+                                requestParametersArray[i++]);
+                    }
+                    for (String mediaFileName : evidenceAdapter.content) {
+                        String requestTag, mimeType;
+                        if (mediaFileName.endsWith(CameraManager.JPG)){
+                            requestTag = "images";
+                            mimeType = "image/jpeg";
+                        } else {
+                            requestTag = "videos";
+                            mimeType = "video/mp4";
+                        }
+                        requestBodyBuilder.addFormDataPart(typeServerSuffixNoS + "[" + requestTag + "][]",
+                                mediaFileName,
+                                RequestBody.create(MediaType.parse(mimeType), new File(mediaFileName)));
+                    }
+
+                    RetrofitMultipartUploader api = Karatel.getClient().create(RetrofitMultipartUploader.class);
+                    Call<CreationResponse> call = api.upload(Globals.sessionToken, typeServerSuffix, requestBodyBuilder.build());
+                    Response<CreationResponse> json = call.execute();
+                    if (json.isSuccessful()) {
+                        result = json.body();
+                    } else {
+                        ResponseBody errorBody = json.errorBody();
+                        result = new ObjectMapper().readValue(errorBody.string(), CreationResponse.class);
+                        errorBody.close();
+                    }
+
+                    //request based on HttpUrlConnection
+                    /*
                     int tries = 0; final int MAX_TRIES = 2;
                     while (tries++ < MAX_TRIES) try {
                         MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8");
@@ -1090,7 +1061,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                         } else {
                             Log.e("Punisher", "try # " + tries + " : " + e.toString());
                         }
-                    }
+                    }*/
                 }
 
             } catch (final IOException e){
@@ -1100,37 +1071,45 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                         Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
                     }
                 });
-                return "";
+                return null;
             }
-            return response.toString();
+            return result;
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
+        protected void onPostExecute(CreationResponse answer) {
+            super.onPostExecute(answer);
             progressBar.setVisibility(View.GONE);
-            if (mode == calculateRefusedStatus()){
-                DBHelper.deleteRequest(dbHelper.getWritableDatabase(), new BigDecimal(rowID).intValue());
-            }
-            try {
-                JSONObject fullAnswer = new JSONObject(s);
-                switch (fullAnswer.getString("status")) {
-                    case Globals.SERVER_SUCCESS: {
-                        if (mode != calculateRefusedStatus()) {
-                            DBHelper.deleteRequest(dbHelper.getWritableDatabase(), id);
-                        }
-                        Toast.makeText(context, R.string.requestSent, Toast.LENGTH_LONG).show();
-                        finish();
-                        break;
-                    }
-                    case Globals.SERVER_ERROR: {
-                        Toast.makeText(context, fullAnswer.getString("error"), Toast.LENGTH_LONG).show();
-                        break;
-                    }
+
+            if (answer == null) {
+                try {
+                    answer = new ObjectMapper().readValue(HttpHelper.ERROR_JSON, CreationResponse.class);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (JSONException e){
-                Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
             }
+
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+            if (mode == calculateRefusedStatus()){
+                DBHelper.deleteRequest(db, new BigDecimal(rowID).intValue());
+            }
+            switch (answer.status) {
+                case Globals.SERVER_SUCCESS: {
+                    if (mode != calculateRefusedStatus()) {
+                        DBHelper.deleteRequest(db, id);
+                    }
+                    //Toast.makeText(context, R.string.requestSent, Toast.LENGTH_LONG).show();
+                    finish();
+                    break;
+                }
+                case Globals.SERVER_ERROR: {
+                    Toast.makeText(context, answer.error, Toast.LENGTH_LONG).show();
+                    break;
+                }
+            }
+
+            db.close();
         }
     }
 
@@ -1201,13 +1180,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     request.type = dataJSON.getString(0);
                     }
 
-
-                /*JSONArray updatesJSON = new JSONObject(s).getJSONArray("data").getJSONObject(1).getJSONArray("updates");
-                ObjectMapper objectMapper = new ObjectMapper();
-                UpdateEntity[] updates = new UpdateEntity[updatesJSON.length()];
-                for (int i = 0; i < updatesJSON.length(); i++){
-                    updates[i] = objectMapper.readValue(updatesJSON.get(i).toString(), UpdateEntity.class);
-                }*/
                 historyAdapter.setContent(request.updates);
             } catch (JSONException | IOException | NullPointerException e) {
                 Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);

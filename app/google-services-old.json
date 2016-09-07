@@ -1,0 +1,61 @@
+{
+  "project_info": {
+    "project_number": "301781387946",
+    "project_id": "karatel-ae5ac"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:301781387946:android:a840ca736503e44b",
+        "android_client_info": {
+          "package_name": "org.foundation101.thepunisher"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvOmKt5COzldoNnalypQJ5yYo_3o2XrvE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:301781387946:android:d999169b87a355f9",
+        "android_client_info": {
+          "package_name": "org.foundation101.karatel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvOmKt5COzldoNnalypQJ5yYo_3o2XrvE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

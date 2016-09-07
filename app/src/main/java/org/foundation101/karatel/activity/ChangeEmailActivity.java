@@ -1,9 +1,11 @@
 package org.foundation101.karatel.activity;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -145,7 +147,17 @@ public class ChangeEmailActivity extends AppCompatActivity {
                             .putString(Globals.USER_EMAIL, email).apply();
                     AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ChangeEmailActivity.this);
                     AlertDialog dialog = dialogBuilder.setTitle(R.string.email_changed)
-                            .setNegativeButton(R.string.ok, simpleListener).create();
+                            .setMessage(R.string.check_email_to_approve)
+                            .setCancelable(false)
+                            .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                    LocalBroadcastManager.getInstance(getApplicationContext())
+                                            .sendBroadcast(new Intent(MainActivity.BROADCAST_RECEIVER_TAG));
+                                    finish();
+                                }
+                            }).create();
                     dialog.show();
                 } else {
                     if (s.equals(HttpHelper.ERROR_JSON)) {
