@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.ExifInterface;
 import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -30,6 +31,7 @@ import android.widget.Toast;
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.MultipartUtility;
 import org.foundation101.karatel.PunisherUser;
 import org.foundation101.karatel.R;
@@ -160,12 +162,17 @@ public class ProfileFragment extends Fragment {
                 } else {
                     InputStream inputStream = getContext().getContentResolver().openInputStream(data.getData());
                     Bitmap bigImage = BitmapFactory.decodeStream(inputStream, null, options);
-                    setNewAvatar(bigImage);
+                    int orientation = Karatel.getOrientation(getActivity(), data.getData());
+                    setNewAvatar(Karatel.rotateBitmap(bigImage, orientation));
                 }
             }
             if (requestCode == CameraManager.IMAGE_CAPTURE_INTENT && resultCode == Activity.RESULT_OK) {
                 Bitmap bigImage = BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options);
-                setNewAvatar(bigImage);
+
+                ExifInterface ei = new ExifInterface(CameraManager.lastCapturedFile);
+                int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+                setNewAvatar(Karatel.rotateBitmap(bigImage, orientation));
                 boolean b = new File(CameraManager.lastCapturedFile).delete();
             }
         } catch (IOException e) {

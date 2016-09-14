@@ -8,8 +8,8 @@ android {
         applicationId "org.foundation101.karatel"
         minSdkVersion 16
         targetSdkVersion 22
-        versionCode 6
-        versionName "1.05"
+        versionCode 9
+        versionName "1.08"
     }
     buildTypes {
         release {

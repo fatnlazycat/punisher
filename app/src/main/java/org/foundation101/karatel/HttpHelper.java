@@ -33,6 +33,7 @@ public class HttpHelper {
         final LinkedHashMap<String, String> SPECIAL_CHARACTERS = new LinkedHashMap<String, String>(){
             {
                 put("%", "%25"); //this should go first to avoid double replacing '%'
+                put("'", "%27");
                 put("@", "%40");
             }
         };

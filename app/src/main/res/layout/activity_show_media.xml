@@ -31,4 +31,9 @@
         android:visibility="gone"
         android:id="@+id/videoViewJustShow"/>
 
+    <include layout="@layout/frame_progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/frameLayoutProgress"/>
+
 </RelativeLayout>

@@ -350,7 +350,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void createRequest(View view) {
-        String tag = getResources().getString(R.string.do_punish);
+        currentFragment = 1; //Покарати за порушення
+        String tag = fragmentTags.get(currentFragment);
         toolbar.setTitle(tag);
         fManager.beginTransaction().replace(R.id.frameLayoutMain, new MainFragment(), tag).commit();
     }

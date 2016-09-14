@@ -99,7 +99,7 @@
         <item>Bribe_name_of_authority</item>
         <item>НАЗВА ОРГАНУ ВЛАДИ</item>
         <item>Напис на вивісці</item>
-        <item>Вкажіть напіс на вивісці</item>
+        <item>Вкажіть напис на вивісці</item>
         <item>true</item>
 
         <item>Bribe_description</item>
@@ -131,7 +131,7 @@
         <item>Insult_name_of_authority</item>
         <item>НАЗВА ОРГАНУ ВЛАДИ АБО ПРИВАТНОГО ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
-        <item>Вкажіть напіс на вивісці</item>
+        <item>Вкажіть напис на вивісці</item>
         <item>true</item>
 
         <item>Insult_name_of_institution</item>
@@ -217,7 +217,7 @@
         <item>NoSmoking_name_of_institution</item>
         <item>НАЗВА ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
-        <item>Вкажіть напіс на вивісці</item>
+        <item>Вкажіть напис на вивісці</item>
         <item>true</item>
 
         <item>NoSmoking_name_of_entity</item>
@@ -243,7 +243,7 @@
         <item>SaleOfGood_name_of_institution</item>
         <item>НАЗВА ЗАКЛАДУ</item>
         <item>Напис на вивісці</item>
-        <item>Вкажіть напіс на вивісці</item>
+        <item>Вкажіть напис на вивісці</item>
         <item>true</item>
 
         <item>SaleOfGood_name_of_entity</item>

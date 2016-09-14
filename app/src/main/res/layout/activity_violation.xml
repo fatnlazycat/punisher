@@ -158,12 +158,44 @@
                     </LinearLayout>
                 </org.foundation101.karatel.view.MyScrollView>
 
-                <ListView
+                <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:divider="@color/colorBackground"
-                    android:dividerHeight="16dp"
-                    android:id="@+id/historyListView_TabStatus"/>
+                    android:id="@+id/tabStatus">
+
+                    <ListView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:divider="@color/colorBackground"
+                        android:dividerHeight="16dp"
+                        android:id="@+id/historyListView"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:visibility="gone"
+                        android:orientation="vertical"
+                        android:id="@+id/layoutNoRequests">
+
+                        <ImageView
+                            android:id="@+id/imageViewNoRequests"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="94dp"
+                            android:layout_marginBottom="56dp"
+                            android:src="@mipmap/ill_empty"/>
+
+                        <TextView
+                            android:id="@+id/textViewNoRequests"
+                            android:layout_width="192dp"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:gravity="center"
+                            android:text="@string/you_request_is_being_moderated"
+                            android:textSize="16sp"/>
+                    </LinearLayout>
+                </RelativeLayout>
+
             </FrameLayout>
         </LinearLayout>
     </TabHost>

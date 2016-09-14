@@ -8,6 +8,9 @@ import android.os.AsyncTask;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
@@ -16,6 +19,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -139,9 +143,7 @@ public class HistoryAdapter extends BaseAdapter {
                 holder.answerLayout.setVisibility(View.VISIBLE );
                 holder.imageAnswer.getSettings().setLoadWithOverviewMode(true);
                 holder.imageAnswer.getSettings().setUseWideViewPort(true);
-                String suffix = thisUpdate.documents[0].url.endsWith(PDF) ? googleDocsUrl : "";
-                final String docUrl = suffix + Globals.SERVER_URL.replace("/api/v1/", "")
-                        + thisUpdate.documents[0].url;
+                final String docUrl = getDocUrl(thisUpdate.documents[0]);
                 holder.imageAnswer.loadUrl(docUrl);
                 holder.imageAnswer.setWebViewClient(new WebViewClient(){
                     @Override
@@ -160,13 +162,19 @@ public class HistoryAdapter extends BaseAdapter {
                 holder.ic_zoom.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent intent = new Intent(Intent.ACTION_VIEW);
-                        intent.setData(Uri.parse(docUrl));
-                        if (intent.resolveActivity(context.getPackageManager()) != null) {
-                            context.startActivity(intent);
-                        } else {
-                            Toast.makeText(context, "web-browser not installed", Toast.LENGTH_LONG).show();
+                        PopupMenu popup = new PopupMenu(context, v);
+                        int counter = 0;
+                        for (UpdateEntity.DocUrl d : thisUpdate.documents) {
+                            String label = Uri.parse(d.url).getLastPathSegment();
+                            popup.getMenu().add(Menu.NONE, counter++, Menu.NONE, label);
                         }
+                        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                            @Override
+                            public boolean onMenuItemClick(MenuItem item) {
+                                return docsPopup(thisUpdate.documents, item.getItemId());
+                            }
+                        });
+                        popup.show();
                     }
                 });
 
@@ -218,6 +226,23 @@ public class HistoryAdapter extends BaseAdapter {
     void changeCollapseStatus(UpdateEntity update){
         update.setCollapsed(!update.isCollapsed());
         notifyDataSetChanged();
+    }
+
+    String getDocUrl(UpdateEntity.DocUrl arg){
+        String suffix = arg.url.endsWith(PDF) ? googleDocsUrl : "";
+        final String result = suffix + Globals.SERVER_URL.replace("/api/v1/", "") + arg.url;
+        return result;
+    }
+
+    public boolean docsPopup(UpdateEntity.DocUrl[] documents, int position){
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse(getDocUrl(documents[position])));
+        if (intent.resolveActivity(context.getPackageManager()) != null) {
+            context.startActivity(intent);
+        } else {
+            Toast.makeText(context, "web-browser not installed", Toast.LENGTH_LONG).show();
+        }
+        return true;
     }
 
     public static class ViewHolder{

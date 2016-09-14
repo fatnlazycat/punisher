@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.media.ExifInterface;
 import android.media.MediaPlayer;
 import android.opengl.GLES10;
 import android.os.AsyncTask;
@@ -14,14 +15,17 @@ import android.support.v7.widget.Toolbar;
 import android.view.Display;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.MediaController;
 import android.widget.VideoView;
 
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
@@ -35,11 +39,14 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class ShowMediaActivity extends AppCompatActivity {
     Bitmap picture;
+    FrameLayout progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_media);
+
+        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
 
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -79,6 +86,10 @@ public class ShowMediaActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void empty(View view) {
+        //empty method to handle click events
     }
 
     /*
@@ -150,12 +161,25 @@ public class ShowMediaActivity extends AppCompatActivity {
         return Math.max(maximumTextureSize, IMAGE_MAX_BITMAP_DIMENSION);
     }
 
+    Point getDesiredSize(){
+        Display display = getWindowManager().getDefaultDisplay();
+        Point point = new Point();
+        display.getSize(point);
+        return point;
+    }
+
     class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
         private final WeakReference<ImageView> imageViewReference;
 
         public BitmapWorkerTask(ImageView imageView) {
             // Use a WeakReference to ensure the ImageView can be garbage collected
             imageViewReference = new WeakReference<>(imageView);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
         }
 
         // Decode image in background.
@@ -173,10 +197,12 @@ public class ShowMediaActivity extends AppCompatActivity {
                     imageView.setImageBitmap(bitmap);
                 }
             }
+            progressBar.setVisibility(View.GONE);
         }
 
         public Bitmap decodeSampledBitmapFromFile(String fileName) {
             BitmapFactory.Options options = new BitmapFactory.Options();
+            Point point = getDesiredSize();
             try {
                 if (fileName.matches("https?://.+")){
                     //first run to determine image size
@@ -185,10 +211,6 @@ public class ShowMediaActivity extends AppCompatActivity {
                     BitmapFactory.decodeStream(is, null, options);
 
                     //calculate sample size
-                    Display display = getWindowManager().getDefaultDisplay();
-                    Point point = new Point();
-                    display.getSize(point);
-
                     options.inSampleSize = calculateInSampleSize(options, point.x, point.y);
 
                     //second run to get bitmap
@@ -197,7 +219,20 @@ public class ShowMediaActivity extends AppCompatActivity {
                     picture = BitmapFactory.decodeStream(is, null, options);
                     is.close();
                 } else {
-                    picture = BitmapFactory.decodeFile(fileName, options);
+                    //first run to determine image size
+                    options.inJustDecodeBounds = true;
+                    BitmapFactory.decodeFile(fileName, options);
+
+                    //calculate sample size
+                    options.inSampleSize = calculateInSampleSize(options, point.x, point.y);
+
+                    //second run to get bitmap
+                    options.inJustDecodeBounds = false;
+
+                    ExifInterface ei = new ExifInterface(fileName);
+                    int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+                    picture = Karatel.rotateBitmap(BitmapFactory.decodeFile(fileName, options), orientation);
                 }
             } catch (final IOException e){
                 ShowMediaActivity.this.runOnUiThread(new Runnable() {

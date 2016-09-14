@@ -130,4 +130,6 @@
     <string name="turn_off_mock_locations">Вимкніть емуляцію місцезнаходження</string>
     <string name="create_new_bases_on_this">Створити нову на базі цієї</string>
     <string name="check_email_to_approve">Для підтвердження змін перевірте свою електронну пошту</string>
+    <string name="facebook_disclaimer">Увійти через Facebook можливо, якщо Ви створили профіль та зв\'язали його зі своїм FB-акаунтом</string>
+    <string name="you_request_is_being_moderated">Ваша заявка знаходиться на модерації</string>
 </resources>

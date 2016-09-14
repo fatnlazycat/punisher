@@ -187,6 +187,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
                         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ChangePasswordActivity.this);
                         AlertDialog dialog = dialogBuilder.setTitle(R.string.your_password_is_changed_successfully)
                                 .setMessage(R.string.check_email_to_approve)
+                                .setCancelable(false)
                                 .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {

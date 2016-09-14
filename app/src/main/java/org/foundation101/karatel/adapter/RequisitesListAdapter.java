@@ -168,7 +168,7 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
 
         LatLng here = new LatLng(latitude, longitude);
 
-        if (((ViolationActivity) context).getMode() > ViolationActivity.MODE_CREATE){
+        if (((ViolationActivity) context).getMode() > ViolationActivity.MODE_EDIT){
 
 
             /*//after defining coordinates we check if it's not in edit mode & text field address is filled in

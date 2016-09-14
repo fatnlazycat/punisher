@@ -40,6 +40,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupMenu;
+import android.widget.RelativeLayout;
 import android.widget.TabHost;
 import android.widget.TabWidget;
 import android.widget.TextView;
@@ -92,7 +93,6 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -116,6 +116,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     RequisitesListAdapter requisitesAdapter;
     LinearLayout requisitesList;
+    RelativeLayout tabStatus;
     EvidenceAdapter evidenceAdapter = new EvidenceAdapter(this);
     HistoryAdapter historyAdapter;
     ListView historyListView;
@@ -201,11 +202,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             @Override
             public void onTabChanged(String tabId) {
                 if (statusTabFirstShow) {
-                    historyListView = (ListView)findViewById(R.id.historyListView_TabStatus);
+                    tabStatus = (RelativeLayout)findViewById((R.id.tabStatus));
+                    historyListView = (ListView)findViewById(R.id.historyListView);
                     FrameLayout.LayoutParams mParam = new FrameLayout.LayoutParams(
                             FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT);
-                    historyListView.setLayoutParams(mParam);
+                    tabStatus.setLayoutParams(mParam);
                     historyListView.setAdapter(historyAdapter);
+                    historyListView.setEmptyView(findViewById(R.id.layoutNoRequests));
                     historyAdapter.notifyDataSetChanged();
                     statusTabFirstShow = false;
                 }
@@ -309,7 +312,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
             toolbar.setSubtitle("Заявка № " + id_number_server);
 
-            setupTab(R.id.historyListView_TabStatus, getString(R.string.request_status));
+            setupTab(R.id.tabStatus, getString(R.string.request_status));
             TabWidget tabWidget = (TabWidget)findViewById(android.R.id.tabs);
             tabWidget.setVisibility(View.VISIBLE);
             tabs.setCurrentTab(0);
@@ -409,6 +412,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     int calculateRefusedStatus(){
         int result = -100;
+
+        /*commented out to cancel special tratment of refused requests - they stay refused forever
         String[] violationStatuses = getResources().getStringArray(R.array.violationStatuses);
         int refusedStatusIndex = Arrays.asList(violationStatuses).indexOf(STATUS_REFUSED);
         if (Globals.statusesMap != null){
@@ -416,7 +421,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 if (Globals.statusesMap.get(key) == refusedStatusIndex)
                     result = key;
             }
-        }
+        }*/
         return result;
     }
 
@@ -479,7 +484,9 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 evidenceAdapter.content.add(CameraManager.lastCapturedFile);
                 Bitmap bmp;
                 if (CameraManager.lastCapturedFile.endsWith(CameraManager.JPG)) {
-                    bmp = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(CameraManager.lastCapturedFile),
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inSampleSize = 4;
+                    bmp = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options),
                             thumbDimension, thumbDimension);
                 } else {
                     bmp = ThumbnailUtils.createVideoThumbnail(CameraManager.lastCapturedFile, MediaStore.Video.Thumbnails.MICRO_KIND);
@@ -995,7 +1002,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 }
                 String[] requestParametersArray = requestParameters.toArray(new String[0]);
 
-                // this commented out part is to update existing declined request instead of creating new one
+                // this part is to update existing declined request instead of creating new one
                 if (mode == calculateRefusedStatus()){
                     String request = new HttpHelper(typeServerSuffixNoS).makeRequestString(requestParametersArray);
                     String response = HttpHelper.proceedRequest(typeServerSuffix + "/" + id.toString(), "PUT", request, true);
@@ -1120,7 +1127,11 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             try {
                 URL url = new URL(params[0]);
                 Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-                ViolationActivity.this.evidenceAdapter.mediaContent.add(bmp);
+                int width = getResources().getDimensionPixelSize(R.dimen.evidence_width);
+                int height = getResources().getDimensionPixelSize(R.dimen.evidence_height);
+                Bitmap fitBitmap = Bitmap.createScaledBitmap(bmp, width, height, false);
+                ViolationActivity.this.evidenceAdapter.mediaContent.add(fitBitmap);
+                bmp.recycle();
             } catch (Exception e) {
                 return e;
             }

@@ -1,117 +1,129 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     tools:context=".activity.TipsActivity">
-
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/activity_horizontal_margin"
-        android:layout_marginEnd="@dimen/activity_horizontal_margin"
-        android:orientation="vertical">
+        android:layout_height="wrap_content">
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/imageView"
-            android:src="@mipmap/karatel_text_big"
-            android:layout_marginBottom="50dp"
-            android:layout_marginTop="50dp" />
-
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/email"
-            style="@style/EditTextStyle"
-            android:inputType="textEmailAddress"
-            android:layout_marginBottom="1dp"
-            android:id="@+id/editTextLoginEmail"/>
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/passw"
-            style="@style/EditTextStyle"
-            android:inputType="textPassword"
-            android:id="@+id/editTextLoginPassword"/>
-        <!--android:text="qwerty"-->
-
-        <Button
-            android:id="@+id/forgotPasswButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/forgot_passw"
-            android:onClick="startPasswordRenovation"
-            style="@style/borderlessButton"
-            android:textSize="14sp" />
-
-        <Button
-            android:id="@+id/loginButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/login"
-            android:onClick="login"
-            android:layout_marginTop="20dp" />
-
-        <!--facebook part - DO NOT DELETE -->
         <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/aboLayout"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp">
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:orientation="vertical">
+
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:src="@drawable/grey_line"/>
+                android:id="@+id/imageView"
+                android:src="@mipmap/karatel_text_big"
+                android:layout_marginBottom="50dp"
+                android:layout_marginTop="50dp" />
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/email"
+                style="@style/EditTextStyle"
+                android:inputType="textEmailAddress"
+                android:layout_marginBottom="1dp"
+                android:id="@+id/editTextLoginEmail"/>
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/passw"
+                style="@style/EditTextStyle"
+                android:inputType="textPassword"
+                android:id="@+id/editTextLoginPassword"/>
+            <!--android:text="qwerty"-->
+
+            <Button
+                android:id="@+id/forgotPasswButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/forgot_passw"
+                android:onClick="startPasswordRenovation"
+                style="@style/borderlessButton"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/loginButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/login"
+                android:onClick="login"
+                android:layout_marginTop="20dp" />
+
+            <!--facebook part - DO NOT DELETE -->
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/aboLayout"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/grey_line"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/or"/>
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/grey_line"/>
+            </LinearLayout>
+
+            <!--com.facebook.login.widget.LoginButton
+                android:id="@+id/login_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/-->
+
+            <Button
+                android:id="@+id/facebookLoginButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableStart="@mipmap/facebook"
+                android:drawableLeft="@mipmap/facebook"
+                android:text="@string/facebook_login"
+                android:background="@drawable/selector_facebook_button"
+                android:padding="0dp"
+                android:onClick="facebookLogin"/>
+
             <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/facebook_disclaimer"/>
+
+            <!--empty view to push the rest down the screen-->
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/signUpButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/or"/>
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:src="@drawable/grey_line"/>
+                android:text="@string/sign_up"
+                style="@style/borderlessButton"
+                android:textSize="14sp"
+                android:onClick="signUp"/>
         </LinearLayout>
 
-        <!--com.facebook.login.widget.LoginButton
-            android:id="@+id/login_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/-->
-
-        <Button
-            android:id="@+id/facebookLoginButton"
+        <include layout="@layout/frame_progress_bar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableStart="@mipmap/facebook"
-            android:text="@string/facebook_login"
-            android:background="@drawable/selector_facebook_button"
-            android:padding="0dp"
-            android:onClick="facebookLogin"/>
+            android:layout_height="match_parent"
+            android:id="@+id/frameLayoutProgress"/>
 
-        <!--empty view to push the rest down the screen-->
-        <View
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <Button
-            android:id="@+id/signUpButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/sign_up"
-            style="@style/borderlessButton"
-            android:textSize="14sp"
-            android:onClick="signUp"/>
-    </LinearLayout>
-
-    <include layout="@layout/frame_progress_bar"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/frameLayoutProgress"/>
-
-</RelativeLayout>
+    </RelativeLayout>
+</ScrollView>
