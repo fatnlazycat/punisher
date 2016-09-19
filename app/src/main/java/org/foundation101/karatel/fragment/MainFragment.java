@@ -22,6 +22,7 @@ import org.foundation101.karatel.adapter.ViolationsAdapter;
 import java.util.ArrayList;
 
 public class MainFragment extends Fragment {
+    static final String TAG = "ChooseForm";
 
     public MainFragment() {
         // Required empty public constructor
@@ -32,7 +33,7 @@ public class MainFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         //Google Analytics part
-        ((Karatel)getActivity().getApplication()).sendScreenName(getClass());
+        ((Karatel)getActivity().getApplication()).sendScreenName(TAG);
     }
 
     @Override

@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.PunisherUser;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.HttpHelper;
@@ -29,6 +30,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public class SignUpActivity extends AppCompatActivity implements View.OnClickListener {
+
+    static final String TAG = "Registration";
 
     TextView textViewSignUpErrorMessage;
     EditText editTextEmail, editTextPassword, editTextSurname, editTextName, editTextSecondName, editTextPhone;
@@ -42,6 +45,8 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
+
+        ((Karatel)getApplication()).sendScreenName(TAG);
 
         progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
 
@@ -92,12 +97,12 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
     private boolean signUpDataOK(){
         boolean result = checkBoxPersonalDataAgreement.isChecked();
 
-        result = !(email = editTextEmail.getText().toString()).isEmpty() && result;
-        result = !(password = editTextPassword.getText().toString()).isEmpty() && result;
-        result = !(surname = editTextSurname.getText().toString()).isEmpty() && result;
-        result = !(name = editTextName.getText().toString()).isEmpty() && result;
-        result = !(secondName = editTextSecondName.getText().toString()).isEmpty() && result;
-        result = !(phone = editTextPhone.getText().toString()).isEmpty() && result;
+        result = !(email = editTextEmail.getText().toString().replace(" ", "")).isEmpty() && result;
+        result = !(password = editTextPassword.getText().toString().replace(" ", "")).isEmpty() && result;
+        result = !(surname = editTextSurname.getText().toString().replace(" ", "")).isEmpty() && result;
+        result = !(name = editTextName.getText().toString().replace(" ", "")).isEmpty() && result;
+        result = !(secondName = editTextSecondName.getText().toString().replace(" ", "")).isEmpty() && result;
+        result = !(phone = editTextPhone.getText().toString().replace(" ", "")).isEmpty() && result;
 
         return result;
     }

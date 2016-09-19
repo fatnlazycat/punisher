@@ -13,16 +13,19 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.HttpHelper;
 import org.json.JSONException;
@@ -30,7 +33,10 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
+
 public class ChangeEmailActivity extends AppCompatActivity {
+    static final String TAG = "ChangeEmail";
+
     Toolbar toolbar;
     ViewGroup viewGroup;
     Button button;
@@ -40,6 +46,9 @@ public class ChangeEmailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_email);
+
+        //Google Analytics part
+        ((Karatel)getApplication()).sendScreenName(TAG);
 
         toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -55,6 +64,8 @@ public class ChangeEmailActivity extends AppCompatActivity {
         textView.setAllCaps(true);
         textView.setText(R.string.new_email);
 
+        button = (Button)findViewById(R.id.buttonRegister);
+
         emailEditText = (EditText)viewGroup.getChildAt(2);
         emailEditText.setHint(R.string.enter_new_email);
         emailEditText.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
@@ -68,10 +79,16 @@ public class ChangeEmailActivity extends AppCompatActivity {
                 validateButton(s.toString());
             }
         });
+        emailEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                Globals.hideSoftKeyboard(ChangeEmailActivity.this);
+                return true;
+            }
+        });
 
         viewGroup.getChildAt(1).setVisibility(View.GONE);
 
-        button = (Button)findViewById(R.id.buttonRegister);
     }
 
     @Override

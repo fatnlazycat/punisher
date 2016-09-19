@@ -6,9 +6,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 
 public class ContactsFragment extends Fragment {
+    static final String TAG = "Contact";
     public ContactsFragment() {
         // Required empty public constructor
     }
@@ -16,6 +18,9 @@ public class ContactsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //Google Analytics part
+        ((Karatel)getActivity().getApplication()).sendScreenName(TAG);
 
     }
 

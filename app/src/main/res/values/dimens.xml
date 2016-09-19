@@ -15,5 +15,5 @@
     <dimen name="textSizeRequisiteEditText">16sp</dimen>
 
     <dimen name="evidence_width">60dp</dimen>
-    <dimen name="evidence_height">59dp</dimen>
+    <dimen name="evidence_height">69dp</dimen>
 </resources>

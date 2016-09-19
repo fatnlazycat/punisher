@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.NewsActivity;
 import org.foundation101.karatel.adapter.NewsListAdapter;
@@ -34,6 +35,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 
 public class NewsFragment extends Fragment implements AdapterView.OnItemClickListener{
+    static final String TAG = "News";
 
     ArrayList<NewsItem> newsListContent;
     NewsListAdapter newsListAdapter;
@@ -46,6 +48,9 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //Google Analytics part
+        ((Karatel)getActivity().getApplication()).sendScreenName(TAG);
     }
 
     @Override

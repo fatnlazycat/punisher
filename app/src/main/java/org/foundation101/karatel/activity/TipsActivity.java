@@ -46,6 +46,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TipsActivity extends Activity {
+    static final String TAG = "Login";
     EditText editTextLoginEmail, editTextLoginPassword;
     FrameLayout progressBar;
     SharedPreferences preferences, globalPreferences;
@@ -79,6 +80,8 @@ public class TipsActivity extends Activity {
         FacebookSdk.sdkInitialize(getApplicationContext());
 
         setContentView(R.layout.activity_login);
+
+        ((Karatel)getApplication()).sendScreenName(TAG);
 
         progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
 

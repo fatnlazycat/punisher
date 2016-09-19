@@ -9,10 +9,12 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.View;
 
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.fragment.TutorialFragment;
 
 public class TutorialActivity extends FragmentActivity {
+    static final String TAG = "Instruction";
     final int MAX_STAGE=4;
     public static final String FIRST_TIME_TUTORIAL = "firstTimeTutorial";
 
@@ -33,6 +35,7 @@ public class TutorialActivity extends FragmentActivity {
         int stage = viewPager.getCurrentItem();
         if (stage < MAX_STAGE) {
             viewPager.setCurrentItem(stage + 1);
+            ((Karatel)getApplication()).sendScreenName(TAG + (stage + 1));
         } else {
             if (getIntent().getBooleanExtra(FIRST_TIME_TUTORIAL, true)) {
                 startActivity(new Intent(this, TipsActivity.class));
@@ -56,6 +59,7 @@ public class TutorialActivity extends FragmentActivity {
             Bundle arg = new Bundle();
             arg.putInt(TutorialFragment.STAGE, position);
             fragment.setArguments(arg);
+            ((Karatel)getApplication()).sendScreenName(TAG + (position + 1));
             return fragment;
         }
 

@@ -89,6 +89,10 @@ public class DrawerAdapter extends BaseAdapter {
     }
 
     public int dpToPx(int dp){
+        return dpToPx(context, dp);
+    }
+
+    public static int dpToPx(Context context, int dp){
         final float scale = context.getResources().getDisplayMetrics().density;
         return (int)(dp * scale + 0.5f);
     }

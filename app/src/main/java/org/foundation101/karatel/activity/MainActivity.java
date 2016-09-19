@@ -518,6 +518,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     class SignOutSender extends AsyncTask<Void, Void, String>{
+        static final String TAG = "Logout";
         final String BANNED = "banned";
 
         SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
@@ -588,8 +589,9 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
                 return;
             }
             globalPreferences.edit().clear().apply();
-            //Globals.user = null;
-            //Globals.sessionToken = null;
+
+            //Google Analytics part
+            ((Karatel)getApplication()).sendScreenName(TAG);
             finishAffinity();
         }
     }

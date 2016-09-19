@@ -18,12 +18,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,6 +33,9 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public class ChangePasswordActivity extends AppCompatActivity {
+    static final String TAG = "ChangePassword";
+
+    FrameLayout progressBar;
     Toolbar toolbar;
     ViewGroup viewGroupPassword, viewGroupNewPassword;
     EditText oldPassword, newPassword;
@@ -41,6 +46,12 @@ public class ChangePasswordActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_password);
+
+
+        //Google Analytics part
+        ((Karatel)getApplication()).sendScreenName(TAG);
+
+        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
 
         toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -123,6 +134,10 @@ public class ChangePasswordActivity extends AppCompatActivity {
         button.setEnabled(check);
     }
 
+    public void empty(View view) {
+        //empty method to handle click events
+    }
+
     class ChangePasswordTextWatcher implements TextWatcher{
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -153,6 +168,11 @@ public class ChangePasswordActivity extends AppCompatActivity {
         }
     }
     private class PasswordChanger extends AsyncTask<String, Void, String> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
 
         @Override
         protected String doInBackground(String... params) {
@@ -177,6 +197,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String s) {
+            progressBar.setVisibility(View.GONE);
             super.onPostExecute(s);
             String message;
             try {

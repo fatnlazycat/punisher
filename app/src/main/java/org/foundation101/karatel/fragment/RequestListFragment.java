@@ -42,6 +42,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.adapter.ItemTouchHelperAdapter;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Request;
@@ -62,6 +63,8 @@ import java.util.Date;
 import java.util.Locale;
 
 public class RequestListFragment extends Fragment {
+    static final String TAG = "Complaints";
+
     View mainView;
     RecyclerView recycler;
     FrameLayout progressBar;
@@ -89,6 +92,8 @@ public class RequestListFragment extends Fragment {
         super.onCreate(savedInstanceState);
         db = new DBHelper(getContext(), DBHelper.DATABASE, 1).getReadableDatabase();
         setHasOptionsMenu(true);
+
+        ((Karatel)getActivity().getApplication()).sendScreenName(TAG);
     }
 
     @Override
@@ -229,6 +234,13 @@ public class RequestListFragment extends Fragment {
     void changeSortMenuVisibility(){
         int visibility = (sortMenu.getVisibility() == View.VISIBLE) ? View.GONE : View.VISIBLE;
         sortMenu.setVisibility(visibility);
+    }
+
+    void resetSortMenu(){
+        textViewByStatus.setCompoundDrawablesWithIntrinsicBounds(R.mipmap.ic_sort_by_status, 0, 0, 0);
+        textViewByDate.setCompoundDrawablesWithIntrinsicBounds(R.mipmap.ic_sort_by_date, 0, 0, 0);
+        textViewByStatus.setTextColor(COLOR_GREY);
+        textViewByDate.setTextColor(COLOR_GREY);
     }
 
     class MyItemTouchHelperCallback extends ItemTouchHelper.Callback{
@@ -455,6 +467,7 @@ public class RequestListFragment extends Fragment {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             swipeRefreshLayout.setRefreshing(false);
+                            resetSortMenu();
                             makeRequestListAdapterContent();
                         }
                     }).

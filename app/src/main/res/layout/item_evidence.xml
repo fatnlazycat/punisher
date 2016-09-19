@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="@dimen/evidence_width"
-    android:layout_height="@dimen/evidence_height">
+    android:layout_height="@dimen/evidence_height"
+    android:paddingBottom="10dp">
 
     <ImageView
         android:layout_width="match_parent"

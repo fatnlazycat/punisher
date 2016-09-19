@@ -4,14 +4,13 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
-import android.media.ExifInterface;
 import android.media.MediaPlayer;
-import android.opengl.GLES10;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Display;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,26 +19,40 @@ import android.widget.ImageView;
 import android.widget.MediaController;
 import android.widget.VideoView;
 
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
+
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.retrofit.RetrofitDownloader;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.ref.WeakReference;
-import java.net.URL;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
-import javax.microedition.khronos.opengles.GL10;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 public class ShowMediaActivity extends AppCompatActivity {
     Bitmap picture;
     FrameLayout progressBar;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +61,7 @@ public class ShowMediaActivity extends AppCompatActivity {
 
         progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
 
-        Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
@@ -63,7 +76,7 @@ public class ShowMediaActivity extends AppCompatActivity {
             new BitmapWorkerTask(iView).execute(source);
 
         } else if (source.endsWith(CameraManager.MP4)) {
-            VideoView vView = (VideoView)findViewById(R.id.videoViewJustShow);
+            VideoView vView = (VideoView) findViewById(R.id.videoViewJustShow);
             final MediaController mc = new MediaController(this);
             vView.setMediaController(mc);
             vView.setVideoPath(source);
@@ -76,6 +89,9 @@ public class ShowMediaActivity extends AppCompatActivity {
             });
         }
 
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
@@ -116,7 +132,7 @@ public class ShowMediaActivity extends AppCompatActivity {
         int newWidth = width / inSampleSize;
         int newHeight = height / inSampleSize;
         int textureSize = getMaxTextureSize();
-        if (Math.max(newWidth, newHeight) > textureSize) inSampleSize *= 2;
+        if (Math.max(newWidth, newHeight) > textureSize) inSampleSize *= 2; //? - maybe we should use Math.min() here?
 
         return inSampleSize;
     }
@@ -161,15 +177,31 @@ public class ShowMediaActivity extends AppCompatActivity {
         return Math.max(maximumTextureSize, IMAGE_MAX_BITMAP_DIMENSION);
     }
 
-    Point getDesiredSize(){
+    Point getDesiredSize() {
         Display display = getWindowManager().getDefaultDisplay();
         Point point = new Point();
         display.getSize(point);
         return point;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+    }
+
+    /**
+     * BitmapWorkerTask
+     */
     class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
         private final WeakReference<ImageView> imageViewReference;
+        static final String TAG = "BitmapWorkerTask";
+        final String newFilePath = getExternalFilesDir(null) + File.separator + TAG + CameraManager.JPG;
+        File newFile = new File(newFilePath);
 
         public BitmapWorkerTask(ImageView imageView) {
             // Use a WeakReference to ensure the ImageView can be garbage collected
@@ -204,20 +236,36 @@ public class ShowMediaActivity extends AppCompatActivity {
             BitmapFactory.Options options = new BitmapFactory.Options();
             Point point = getDesiredSize();
             try {
-                if (fileName.matches("https?://.+")){
+                if (fileName.matches("https?://.+")) {
+                    String baseUrl = Globals.SERVER_URL.replace("/api/v1/", "");
+
+                    RetrofitDownloader downloader = new Retrofit.Builder()
+                            .baseUrl(baseUrl)
+                            .build().create(RetrofitDownloader.class);
+                    Call<ResponseBody> call = downloader.downloadFileWithDynamicUrl(fileName.replace(baseUrl, ""));
+                    Response<ResponseBody> response = call.execute();
+                    if (response.isSuccessful()) {
+                        Log.d(TAG, "server contacted and has file");
+                        boolean writtenToDisk = writeResponseBodyToDisk(response.body(), newFile);
+                        Log.d(TAG, "file download was a success? " + writtenToDisk);
+                    } else {
+                        Log.d(TAG, "server contact failed");
+                    }
+
+                    int orientation = Karatel.getOrientation(newFilePath);
+
                     //first run to determine image size
-                    InputStream is = (InputStream) new URL(fileName).getContent();
                     options.inJustDecodeBounds = true;
-                    BitmapFactory.decodeStream(is, null, options);
+                    BitmapFactory.decodeFile(newFilePath, options);
 
                     //calculate sample size
                     options.inSampleSize = calculateInSampleSize(options, point.x, point.y);
 
-                    //second run to get bitmap
-                    is = (InputStream) new URL(fileName).getContent();
+                    //second run to get bitmap & set to resulting picture
                     options.inJustDecodeBounds = false;
-                    picture = BitmapFactory.decodeStream(is, null, options);
-                    is.close();
+                    picture = Karatel.rotateBitmap(BitmapFactory.decodeFile(newFilePath, options), orientation);
+                    boolean fileDeletedSuccessfully = newFile.delete();
+                    Log.d(TAG, "fileDeletedSuccessfully = " + fileDeletedSuccessfully);
                 } else {
                     //first run to determine image size
                     options.inJustDecodeBounds = true;
@@ -229,12 +277,10 @@ public class ShowMediaActivity extends AppCompatActivity {
                     //second run to get bitmap
                     options.inJustDecodeBounds = false;
 
-                    ExifInterface ei = new ExifInterface(fileName);
-                    int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-
+                    int orientation = Karatel.getOrientation(fileName);
                     picture = Karatel.rotateBitmap(BitmapFactory.decodeFile(fileName, options), orientation);
                 }
-            } catch (final IOException e){
+            } catch (final IOException e) {
                 ShowMediaActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -246,5 +292,55 @@ public class ShowMediaActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * class of ShowMediaActivity
+     * @param body
+     * @param file
+     * @return
+     */
+    public static boolean writeResponseBodyToDisk(ResponseBody body, File file) {
+        try {
+            InputStream inputStream = null;
+            OutputStream outputStream = null;
+
+            try {
+                byte[] fileReader = new byte[4096];
+
+                long fileSize = body.contentLength();
+                long fileSizeDownloaded = 0;
+
+                inputStream = body.byteStream();
+                outputStream = new FileOutputStream(file);
+                while (true) {
+                    int read = inputStream.read(fileReader);
+
+                    if (read == -1) {
+                        break;
+                    }
+
+                    outputStream.write(fileReader, 0, read);
+
+                    fileSizeDownloaded += read;
+
+                    Log.d("writeResponseBodyToDisk", "file download: " + fileSizeDownloaded + " of " + fileSize);
+                }
+
+                outputStream.flush();
+                return true;
+            } catch (IOException e) {
+                return false;
+            } finally {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            }
+        } catch (IOException e) {
+            return false;
+        }
+    }
 
 }

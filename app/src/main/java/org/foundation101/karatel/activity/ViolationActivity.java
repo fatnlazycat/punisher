@@ -73,14 +73,16 @@ import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Request;
-import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
 import org.foundation101.karatel.Violation;
 import org.foundation101.karatel.ViolationRequisite;
+import org.foundation101.karatel.adapter.DrawerAdapter;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
 import org.foundation101.karatel.adapter.HistoryAdapter;
 import org.foundation101.karatel.adapter.RequestListAdapter;
 import org.foundation101.karatel.adapter.RequisitesListAdapter;
 import org.foundation101.karatel.fragment.RequestListFragment;
+import org.foundation101.karatel.retrofit.RetrofitDownloader;
+import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
 import org.foundation101.karatel.view.ExpandedGridView;
 import org.foundation101.karatel.view.MyScrollView;
 import org.json.JSONArray;
@@ -90,7 +92,6 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -104,6 +105,7 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 
 public class ViolationActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
@@ -113,6 +115,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     public static final int MODE_CREATE = -1;
     public static final int MODE_EDIT = 0;
     public static final String STATUS_REFUSED = "Відмовлено в розгляді";
+    public static final String TAG = "ViolationActivity";
 
     RequisitesListAdapter requisitesAdapter;
     LinearLayout requisitesList;
@@ -281,6 +284,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         }
 
         ExpandedGridView evidenceGridView = (ExpandedGridView) findViewById(R.id.evidenceGridView);
+        //evidenceGridView.setHorizontalSpacing(DrawerAdapter.dpToPx(getApplicationContext(), 10));
         makeEvidenceAdapterContent(mode, request);
         evidenceGridView.setAdapter(evidenceAdapter);
         evidenceGridView.setEmptyView(findViewById(R.id.emptyView));
@@ -327,6 +331,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         }
 
         makeRequisitesViews();
+
+        ((Karatel)getApplication()).sendScreenName(violation.type);
     }
 
     void makeRequisitesViews(){
@@ -442,8 +448,14 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     if (evidenceFileName.endsWith(CameraManager.JPG)) {
                         BitmapFactory.Options options = new BitmapFactory.Options();
                         options.inSampleSize = 4;
-                        thumbnail = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(evidenceFileName, options),
-                            thumbDimension, thumbDimension);
+                        int orientation = Karatel.getOrientation(evidenceFileName);
+                        thumbnail = Karatel.rotateBitmap(
+                                ThumbnailUtils.extractThumbnail(
+                                        BitmapFactory.decodeFile(evidenceFileName, options)
+                                        , thumbDimension, thumbDimension
+                                )
+                                , orientation
+                        );
                     } else { //it's video
                         thumbnail = ThumbnailUtils.createVideoThumbnail(evidenceFileName, MediaStore.Video.Thumbnails.MICRO_KIND);
                     }
@@ -481,16 +493,23 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         if (resultCode == RESULT_OK &&
                 (requestCode == CameraManager.IMAGE_CAPTURE_INTENT || requestCode == CameraManager.VIDEO_CAPTURE_INTENT)) {
             try {
-                evidenceAdapter.content.add(CameraManager.lastCapturedFile);
                 Bitmap bmp;
                 if (CameraManager.lastCapturedFile.endsWith(CameraManager.JPG)) {
+                    int orientation = Karatel.getOrientation(CameraManager.lastCapturedFile);
+
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     options.inSampleSize = 4;
-                    bmp = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options),
-                            thumbDimension, thumbDimension);
+                    bmp = Karatel.rotateBitmap(
+                            ThumbnailUtils.extractThumbnail(
+                                    BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options)
+                                    , thumbDimension, thumbDimension
+                            )
+                            , orientation
+                    );
                 } else {
                     bmp = ThumbnailUtils.createVideoThumbnail(CameraManager.lastCapturedFile, MediaStore.Video.Thumbnails.MICRO_KIND);
                 }
+                evidenceAdapter.content.add(CameraManager.lastCapturedFile);
                 evidenceAdapter.mediaContent.add(bmp);
                 evidenceAdapter.notifyDataSetChanged();
             } catch (Exception e) {
@@ -1125,6 +1144,44 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         @Override
         protected Exception doInBackground(String... params) {
             try {
+                String filePath = getExternalFilesDir(null) + File.separator + TAG + CameraManager.JPG;
+                File file  = new File(filePath);
+                String baseUrl = Globals.SERVER_URL.replace("/api/v1/", "");
+
+                RetrofitDownloader downloader = new Retrofit.Builder()
+                        .baseUrl(baseUrl)
+                        .build().create(RetrofitDownloader.class);
+                Call<ResponseBody> call = downloader.downloadFileWithDynamicUrl(params[0].replace(baseUrl, ""));
+                Response<ResponseBody> response = call.execute();
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "server contacted and has file");
+                    boolean writtenToDisk = ShowMediaActivity.writeResponseBodyToDisk(response.body(), file);
+                    Log.d(TAG, "file download was a success? " + writtenToDisk);
+                } else {
+                    Log.d(TAG, "server contact failed");
+                }
+
+                int orientation = Karatel.getOrientation(filePath);
+
+                Bitmap picture = Karatel.rotateBitmap(BitmapFactory.decodeFile(filePath, null), orientation);
+                if (picture != null) {
+                    int width = getResources().getDimensionPixelSize(R.dimen.evidence_width);
+                    int height = getResources().getDimensionPixelSize(R.dimen.evidence_height);
+                    Bitmap fitBitmap = Bitmap.createScaledBitmap(picture, width, height, false);
+                    ViolationActivity.this.evidenceAdapter.mediaContent.add(fitBitmap);
+                    picture.recycle();
+                }
+
+                boolean fileDeletedSuccessfully = file.delete();
+                Log.d(TAG, "fileDeletedSuccessfully = " + fileDeletedSuccessfully);
+            } catch (final IOException e) {
+                return  e;
+            }
+
+
+
+            /* old code
+            try {
                 URL url = new URL(params[0]);
                 Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
                 int width = getResources().getDimensionPixelSize(R.dimen.evidence_width);
@@ -1134,7 +1191,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 bmp.recycle();
             } catch (Exception e) {
                 return e;
-            }
+            }*/
             return null;
         }
 

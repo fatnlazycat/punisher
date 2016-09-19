@@ -25,6 +25,12 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.splunk.mint.Mint;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -47,9 +53,9 @@ public class Karatel extends Application {
         }
         return mTracker;
     }
-    public void sendScreenName(Class screenName){
+    public void sendScreenName(String screenName){
         Tracker thisTracker = getDefaultTracker();
-        thisTracker.setScreenName(screenName.getSimpleName());
+        thisTracker.setScreenName(screenName);
         thisTracker.send(new HitBuilders.ScreenViewBuilder().build());
     }
 
@@ -201,5 +207,31 @@ public class Karatel extends Application {
         int result = cursor.getInt(0);
         cursor.close();
         return result;
+    }
+
+    public static int getOrientation(String imageFileName) throws IOException {
+        ExifInterface ei = new ExifInterface(imageFileName);
+        int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        return orientation;
+    }
+
+    private void copyFile(File sourceFile, File destFile) throws IOException {
+        if (!sourceFile.exists()) {
+            return;
+        }
+
+        FileChannel source = new FileInputStream(sourceFile).getChannel();
+        FileChannel destination = new FileOutputStream(destFile).getChannel();
+        if (destination != null && source != null) {
+            destination.transferFrom(source, 0, source.size());
+        }
+        if (source != null) {
+            source.close();
+        }
+        if (destination != null) {
+            destination.close();
+        }
+
+
     }
 }

@@ -32,6 +32,7 @@
         android:layout_marginLeft="-5dp"
         android:textSize="@dimen/textSizeRequisiteEditText"
         android:textColorHint="@color/green_button_disabled"
+        android:imeOptions="actionNext"
         android:id="@+id/editTextRequisite"/>
 
     <FrameLayout

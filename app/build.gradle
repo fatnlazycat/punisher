@@ -8,8 +8,8 @@ android {
         applicationId "org.foundation101.karatel"
         minSdkVersion 16
         targetSdkVersion 22
-        versionCode 9
-        versionName "1.08"
+        versionCode 10
+        versionName "1.09"
     }
     buildTypes {
         release {
@@ -41,6 +41,7 @@ dependencies {
     compile 'com.splunk.mint:mint:5.0.0'
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
     compile 'com.squareup.retrofit2:converter-jackson:2.1.0'
+    compile 'com.google.android.gms:play-services-appindexing:9.2.1'
 }
 repositories {
     mavenCentral()

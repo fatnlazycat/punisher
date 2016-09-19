@@ -59,8 +59,6 @@ public class Globals {
     public static final String SERVER_SUCCESS = "success";
     public static final String SERVER_ERROR = "error";
 
-    //static final String GOOGLE_SENDER_ID = "301781387946";
-
     public static String sessionToken;
     public static PunisherUser user;
 

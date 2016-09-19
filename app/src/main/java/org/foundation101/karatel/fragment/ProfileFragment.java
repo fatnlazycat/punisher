@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.media.ExifInterface;
 import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -48,6 +47,7 @@ import java.io.InputStream;
 import java.util.List;
 
 public class ProfileFragment extends Fragment {
+    static final String TAG = "Profile";
     static final int CHANGE_AVATAR_DIALOG = 500;
 
     ImageView avatarView;
@@ -63,6 +63,9 @@ public class ProfileFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        //Google Analytics part
+        ((Karatel)getActivity().getApplication()).sendScreenName(TAG);
     }
 
     @Override
@@ -169,8 +172,7 @@ public class ProfileFragment extends Fragment {
             if (requestCode == CameraManager.IMAGE_CAPTURE_INTENT && resultCode == Activity.RESULT_OK) {
                 Bitmap bigImage = BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options);
 
-                ExifInterface ei = new ExifInterface(CameraManager.lastCapturedFile);
-                int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+                int orientation = Karatel.getOrientation(CameraManager.lastCapturedFile);
 
                 setNewAvatar(Karatel.rotateBitmap(bigImage, orientation));
                 boolean b = new File(CameraManager.lastCapturedFile).delete();
@@ -221,9 +223,9 @@ public class ProfileFragment extends Fragment {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            name = nameEditText.getText().toString();
-            surname = surnameEditText.getText().toString();
-            secondName = secondNameEditText.getText().toString();
+            name = nameEditText.getText().toString().replace(" ", "");
+            surname = surnameEditText.getText().toString().replace(" ", "");
+            secondName = secondNameEditText.getText().toString().replace(" ", "");
             phone = phoneEditText.getText().toString();
         }
 
