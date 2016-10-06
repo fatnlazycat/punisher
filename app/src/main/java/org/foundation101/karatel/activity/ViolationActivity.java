@@ -73,9 +73,9 @@ import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Request;
+import org.foundation101.karatel.UpdateEntity;
 import org.foundation101.karatel.Violation;
 import org.foundation101.karatel.ViolationRequisite;
-import org.foundation101.karatel.adapter.DrawerAdapter;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
 import org.foundation101.karatel.adapter.HistoryAdapter;
 import org.foundation101.karatel.adapter.RequestListAdapter;
@@ -94,6 +94,9 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -114,7 +117,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     public static final int MODE_CREATE = -1;
     public static final int MODE_EDIT = 0;
-    public static final String STATUS_REFUSED = "Відмовлено в розгляді";
+    public static final String STATUS_REFUSED = "Відмовлено в розгляді"; //do not delete - needed to treat refused requests separately
     public static final String TAG = "ViolationActivity";
 
     RequisitesListAdapter requisitesAdapter;
@@ -132,6 +135,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     SupportMapFragment supportMapFragment;
     final Double REFRESH_ACCURACY = 0.001;
     boolean mockLocationDialogShown = false;
+    public boolean blockButtons = true;//used to check if the location is defined
 
     public int getMode() {
         return mode;
@@ -147,6 +151,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     public FrameLayout progressBar;
     TabHost tabs;
+    TabHost.OnTabChangeListener tabChangeListener;
     Button punishButton, saveButton;
 
     public GoogleApiClient googleApiClient;
@@ -185,12 +190,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         if (checkGooglePlayServices()) { buildGoogleApiClient(); }
         initOldAndroidLocation();
 
-        //check location availability
-        /*if ( !locationManager.isProviderEnabled( LocationManager.GPS_PROVIDER ) && !HttpHelper.internetConnected(this)) {
-            DialogFragment dialog = new OpenSettingsFragment();
-            dialog.show(getSupportFragmentManager(), "openSettingsFragment");
-        }*/
-
         ((Karatel)getApplication()).restoreUserFromPreferences();
 
         //dimension of the thumbnail - the thumbnail should have the same size as MediaStore.Video.Thumbnails.MICRO_KIND
@@ -201,7 +200,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         tabs.setup();
         setupTab(R.id.tabInfo, getString(R.string.information));
         tabs.setCurrentTab(0);
-        tabs.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+        tabChangeListener = new TabHost.OnTabChangeListener() {
             @Override
             public void onTabChanged(String tabId) {
                 if (statusTabFirstShow) {
@@ -216,7 +215,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     statusTabFirstShow = false;
                 }
             }
-        });
+        };
+        tabs.setOnTabChangedListener(tabChangeListener);
 
         dbHelper = new DBHelper(this, DBHelper.DATABASE, 1);
         requisitesAdapter = new RequisitesListAdapter(this);
@@ -304,7 +304,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 saveButton.setVisibility(View.GONE);
                 punishButton.setText(R.string.create_new_bases_on_this);
             } else { //the request is already filed & not refused - > no edit anymore
-                blockButtons(true);
+                hideButtons(true);
                 requisitesAdapter.setEditTrigger(false);
             }
 
@@ -518,9 +518,9 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         }
 
         if (requestCode == REQUEST_CHECK_SETTINGS){
-
             /*switch (resultCode){
                 case RESULT_OK : {*/
+
             if (googleApiClient != null && googleApiClient.isConnected()) {
                 LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
             }
@@ -562,7 +562,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         /*first check if location is available - show error dialog if not
         this is made to prevent saving request with zero LatLng -> leads to crash.
          */
-        if (checkLocation()) {
+        if (checkLocation() && !blockButtons) {
 
             //db actions
             SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -629,14 +629,16 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
             //show toast only if the method is called by Save button
             if (view != null ) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, R.string.cannot_define_location, Toast.LENGTH_LONG).show();
         }
     }
 
     boolean checkLocation(){
         if (latitude == null){
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            /*AlertDialog.Builder builder = new AlertDialog.Builder(this);
             AlertDialog dialog = builder.setTitle(R.string.cannot_define_location).setNegativeButton(R.string.ok, null).create();
-            dialog.show();
+            dialog.show();*/
             return false;
         } else return true;
     }
@@ -671,12 +673,16 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     }
 
     public void punish(View view) {
-        try {
-            RequestListFragment.punishPerformed = true;
-            saveToBase(null); //we pass null to point that it's called from punish()
-            new ViolationSender(this).execute(violation);
-        } catch (Exception e){
-            Globals.showError(this,  R.string.error, e);
+        if (blockButtons) {
+            Toast.makeText(this, R.string.cannot_define_location, Toast.LENGTH_LONG).show();
+        } else {
+            try {
+                RequestListFragment.punishPerformed = true;
+                saveToBase(null); //we pass null to point that it's called from punish()
+                new ViolationSender(this).execute(violation);
+            } catch (Exception e) {
+                Globals.showError(this, R.string.error, e);
+            }
         }
     }
 
@@ -705,7 +711,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         return result;
     }
 
-    public void blockButtons(boolean block){
+    public void hideButtons(boolean block){
         int visibility = block ? View.GONE : View.VISIBLE;
         punishButton.setVisibility(visibility);
         saveButton.setVisibility((visibility));
@@ -828,10 +834,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     .setNumUpdates(3)
                     .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                     .setInterval(1);
-            LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                    .addLocationRequest(locationRequest);
-            PendingResult<LocationSettingsResult> result =
-                    LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
+            PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
 
             result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
                 @Override
@@ -879,19 +882,38 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     }
 
     @Override
-    public void onLocationChanged(Location location) {
+    public void onLocationChanged(final Location location) {
         if (mode == MODE_CREATE && !((Karatel)getApplicationContext()).locationIsMock(location)){
             Double latToCheck = latitude!=null ? latitude : 0;
             Double lonToCheck = longitude!=null ? longitude : 0;
             Double absLat = Math.abs(latToCheck - location.getLatitude());
             Double absLon = Math.abs(lonToCheck - location.getLongitude());
             if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
-                latitude = location.getLatitude();
-                longitude = location.getLongitude();
-                requisitesAdapter.nullSavedLatLng();
-                requisitesAdapter.reclaimMap();
+                PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
+
+                result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+                    @Override
+                    public void onResult(LocationSettingsResult result) {
+                        if (result.getStatus().getStatusCode() == LocationSettingsStatusCodes.SUCCESS) {
+                            latitude = location.getLatitude();
+                            longitude = location.getLongitude();
+                            requisitesAdapter.nullSavedLatLng();
+                            requisitesAdapter.reclaimMap();
+                        } else {
+                            latitude = null; //this will block the buttons
+                        }
+                    }
+                });
             }
         }
+    }
+
+    PendingResult<LocationSettingsResult> getPendingLocationSettings(){
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+        PendingResult<LocationSettingsResult> result =
+                LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
+        return result;
     }
 
     @Override
@@ -931,6 +953,11 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         requisitesAdapter.releaseMap();
 
         super.onDestroy();
+    }
+
+    void switchTabToHistory(){
+        tabs.setCurrentTab(1);
+        tabChangeListener.onTabChanged(getString(R.string.request_status));
     }
 
     class ViolationSender extends AsyncTask<Violation, Void, CreationResponse> {
@@ -1247,8 +1274,17 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
                     request.type = dataJSON.getString(0);
                     }
-
+                Arrays.sort(request.updates, new Comparator<UpdateEntity>() {
+                    @Override
+                    public int compare(UpdateEntity first, UpdateEntity second) {
+                        return -first.created_at.compareTo(second.created_at);
+                    }
+                });
                 historyAdapter.setContent(request.updates);
+                if (request.updates.length > 0) {
+                    request.updates[0].setCollapsed(false); //the first item will be opened by default
+                    switchTabToHistory();
+                }
             } catch (JSONException | IOException | NullPointerException e) {
                 Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
             }

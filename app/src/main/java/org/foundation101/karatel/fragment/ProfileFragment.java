@@ -50,6 +50,8 @@ public class ProfileFragment extends Fragment {
     static final String TAG = "Profile";
     static final int CHANGE_AVATAR_DIALOG = 500;
 
+    boolean avatarChanged = false;
+
     ImageView avatarView;
     ViewGroup memberEmail, memberPassword, memberSurname, memberName, memberSecondName, memberPhone;
     EditText surnameEditText, nameEditText, secondNameEditText, phoneEditText, emailEditText, passwordEditText;
@@ -210,6 +212,7 @@ public class ProfileFragment extends Fragment {
             os.close();
             avatarView.setBackground(avatar);
         }
+        avatarChanged = true;
     }
 
     class ProfileSaver extends AsyncTask<Void, Void, String>{
@@ -247,7 +250,10 @@ public class ProfileFragment extends Fragment {
                     //multipart.addFormField("user[password_confirmation]", "qwerty");//Globals.user.password
 
                     if (Globals.user.avatarFileName != null && !Globals.user.avatarFileName.isEmpty()) {
-                        multipart.addFilePart("user[avatar]", new File(Globals.user.avatarFileName));
+                        if (avatarChanged) {
+                            multipart.addFilePart("user[avatar]", new File(Globals.user.avatarFileName));
+                            avatarChanged = false;
+                        }
                     } else {
                         multipart.addFormField("user[avatar]", ""); //delete avatar
                     }

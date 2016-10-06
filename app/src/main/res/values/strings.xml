@@ -107,7 +107,7 @@
     <string name="answerToRequest">Відповідь на звернення</string>
     <string name="answerBy">Відповідь надана</string>
     <string name="estimateGivenAnswer">Оцініть надану відповідь</string>
-    <string name="cannot_define_location">Пристрій не може визначити Ваше місцезнаходження. Збереження буде неможливе.</string>
+    <string name="cannot_define_location">Неможливо виконати дію, оскільки ваше місцезнаходження не знайдено</string>
     <string name="requestSaved">Заявка збережена</string>
     <string name="show_details">Показати подробиці</string>
     <string name="hide_details">Сховати подробиці</string>
@@ -132,4 +132,5 @@
     <string name="check_email_to_approve">Для підтвердження змін перевірте свою електронну пошту</string>
     <string name="facebook_disclaimer">Увійти через Facebook можливо, якщо Ви створили профіль та зв\'язали його зі своїм FB-акаунтом</string>
     <string name="you_request_is_being_moderated">Ваша заявка знаходиться на модерації</string>
+    <string name="media_format_not_supported">Формат медіафайлу не підтримується</string>
 </resources>

@@ -23,6 +23,7 @@ public class CameraManager {
     public static final String JPG = ".jpg";
     public static final String PNG = ".png";
     public static final String MP4 = ".mp4";
+    public static final String MOV = ".mov";
     public static String lastCapturedFile;
 
     private Activity context;

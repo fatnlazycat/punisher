@@ -25,8 +25,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -42,9 +40,7 @@ import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.CameraManager;
-import org.foundation101.karatel.CreationResponse;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.Karatel;
@@ -88,22 +84,28 @@ public class MainActivity extends AppCompatActivity {
     private final BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(MainActivity.this, R.style.AppTheme);
-            dialogBuilder.setTitle("Увага! Змінився токен Google Cloud Messaging.")
-                    .setMessage("Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.")
-                    .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            new SignOutSender().execute();
-                        }
-                    })
-                    .setCancelable(false);
-            final AlertDialog dialog = dialogBuilder.create();
-            dialog.show();
+            Boolean justLogout = intent.getBooleanExtra(TAG_JUST_LOGOUT, true);
+            if (justLogout){
+                new SignOutSender().execute();
+            } else {
+                final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(MainActivity.this, R.style.AppTheme);
+                dialogBuilder.setTitle("Увага! Змінився токен Google Cloud Messaging.")
+                        .setMessage("Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.")
+                        .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                new SignOutSender().execute();
+                            }
+                        })
+                        .setCancelable(false);
+                final AlertDialog dialog = dialogBuilder.create();
+                dialog.show();
+            }
         }
     };
     public static final String BROADCAST_RECEIVER_TAG = "myBroadcastReceiver_MainActivity";
+    public static final String TAG_JUST_LOGOUT = "myBroadcastReceiver_MainActivity_gcm_token_changed";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -588,7 +590,11 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
                 }
                 return;
             }
+            boolean appClosed = globalPreferences.getBoolean(Globals.APP_CLOSED, false);
             globalPreferences.edit().clear().apply();
+            if (appClosed){
+                globalPreferences.edit().putBoolean(Globals.APP_CLOSED, true).apply();
+            }
 
             //Google Analytics part
             ((Karatel)getApplication()).sendScreenName(TAG);

@@ -170,8 +170,10 @@ public class ChangeEmailActivity extends AppCompatActivity {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     dialog.dismiss();
+                                    Intent logoutIntent = new Intent(MainActivity.BROADCAST_RECEIVER_TAG);
+                                    logoutIntent.putExtra(MainActivity.TAG_JUST_LOGOUT, true);
                                     LocalBroadcastManager.getInstance(getApplicationContext())
-                                            .sendBroadcast(new Intent(MainActivity.BROADCAST_RECEIVER_TAG));
+                                            .sendBroadcast(logoutIntent);
                                     finish();
                                 }
                             }).create();

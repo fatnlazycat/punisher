@@ -2,8 +2,10 @@ package org.foundation101.karatel.activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -31,6 +33,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+
+import javax.microedition.khronos.opengles.GL;
 
 public class ChangePasswordActivity extends AppCompatActivity {
     static final String TAG = "ChangePassword";
@@ -88,6 +92,18 @@ public class ChangePasswordActivity extends AppCompatActivity {
         showOldPassword.setOnTouchListener(new ShowPasswordOnTouchListener(oldPassword));
         showNewPassword = (ImageButton)findViewById(R.id.showNewPasswordButton);
         showNewPassword.setOnTouchListener(new ShowPasswordOnTouchListener(newPassword));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        //see comments in Globals.APP_CLOSED
+        SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        if (globalPreferences.contains(Globals.APP_CLOSED)){
+            globalPreferences.edit().remove(Globals.APP_CLOSED).apply();
+            finishAffinity();
+        }
     }
 
     @Override
@@ -207,14 +223,16 @@ public class ChangePasswordActivity extends AppCompatActivity {
                     case Globals.SERVER_SUCCESS : {
                         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ChangePasswordActivity.this);
                         AlertDialog dialog = dialogBuilder.setTitle(R.string.your_password_is_changed_successfully)
-                                .setMessage(R.string.check_email_to_approve)
+                                //.setMessage(R.string.check_email_to_approve)
                                 .setCancelable(false)
                                 .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         dialog.dismiss();
+                                        Intent logoutIntent = new Intent(MainActivity.BROADCAST_RECEIVER_TAG);
+                                        logoutIntent.putExtra(MainActivity.TAG_JUST_LOGOUT, true);
                                         LocalBroadcastManager.getInstance(getApplicationContext())
-                                                .sendBroadcast(new Intent(MainActivity.BROADCAST_RECEIVER_TAG));
+                                                .sendBroadcast(logoutIntent);
                                         finish();
                                     }
                                 }).create();

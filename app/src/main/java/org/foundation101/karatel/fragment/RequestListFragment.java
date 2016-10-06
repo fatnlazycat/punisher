@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
@@ -15,10 +14,8 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -32,7 +29,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -43,12 +39,13 @@ import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.Karatel;
-import org.foundation101.karatel.adapter.ItemTouchHelperAdapter;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Request;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.ViolationActivity;
+import org.foundation101.karatel.adapter.ItemTouchHelperAdapter;
 import org.foundation101.karatel.adapter.RequestListAdapter;
+import org.foundation101.karatel.service.MyGcmListenerService;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -73,7 +70,6 @@ public class RequestListFragment extends Fragment {
     SwipeRefreshLayout swipeRefreshLayout;
     TextView textViewByStatus, textViewByDate;
     Snackbar snackbar;
-    //ImageView sortByStatusButton, sortByDateButton;
 
     SQLiteDatabase db;
 
@@ -238,9 +234,9 @@ public class RequestListFragment extends Fragment {
 
     void resetSortMenu(){
         textViewByStatus.setCompoundDrawablesWithIntrinsicBounds(R.mipmap.ic_sort_by_status, 0, 0, 0);
-        textViewByDate.setCompoundDrawablesWithIntrinsicBounds(R.mipmap.ic_sort_by_date, 0, 0, 0);
+        textViewByDate.setCompoundDrawablesWithIntrinsicBounds(R.mipmap.ic_sort_by_date_selected, 0, 0, 0);
         textViewByStatus.setTextColor(COLOR_GREY);
-        textViewByDate.setTextColor(COLOR_GREY);
+        textViewByDate.setTextColor(COLOR_GREEN);
     }
 
     class MyItemTouchHelperCallback extends ItemTouchHelper.Callback{
@@ -374,10 +370,8 @@ public class RequestListFragment extends Fragment {
                             request.type = oneRequest.getString(0);
 
                             requestsFromServer.add(request);
-
                         }
                         requestListAdapter.getContent().addAll(requestsFromServer);
-                        requestListAdapter.notifyDataSetChanged();
                         break;
                     }
                     case Globals.SERVER_ERROR : {
@@ -387,9 +381,18 @@ public class RequestListFragment extends Fragment {
                 }
                 if (requestListAdapter.getItemCount() == 0) { //there are no requests
                     showNoRequestsLayout();
+                } else {
+                    Collections.sort(requestListAdapter.content, new RequestComparator(RequestComparator.SORT_FLAG_DATE));
+                    requestListAdapter.notifyDataSetChanged();
                 }
             } catch (JSONException | IOException e) {
                 Globals.showError(getActivity(), R.string.error, e);
+            }
+            String requestFromPush = getActivity().getIntent().getStringExtra(MyGcmListenerService.REQUEST_NUMBER);
+            if (requestFromPush != null){
+                getActivity().getIntent().removeExtra(MyGcmListenerService.REQUEST_NUMBER);
+                int index = requestListAdapter.getRequestNumberFromTag(requestFromPush);
+                if (index > -1) requestListAdapter.openRequest(index);
             }
         }
     }
@@ -443,7 +446,7 @@ public class RequestListFragment extends Fragment {
                         SimpleDateFormat dateFormatter = new SimpleDateFormat(RequestListAdapter.INPUT_DATE_FORMAT, Locale.US);
                         Date date1 = dateFormatter.parse(first.created_at);
                         Date date2 = dateFormatter.parse(second.created_at);
-                        return date1.compareTo(date2);
+                        return -(date1.compareTo(date2)); // "-" is for reverse sorting
                     } catch (ParseException e){
                         Globals.showError(getActivity(), R.string.error, e);
                         break;

@@ -21,9 +21,13 @@ import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.TipsActivity;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class MyGcmListenerService extends GcmListenerService {
 
     private static final String TAG = "MyGcmListenerService";
+    public static  final String REQUEST_NUMBER = "REQUEST_NUMBER";
 
     /**
      * Called when message is received.
@@ -75,14 +79,24 @@ public class MyGcmListenerService extends GcmListenerService {
         } else {
             activityClass = TipsActivity.class;
         }
+
         Intent intent = new Intent(this, activityClass);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        Pattern pattern = Pattern.compile("\\D+ (\\d{8}/\\d+) .*"); //pattern 20160101/2
+        Matcher matcher = pattern.matcher(message);
+        if (matcher.find()) {
+            String requestTag = matcher.group(1);
+            intent.putExtra(REQUEST_NUMBER, requestTag);
+        }
+
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
                 PendingIntent.FLAG_ONE_SHOT);
 
+
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_push)
+                .setSmallIcon(getNotificationIcon())
                 .setContentTitle("Каратєль")
                 .setContentText(message)
                 .setAutoCancel(true)
@@ -95,10 +109,14 @@ public class MyGcmListenerService extends GcmListenerService {
         notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
     }
 
+    private int getNotificationIcon() {
+        boolean use_BW_Icon = (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP);
+        return use_BW_Icon ? R.drawable.ic_push : R.drawable.karatel_logo_color;
+    }
+
     boolean loggedIn(){
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         return preferences.contains(Globals.SESSION_TOKEN);
-                //Globals.sessionToken != null;
     }
 }
 

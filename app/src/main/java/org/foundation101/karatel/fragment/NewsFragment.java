@@ -113,12 +113,7 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
                     Document docToGetImage = Jsoup.connect(link).get();
                     String imageLink = docToGetImage.select("div.preview_img > img").first().attr("src");*/
 
-                        URLConnection urlConnection = new URL(imageLink).openConnection();
-                        InputStream is = urlConnection.getInputStream();
-                        Drawable image = Drawable.createFromStream(is, "newsImage");
-                        is.close();
-
-                        publishProgress(new NewsItem(title, description, pubDate, link, image));
+                        publishProgress(new NewsItem(title, description, pubDate, link, imageLink));
                     }
                 } catch (final IOException e){
                     getActivity().runOnUiThread(new Runnable() {

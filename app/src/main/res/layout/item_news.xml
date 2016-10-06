@@ -9,9 +9,14 @@
         android:layout_height="104dp"
         android:id="@+id/imageViewNews"
         android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true" />
-    <!--android:layout_width="104dp"
-        android:layout_height="118dp"-->
+        android:layout_alignParentLeft="true"/>
+    <include layout="@layout/frame_progress_bar"
+        android:layout_width="104dp"
+        android:layout_height="104dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:id="@+id/frameLayoutProgress"/>
 
 
     <TextView

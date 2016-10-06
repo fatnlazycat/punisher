@@ -116,7 +116,7 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
         this.recycler = recyclerView;
     }
 
-    void openRequest(int requestPosition){
+    public void openRequest(int requestPosition){
         Request thisRequest = content.get(requestPosition);
         int status = thisRequest.complain_status_id;
         if (status <= ViolationActivity.MODE_EDIT || HttpHelper.internetConnected(context)) {
@@ -129,6 +129,14 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
         } else {
             Toast.makeText(context, R.string.no_internet_connection, Toast.LENGTH_LONG).show();
         }
+    }
+
+    public int getRequestNumberFromTag(String tag){
+        for (int i=0; i < content.size(); i++){
+            String thisRequestTag = content.get(i).id_number;
+            if (thisRequestTag != null && thisRequestTag.equals(tag)) return i;
+        }
+        return -1;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

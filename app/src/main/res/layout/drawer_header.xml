@@ -7,10 +7,11 @@
     android:id="@+id/drawerHeaderLayout">
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/avatar_profile_size"
+        android:layout_height="@dimen/avatar_profile_size"
         android:layout_gravity="center"
         android:src="@mipmap/hex_white"
+        android:scaleType="fitXY"
         android:id="@+id/avatarImageView"/>
 
     <TextView

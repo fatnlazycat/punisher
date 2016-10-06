@@ -57,12 +57,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="47dp"
                 android:gravity="center_vertical"
-                android:drawableLeft="@mipmap/ic_sort_by_date"
-                android:drawableStart="@mipmap/ic_sort_by_date"
+                android:drawableLeft="@mipmap/ic_sort_by_date_selected"
+                android:drawableStart="@mipmap/ic_sort_by_date_selected"
                 android:drawablePadding="15dp"
                 android:text="@string/byDate"
                 android:textAllCaps="true"
-                android:textColor="@color/grey_button"
+                android:textColor="@color/darkGreen"
                 android:id="@+id/textViewByDate"/>
         </LinearLayout>
 

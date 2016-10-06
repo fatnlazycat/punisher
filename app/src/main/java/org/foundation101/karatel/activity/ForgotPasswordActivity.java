@@ -89,6 +89,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                 switch (json.getString("status")){
                     case Globals.SERVER_SUCCESS : {
                         startActivity(new Intent(ForgotPasswordActivity.this, ForgotPassword2Activity.class));
+                        finish();
                         break;
                     }
                     case Globals.SERVER_ERROR : {

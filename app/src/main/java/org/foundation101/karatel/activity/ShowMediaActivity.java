@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.MediaController;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.google.android.gms.appindexing.AppIndex;
@@ -70,7 +71,7 @@ public class ShowMediaActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         String source = intent.getStringExtra(Globals.MEDIA_FILE);
-        if (source.endsWith(CameraManager.JPG)) {
+        if (source.endsWith(CameraManager.JPG) || source.endsWith(CameraManager.PNG)) {
             ImageView iView = (ImageView) findViewById(R.id.imageViewJustShow);
             iView.setVisibility(View.VISIBLE);
             new BitmapWorkerTask(iView).execute(source);
@@ -87,6 +88,9 @@ public class ShowMediaActivity extends AppCompatActivity {
                     mc.show();
                 }
             });
+        } else {
+            Toast.makeText(this, R.string.media_format_not_supported, Toast.LENGTH_LONG).show();
+            finish();
         }
 
         // ATTENTION: This was auto-generated to implement the App Indexing API.

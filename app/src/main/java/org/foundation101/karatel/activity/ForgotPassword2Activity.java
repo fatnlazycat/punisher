@@ -1,11 +1,14 @@
 package org.foundation101.karatel.activity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.app.Activity;
+import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
-import android.widget.Toast;
 
+import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
 
 public class ForgotPassword2Activity extends Activity {
@@ -18,10 +21,23 @@ public class ForgotPassword2Activity extends Activity {
 
     public void proceedWithPasswordRenovation(View view) {
         Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_APP_EMAIL);
+        intent.addCategory(Intent.CATEGORY_APP_EMAIL).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(Intent.createChooser(intent, getString(R.string.chooseEmailClient)));
         }
-        finishAffinity();
+
+        SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        if (globalPreferences.contains(Globals.SESSION_TOKEN)){
+            globalPreferences.edit().putBoolean(Globals.APP_CLOSED, true).apply();
+
+            Intent logoutIntent = new Intent(MainActivity.BROADCAST_RECEIVER_TAG);
+            logoutIntent.putExtra(MainActivity.TAG_JUST_LOGOUT, true);
+            LocalBroadcastManager.getInstance(getApplicationContext())
+                    .sendBroadcast(logoutIntent);
+            finish();
+        } else {
+            finishAffinity();
+        }
     }
 }
