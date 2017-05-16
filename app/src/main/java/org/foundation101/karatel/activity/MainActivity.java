@@ -20,6 +20,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -69,6 +70,8 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
 
     HashMap<Integer, String> fragmentTags;
+
+    private static final String TAG = "MainActivity";
 
     public Toolbar toolbar;
     ImageView avatarImageView;
@@ -219,27 +222,27 @@ public class MainActivity extends AppCompatActivity {
                     tag = fragmentTags.get(currentFragment);
                     switch (currentFragment) {
                         case 1: {
-                            ft.add(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
+                            ft.replace(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
                         case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT: {
-                            ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
+                            ft.replace(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
                         case 3: {
-                            ft.add(R.id.frameLayoutMain, new AboutFragment(), tag).addToBackStack(tag).commit();
+                            ft.replace(R.id.frameLayoutMain, new AboutFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
                         case 5: {
-                            ft.add(R.id.frameLayoutMain, new ContactsFragment(), tag).addToBackStack(tag).commit();
+                            ft.replace(R.id.frameLayoutMain, new ContactsFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
                         case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT: {
-                            ft.add(R.id.frameLayoutMain, new ProfileFragment(), tag).addToBackStack(tag).commit();
+                            ft.replace(R.id.frameLayoutMain, new ProfileFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
                         case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT: {
-                            ft.add(R.id.frameLayoutMain, new NewsFragment(), tag).addToBackStack(tag).commit();
+                            ft.replace(R.id.frameLayoutMain, new NewsFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
                     }
@@ -307,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(myBroadcastReceiver);
+        Log.d(TAG, "onDestroy");
         super.onDestroy();
     }
 
@@ -330,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
              */
     String[] makeDrawerList(){
         String[] menuItems = getResources().getStringArray(R.array.drawerMenuItems);
-        ArrayList<String> tempList = new ArrayList(Arrays.asList(menuItems));
+        ArrayList<String> tempList = new ArrayList<>(Arrays.asList(menuItems));
         return tempList.toArray(new String[0]);
     }
 
@@ -477,6 +481,8 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
     }
 
+
+
     class FacebookBinder extends AsyncTask<String, Void, String> {
         String fbUserId;
 
@@ -519,7 +525,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    class SignOutSender extends AsyncTask<Void, Void, String>{
+    private class SignOutSender extends AsyncTask<Void, Void, String>{
         static final String TAG = "Logout";
         final String BANNED = "banned";
 
@@ -537,6 +543,11 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(Void... params) {
             String result;
+            /*Log.d(TAG, "start long calculation");
+            for (int i = 0; i < 90000000; i++){
+                if (i % 1000000 == 0) Log.d(TAG, "i= " + i);
+            }
+            Log.d(TAG, "end long calculation");*/
             try {
                 if (HttpHelper.internetConnected(MainActivity.this)){
                     String gcmToken = globalPreferences.contains(Globals.PUSH_TOKEN) ?
@@ -598,6 +609,7 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
 
             //Google Analytics part
             ((Karatel)getApplication()).sendScreenName(TAG);
+            Log.d(TAG, "Task=" + getTaskId());
             finishAffinity();
         }
     }

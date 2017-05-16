@@ -282,7 +282,13 @@ public class ShowMediaActivity extends AppCompatActivity {
                     options.inJustDecodeBounds = false;
 
                     int orientation = Karatel.getOrientation(fileName);
-                    picture = Karatel.rotateBitmap(BitmapFactory.decodeFile(fileName, options), orientation);
+                    try {
+                        picture = Karatel.rotateBitmap(BitmapFactory.decodeFile(fileName, options), orientation);
+                    } catch (OutOfMemoryError err) {
+                        Log.d(TAG, "reducing in sample size");
+                        options.inSampleSize *= 4;
+                        picture = Karatel.rotateBitmap(BitmapFactory.decodeFile(fileName, options), orientation);
+                    }
                 }
             } catch (final IOException e) {
                 ShowMediaActivity.this.runOnUiThread(new Runnable() {

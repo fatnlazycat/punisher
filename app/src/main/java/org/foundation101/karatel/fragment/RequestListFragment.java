@@ -1,5 +1,6 @@
 package org.foundation101.karatel.fragment;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -239,7 +240,7 @@ public class RequestListFragment extends Fragment {
         textViewByDate.setTextColor(COLOR_GREEN);
     }
 
-    class MyItemTouchHelperCallback extends ItemTouchHelper.Callback{
+    private class MyItemTouchHelperCallback extends ItemTouchHelper.Callback{
         private final ItemTouchHelperAdapter touchAdapter;
         private Paint p = new Paint();
 
@@ -287,7 +288,7 @@ public class RequestListFragment extends Fragment {
                         public void onClick(View view) {
                             undoDeleteRequest(requestToDelete, position);
                         }
-                    }).setActionTextColor(getResources().getColor(R.color.colorPrimary))
+                    }).setActionTextColor(getResources().getColor(R.color.colorPrimary)) //deprecated in 23
                     .setCallback(new Snackbar.Callback() {
                         @Override
                         public void onDismissed(Snackbar snackbar, int event) {
@@ -325,7 +326,7 @@ public class RequestListFragment extends Fragment {
         }
     }
 
-    class RequestListFetcher extends AsyncTask<Void, Void, String>{
+    private class RequestListFetcher extends AsyncTask<Void, Void, String>{
 
         @Override
         protected void onPreExecute() {
@@ -340,7 +341,7 @@ public class RequestListFragment extends Fragment {
                     return HttpHelper.proceedRequest("complains", "GET", "", true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
-                getActivity().runOnUiThread(new Runnable() {
+                if (getActivity() != null) getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         Globals.showError(getActivity(), R.string.cannot_connect_server, e);
@@ -388,16 +389,18 @@ public class RequestListFragment extends Fragment {
             } catch (JSONException | IOException e) {
                 Globals.showError(getActivity(), R.string.error, e);
             }
-            String requestFromPush = getActivity().getIntent().getStringExtra(MyGcmListenerService.REQUEST_NUMBER);
+            Activity activity = getActivity();
+            String requestFromPush = activity == null ?
+                    null : activity.getIntent().getStringExtra(MyGcmListenerService.REQUEST_NUMBER);
             if (requestFromPush != null){
-                getActivity().getIntent().removeExtra(MyGcmListenerService.REQUEST_NUMBER);
+                activity.getIntent().removeExtra(MyGcmListenerService.REQUEST_NUMBER);
                 int index = requestListAdapter.getRequestNumberFromTag(requestFromPush);
                 if (index > -1) requestListAdapter.openRequest(index);
             }
         }
     }
 
-    class RequestEraser extends AsyncTask<Integer, Void, String>{
+    private class RequestEraser extends AsyncTask<Integer, Void, String>{
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -426,7 +429,7 @@ public class RequestListFragment extends Fragment {
         }
     }
 
-    class RequestComparator implements Comparator<Request>{
+    private class RequestComparator implements Comparator<Request>{
         static final int SORT_FLAG_STATUS = 1;
         static final int SORT_FLAG_DATE = 2;
         int sortFlag;
@@ -457,7 +460,7 @@ public class RequestListFragment extends Fragment {
         }
     }
 
-    class RefreshListOfRequestsDialog  extends AlertDialog {
+    private class RefreshListOfRequestsDialog  extends AlertDialog {
 
         protected RefreshListOfRequestsDialog(Context context) {
             super(context);

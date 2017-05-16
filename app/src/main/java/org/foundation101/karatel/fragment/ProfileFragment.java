@@ -340,7 +340,7 @@ public class ProfileFragment extends Fragment {
             try {
                 return HttpHelper.proceedRequest("users/" + params[0], "GET", "", true);
             } catch (final IOException e){
-                activity.runOnUiThread(new Runnable() {
+                if (activity != null) activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         Globals.showError(getActivity(), R.string.cannot_connect_server, e);

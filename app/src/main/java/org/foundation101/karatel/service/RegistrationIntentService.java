@@ -31,7 +31,7 @@ public class RegistrationIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.e("Punisher", intent.toString());
+        Log.d(TAG, "onHandleIntent");
         SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         String oldToken = globalPreferences.getString(Globals.PUSH_TOKEN, "");

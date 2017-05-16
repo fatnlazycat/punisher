@@ -116,20 +116,24 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
                         publishProgress(new NewsItem(title, description, pubDate, link, imageLink));
                     }
                 } catch (final IOException e){
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                            }
+                        });
+                    }
+                }
+            } else {
+                if (getActivity() != null) {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                            Toast.makeText(getActivity(), R.string.no_internet_connection, Toast.LENGTH_LONG).show();
                         }
                     });
                 }
-            } else {
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getActivity(), R.string.no_internet_connection, Toast.LENGTH_LONG).show();
-                    }
-                });
             }
             return null;
         }

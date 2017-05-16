@@ -78,6 +78,7 @@ public class TipsActivity extends Activity {
 
         // facebook part
         FacebookSdk.sdkInitialize(getApplicationContext());
+        fbCallbackManager = CallbackManager.Factory.create();
 
         setContentView(R.layout.activity_login);
 
@@ -152,7 +153,7 @@ public class TipsActivity extends Activity {
     public void facebookLogin(View view) {
         if (HttpHelper.internetConnected(this)) {
             List<String> permissionNeeds = Arrays.asList("user_photos", "email", "user_birthday", "user_friends");
-            fbCallbackManager = CallbackManager.Factory.create();
+            //fbCallbackManager = CallbackManager.Factory.create();
             LoginManager.getInstance().logInWithReadPermissions(this, permissionNeeds);
             LoginManager.getInstance().registerCallback(fbCallbackManager, new FacebookCallback<LoginResult>() {
                 @Override

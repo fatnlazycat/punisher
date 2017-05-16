@@ -748,11 +748,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     */
     void initOldAndroidLocation(){
         locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-        locationListener = new MyOldAndroidLocationListener();
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            locationListener = new MyOldAndroidLocationListener();
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        }
     }
 
-    class MyOldAndroidLocationListener implements android.location.LocationListener{
+    private class MyOldAndroidLocationListener implements android.location.LocationListener{
         @Override
         public void onLocationChanged(Location location) {
             if (latitude == null || latitude == 0) {//use this only if no result from FusedLocationAPI

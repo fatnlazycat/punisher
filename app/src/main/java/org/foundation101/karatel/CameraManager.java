@@ -2,6 +2,8 @@ package org.foundation101.karatel;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -11,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by Dima on 07.05.2016.
@@ -20,6 +23,7 @@ public class CameraManager {
     public static final int IMAGE_CAPTURE_INTENT = 100;
     public static final int VIDEO_CAPTURE_INTENT = 200;
     private static final String FILE_NAME_PREFIX = "punisher_";
+    //private static final String DEFAULT_CAMERA_PACKAGE = "com.google.android.camera";
     public static final String JPG = ".jpg";
     public static final String PNG = ".png";
     public static final String MP4 = ".mp4";
@@ -41,7 +45,7 @@ public class CameraManager {
         if (photoOrVideo==IMAGE_CAPTURE_INTENT){ //capture photo
             actionFlag=MediaStore.ACTION_IMAGE_CAPTURE;
         }
-        Intent cameraIntent = new Intent(actionFlag);
+        Intent cameraIntent = makeCameraIntent(actionFlag);
         Uri mediaFileUri = getMediaFileUri(actionFlag);
         if (mediaFileUri != null) {
             cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mediaFileUri);
@@ -68,5 +72,14 @@ public class CameraManager {
             }
         }
         return mediaFileUri;
+    }
+
+    Intent makeCameraIntent(String action) {
+        Intent cameraIntent = new Intent(action);
+        PackageManager packageManager = context.getPackageManager();
+        List<ResolveInfo> listCam = packageManager.queryIntentActivities(cameraIntent, 0);
+        cameraIntent.setPackage(listCam.get(0).activityInfo.packageName);
+        //cameraIntent.setPackage(DEFAULT_CAMERA_PACKAGE);
+        return cameraIntent;
     }
 }

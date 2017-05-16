@@ -154,7 +154,8 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
         } else {
             latitude = ((ViolationActivity) context).latitude;
             longitude = ((ViolationActivity) context).longitude;
-            if (((ViolationActivity) context).getMode() == ViolationActivity.MODE_CREATE)
+            if (    ((ViolationActivity) context).getMode() == ViolationActivity.MODE_CREATE
+                ||  ((ViolationActivity) context).getMode() == ViolationActivity.MODE_EDIT)
                 ((ViolationActivity) context).blockButtons = false;
         }
 

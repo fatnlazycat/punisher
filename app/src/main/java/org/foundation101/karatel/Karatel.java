@@ -3,7 +3,6 @@ package org.foundation101.karatel;
 import android.app.Application;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -18,7 +17,6 @@ import android.support.v7.app.AlertDialog;
 import android.util.TypedValue;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
@@ -62,7 +60,7 @@ public class Karatel extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Mint.initAndStartSession(this, "c609df56");
+        initACRA();
         //ACRA.init(this);
     }
 
@@ -70,6 +68,13 @@ public class Karatel extends Application {
     public void onLowMemory(){
         super.onLowMemory();
         Runtime.getRuntime().gc();
+    }
+
+    void initACRA() {
+        if (BuildConfig.DEBUG) {
+            Mint.initAndStartSession(this, "c609df56");
+            //Mint.startANRMonitoring(5000, true);
+        }
     }
 
     public void restoreUserFromPreferences(){
@@ -188,7 +193,7 @@ public class Karatel extends Application {
             bitmap.recycle();
             return bmRotated;
         }
-        catch (OutOfMemoryError e) {
+        catch (OutOfMemoryError | NullPointerException e) {
             e.printStackTrace();
             return null;
         }
