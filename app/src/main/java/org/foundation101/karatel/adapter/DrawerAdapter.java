@@ -19,7 +19,7 @@ import org.foundation101.karatel.R;
  */
 public class DrawerAdapter extends BaseAdapter {
     public static String[] content;
-    Context context;
+    private Context context;
 
     @Override
     public int getCount() {
@@ -56,7 +56,7 @@ public class DrawerAdapter extends BaseAdapter {
             case 2:
                 setDivider(menuItemText);
                 break;
-            case 5:
+            case 6:
                 setDivider(menuItemText);
                 break;
         }

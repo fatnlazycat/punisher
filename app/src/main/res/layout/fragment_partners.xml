@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView  xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -26,18 +26,6 @@
             android:paddingTop="@dimen/text_box_vertical_padding"
             android:paddingBottom="@dimen/text_box_vertical_padding" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/about_2"
-            android:id="@+id/textView4"
-            android:background="@android:color/white"
-            android:paddingRight="@dimen/text_box_horizontal_padding"
-            android:paddingLeft="@dimen/text_box_horizontal_padding"
-            android:paddingTop="@dimen/text_box_vertical_padding"
-            android:paddingBottom="@dimen/text_box_vertical_padding"
-            android:layout_marginTop="16dp" />
-
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
@@ -53,67 +41,17 @@
                 android:layout_marginBottom="12dp"
                 android:layout_marginLeft="24dp"
                 android:layout_marginRight="16dp"
-                android:src="@mipmap/logo_101"
-                android:onClick="open101"/>
+                android:src="@drawable/nash_kiev"
+                android:tag="http://nashkiev.ua/"
+                android:onClick="openSocialLink"/>
 
             <ImageButton
                 android:layout_width="50dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
                 android:background="@drawable/selector_connect_button"
-                android:onClick="open101"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@android:color/white">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:layout_marginLeft="24dp"
-                android:layout_marginRight="16dp"
-                android:src="@mipmap/logo_peoples_project"
-                android:onClick="openPeoplesProject"/>
-
-            <ImageButton
-                android:layout_width="50dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:background="@drawable/selector_connect_button"
-                android:onClick="openPeoplesProject"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:padding="24dp"
-            android:background="@android:color/white"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingBottom="16dp"
-                android:text="@string/forgot_how"
-                android:id="@+id/textView5" />
-
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/instruction"
-                android:id="@+id/button"
-                style="@style/GreenButton"
-                android:textAllCaps="true"
-                android:onClick="startTutorial"/>
+                android:tag="http://nashkiev.ua/"
+                android:onClick="openSocialLink"/>
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

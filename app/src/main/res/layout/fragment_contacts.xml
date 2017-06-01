@@ -91,7 +91,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/buttonFacebook"
-                    android:tag="https://www.facebook.com/fund101"
+                    android:tag="https://www.facebook.com/karatel101"
                     android:src="@mipmap/ic_fb"
                     android:background="@drawable/selector_common_button"
                     android:onClick="openSocialLink"/>
@@ -99,11 +99,29 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="8dp"
+                    android:id="@+id/buttonInstagram"
+                    android:tag="https://www.instagram.com/karatel_101/"
+                    android:src="@mipmap/ic_inst"
+                    android:background="@drawable/selector_common_button"
+                    android:onClick="openSocialLink"/>
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:id="@+id/buttonYouTube"
+                    android:tag="https://www.youtube.com/channel/UCCOWFQDJV_Ry-zTxyIKNkOA   "
+                    android:src="@mipmap/ic_yt"
+                    android:background="@drawable/selector_common_button"
+                    android:onClick="openSocialLink"/>
+                <!--<ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
                     android:id="@+id/buttonVK"
                     android:tag="https://vk.com/fund101"
                     android:src="@mipmap/ic_vk"
                     android:background="@drawable/selector_common_button"
-                    android:onClick="openSocialLink"/>
+                    android:onClick="openSocialLink"/>-->
                 <ImageButton
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -129,24 +147,6 @@
                     android:id="@+id/buttonTelegram"
                     android:tag="http://telegram.me/fund101"
                     android:src="@mipmap/ic_tg"
-                    android:background="@drawable/selector_common_button"
-                    android:onClick="openSocialLink"/>
-                <ImageButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
-                    android:id="@+id/buttonYouTube"
-                    android:tag="https://www.youtube.com/c/foundation101orgWWW"
-                    android:src="@mipmap/ic_yt"
-                    android:background="@drawable/selector_common_button"
-                    android:onClick="openSocialLink"/>
-                <ImageButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
-                    android:id="@+id/buttonInstagram"
-                    android:tag="https://www.instagram.com/fund101/"
-                    android:src="@mipmap/ic_inst"
                     android:background="@drawable/selector_common_button"
                     android:onClick="openSocialLink"/>
             </LinearLayout>

@@ -36,9 +36,14 @@ public class Globals {
     public static final String MAIN_ACTIVITY_SAVED_INSTANCE_STATE = "PUNISHER_MAIN_ACTIVITY_SAVED_INSTANCE_STATE";
 
     //fragment tags for MainActivity
+    public static final int MAIN_ACTIVITY_PUNISH_FRAGMENT = 1;
     public static final int MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT = 2;
-    public static final int MAIN_ACTIVITY_NEWS_FRAGMENT = 4;
-    public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 6;
+    public static final int MAIN_ACTIVITY_ABOUT_FRAGMENT = 3;
+    public static final int MAIN_ACTIVITY_PARTENRS_FRAGMENT = 4;
+    public static final int MAIN_ACTIVITY_NEWS_FRAGMENT = 5;
+    public static final int MAIN_ACTIVITY_CONTACTS_FRAGMENT = 6;
+    public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 7;
+    public static final int MAIN_ACTIVITY_EXIT = 8;
 
     public static final String PUSH_TOKEN = "PUSH_TOKEN";
 

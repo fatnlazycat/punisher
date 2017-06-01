@@ -51,6 +51,7 @@ import org.foundation101.karatel.fragment.AboutFragment;
 import org.foundation101.karatel.fragment.ContactsFragment;
 import org.foundation101.karatel.fragment.MainFragment;
 import org.foundation101.karatel.fragment.NewsFragment;
+import org.foundation101.karatel.fragment.PartnersFragment;
 import org.foundation101.karatel.fragment.ProfileFragment;
 import org.foundation101.karatel.fragment.RequestListFragment;
 import org.foundation101.karatel.retrofit.RetrofitSignOutSender;
@@ -138,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
 
         final DrawerLayout drawerLayout = (DrawerLayout)findViewById(R.id.drawerLayoutMainActivity);
         final DrawerAdapter drawerAdapter = new DrawerAdapter();
-        drawerAdapter.content = makeDrawerList();
+        DrawerAdapter.content = makeDrawerList();
         drawerListView.setAdapter(drawerAdapter);
 
         ActionBarDrawerToggle drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar,
@@ -165,39 +166,44 @@ public class MainActivity extends AppCompatActivity {
                 currentFragment = position;
                 String tag = fragmentTags.get(position);
                 switch (position){
-                    case 1 : {
+                    case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new MainFragment(), tag)
                                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
                                 .addToBackStack(tag).commit();
                         break;
                     }
-                    case 2 : {
+                    case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new RequestListFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
                     }
-                    case 3 : {
+                    case Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new AboutFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
                     }
-                    case 4 : {
+                    case Globals.MAIN_ACTIVITY_PARTENRS_FRAGMENT: {
+                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new PartnersFragment(), tag)
+                                .addToBackStack(tag).commit();
+                        break;
+                    }
+                    case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new NewsFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
                     }
-                        case 5 : {
+                        case Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new ContactsFragment(), tag)
                                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                                 .addToBackStack(tag).commit();
                         break;
                     }
-                    case 6 : {
+                    case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new ProfileFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
                     }
-                    case 7 : {
+                    case Globals.MAIN_ACTIVITY_EXIT: {
                         new SignOutSender().execute();
                     }
                 }
@@ -221,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
                     currentFragment = savedInstanceState.getInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, 0);
                     tag = fragmentTags.get(currentFragment);
                     switch (currentFragment) {
-                        case 1: {
+                        case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
                             ft.replace(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
@@ -229,11 +235,19 @@ public class MainActivity extends AppCompatActivity {
                             ft.replace(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
-                        case 3: {
+                        case Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT: {
                             ft.replace(R.id.frameLayoutMain, new AboutFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
-                        case 5: {
+                        case Globals.MAIN_ACTIVITY_PARTENRS_FRAGMENT: {
+                            ft.replace(R.id.frameLayoutMain, new PartnersFragment(), tag).addToBackStack(tag).commit();
+                            break;
+                        }
+                        case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT: {
+                            ft.replace(R.id.frameLayoutMain, new NewsFragment(), tag).addToBackStack(tag).commit();
+                            break;
+                        }
+                        case Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT: {
                             ft.replace(R.id.frameLayoutMain, new ContactsFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
@@ -241,13 +255,9 @@ public class MainActivity extends AppCompatActivity {
                             ft.replace(R.id.frameLayoutMain, new ProfileFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
-                        case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT: {
-                            ft.replace(R.id.frameLayoutMain, new NewsFragment(), tag).addToBackStack(tag).commit();
-                            break;
-                        }
                     }
                 } else {
-                    currentFragment = 1;
+                    currentFragment = Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT;
                     tag = fragmentTags.get(currentFragment);
                     ft.add(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
                 }
@@ -278,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
             String tag = fManager.getBackStackEntryAt(entryNumber).getName();
             if (tag.equals(getResources().getString(R.string.profile_header))) {//skip the profile page
                 tag = getResources().getString(R.string.do_punish);//& go to main page
-                currentFragment = 1;
+                currentFragment = Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT;
             } else {
                 for (int i : fragmentTags.keySet()){
                     if (tag.equals(fragmentTags.get(i))) {
@@ -289,9 +299,9 @@ public class MainActivity extends AppCompatActivity {
             }
             toolbar.setTitle(tag);
             fManager.popBackStackImmediate(tag, 0);
-        } else {
+        } /*else {
             super.onBackPressed();
-        }
+        }*/
     }
 
     //hides the software keyboard
@@ -318,13 +328,14 @@ public class MainActivity extends AppCompatActivity {
     HashMap<Integer, String> getFragmentTags(){
         HashMap<Integer, String> result = new HashMap<>();
 
-        result.put(1, getResources().getString(R.string.do_punish));
-        result.put(2, getResources().getString(R.string.punishment_requests));
-        result.put(3, getResources().getString(R.string.about_header));
-        result.put(4, getResources().getString(R.string.news_header));
-        result.put(5, getResources().getString(R.string.contacts_header));
-        result.put(6, getResources().getString(R.string.profile_header));
-        result.put(7, "");//exit - no tag
+        result.put(Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT,       getResources().getString(R.string.do_punish));
+        result.put(Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT, getResources().getString(R.string.punishment_requests));
+        result.put(Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT,        getResources().getString(R.string.about_header));
+        result.put(Globals.MAIN_ACTIVITY_PARTENRS_FRAGMENT,     getResources().getString(R.string.partners_header));
+        result.put(Globals.MAIN_ACTIVITY_NEWS_FRAGMENT,         getResources().getString(R.string.news_header));
+        result.put(Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT,     getResources().getString(R.string.contacts_header));
+        result.put(Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT,      getResources().getString(R.string.profile_header));
+        result.put(Globals.MAIN_ACTIVITY_EXIT,                  "");//exit - no tag
 
         return result;
     }

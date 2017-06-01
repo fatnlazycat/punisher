@@ -49,11 +49,6 @@ import retrofit2.Retrofit;
 public class ShowMediaActivity extends AppCompatActivity {
     Bitmap picture;
     FrameLayout progressBar;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +90,11 @@ public class ShowMediaActivity extends AppCompatActivity {
 
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+        /*
+      ATTENTION: This was auto-generated to implement the App Indexing API.
+      See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+        GoogleApiClient client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
@@ -201,13 +200,13 @@ public class ShowMediaActivity extends AppCompatActivity {
     /**
      * BitmapWorkerTask
      */
-    class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
+    private class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
         private final WeakReference<ImageView> imageViewReference;
         static final String TAG = "BitmapWorkerTask";
         final String newFilePath = getExternalFilesDir(null) + File.separator + TAG + CameraManager.JPG;
         File newFile = new File(newFilePath);
 
-        public BitmapWorkerTask(ImageView imageView) {
+        BitmapWorkerTask(ImageView imageView) {
             // Use a WeakReference to ensure the ImageView can be garbage collected
             imageViewReference = new WeakReference<>(imageView);
         }
@@ -236,7 +235,7 @@ public class ShowMediaActivity extends AppCompatActivity {
             progressBar.setVisibility(View.GONE);
         }
 
-        public Bitmap decodeSampledBitmapFromFile(String fileName) {
+        Bitmap decodeSampledBitmapFromFile(String fileName) {
             BitmapFactory.Options options = new BitmapFactory.Options();
             Point point = getDesiredSize();
             try {

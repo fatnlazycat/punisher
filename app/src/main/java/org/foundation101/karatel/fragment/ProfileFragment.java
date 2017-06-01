@@ -215,7 +215,7 @@ public class ProfileFragment extends Fragment {
         avatarChanged = true;
     }
 
-    class ProfileSaver extends AsyncTask<Void, Void, String>{
+    private class ProfileSaver extends AsyncTask<Void, Void, String>{
         String name, surname, secondName, phone;
         Activity activity;
 

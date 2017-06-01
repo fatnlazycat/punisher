@@ -55,6 +55,17 @@
         <item>false</item>
     </string-array>
 
+    <!-- 0 - photo + video; 1 - video only -->
+    <integer-array name="violationMediaTypes">
+        <item>1</item>
+        <item>1</item>
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+    </integer-array>
+
     <string-array name="violationStatuses">
         <item>Чернетка</item>
         <item>На модерації</item>
@@ -71,6 +82,7 @@
         <item>Покарати за порушення</item>
         <item>Заявки</item>
         <item>Про додаток</item>
+        <item>Партнери</item>
         <item>Новини</item>
         <item>Зворотній зв’язок</item>
         <item>Редагувати профіль</item>

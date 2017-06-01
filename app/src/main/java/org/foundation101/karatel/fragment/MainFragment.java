@@ -64,6 +64,7 @@ public class MainFragment extends Fragment {
         String[] violationNames = getResources().getStringArray(R.array.violations);
         String[] violationTypes = getResources().getStringArray(R.array.violationTypes);
         String[] violationUsesCamera = getResources().getStringArray(R.array.violationUsesCamera);
+        int[] violationMediaTypes = getResources().getIntArray(R.array.violationMediaTypes);
         int len = violationNames.length;
         for (int i = 0; i < len; i++) {
             Violation v =  new Violation();
@@ -71,6 +72,7 @@ public class MainFragment extends Fragment {
             v.setName(violationNames[i]);
             v.setType(violationTypes[i]);
             v.setUsesCamera(Boolean.parseBoolean(violationUsesCamera[i]));
+            v.setMediaTypes(violationMediaTypes[i]);
             result.add(v);
         }
         return result;

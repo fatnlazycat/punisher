@@ -156,7 +156,11 @@ public class RequestListFragment extends Fragment {
                 if (snackbar!=null && snackbar.isShownOrQueued()) {
                     swipeRefreshLayout.setRefreshing(false);
                 } else {
-                    new RefreshListOfRequestsDialog(getActivity()).get().show();
+                    //dialog to prompt refresh or decline - Bogdanovich asked to remove
+                    //new RefreshListOfRequestsDialog(getActivity()).get().show();
+                    swipeRefreshLayout.setRefreshing(false);
+                    resetSortMenu();
+                    makeRequestListAdapterContent();
                 }
             }
         });
@@ -387,7 +391,7 @@ public class RequestListFragment extends Fragment {
                     requestListAdapter.notifyDataSetChanged();
                 }
             } catch (JSONException | IOException e) {
-                Globals.showError(getActivity(), R.string.error, e);
+                Globals.showError(getContext(), R.string.error, e);
             }
             Activity activity = getActivity();
             String requestFromPush = activity == null ?

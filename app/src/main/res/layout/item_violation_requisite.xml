@@ -33,6 +33,7 @@
         android:textSize="@dimen/textSizeRequisiteEditText"
         android:textColorHint="@color/green_button_disabled"
         android:imeOptions="actionNext"
+        android:inputType="textCapSentences|textMultiLine"
         android:id="@+id/editTextRequisite"/>
 
     <FrameLayout

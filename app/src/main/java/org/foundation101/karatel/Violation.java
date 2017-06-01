@@ -41,6 +41,13 @@ public class Violation implements Serializable{
         this.type = type;
     }
 
+    public int getMediaTypes() {
+        return mediaTypes;
+    }
+
+    public void setMediaTypes(int mediaTypes) {
+        this.mediaTypes = mediaTypes;
+    }
 
     public static String getViolationNameFromType(Context context, String type){
         String[] violationNames = context.getResources().getStringArray(R.array.violations);
@@ -51,4 +58,7 @@ public class Violation implements Serializable{
     public String name, type;
     public int drawableId;
     public boolean usesCamera;
+    public int mediaTypes;
+
+    public static final int VIDEO_ONLY = 1;
 }

@@ -644,18 +644,22 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     }
 
     public void photoVideoPopupMenu(View view) {
-        PopupMenu popup = new PopupMenu(this, view);
+        if (violation.getMediaTypes() == Violation.VIDEO_ONLY){
+            CameraManager.getInstance(this).startCamera(CameraManager.VIDEO_CAPTURE_INTENT);
+        } else {
+            PopupMenu popup = new PopupMenu(this, view);
 
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                return onPhotoVideoMenuItemClick(item);
-            }
-        });
+            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    return onPhotoVideoMenuItemClick(item);
+                }
+            });
 
-        MenuInflater inflater = popup.getMenuInflater();
-        inflater.inflate(R.menu.photo_video_popup_menu, popup.getMenu());
-        popup.show();
+            MenuInflater inflater = popup.getMenuInflater();
+            inflater.inflate(R.menu.photo_video_popup_menu, popup.getMenu());
+            popup.show();
+        }
     }
 
     public boolean onPhotoVideoMenuItemClick(MenuItem item) {
@@ -966,7 +970,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
         Context context;
 
-        public ViolationSender(Context context){
+        ViolationSender(Context context){
             this.context = context;
         }
 
@@ -1168,7 +1172,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         }
     }
 
-    class ThumbnailFetcher extends AsyncTask<String, Void, Exception>{
+    private class ThumbnailFetcher extends AsyncTask<String, Void, Exception>{
 
         @Override
         protected Exception doInBackground(String... params) {
@@ -1233,7 +1237,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         }
     }
 
-    class RequestFetcher extends AsyncTask<Integer, Void, String>{
+    private class RequestFetcher extends AsyncTask<Integer, Void, String>{
 
         @Override
         protected void onPreExecute() {
@@ -1244,7 +1248,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
         @Override
         protected String doInBackground(Integer... params) {
-            String result = null;
+            String result;
             if (HttpHelper.internetConnected(ViolationActivity.this)) {
                 try {
                     result = HttpHelper.proceedRequest("complains/" + params[0], "GET", "", true);

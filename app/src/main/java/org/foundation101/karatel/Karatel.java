@@ -10,13 +10,16 @@ import android.graphics.Matrix;
 import android.location.Location;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
@@ -118,19 +121,17 @@ public class Karatel extends Application {
     }
 
     public boolean locationIsMock(Location location){
-        boolean isMock = !Settings.Secure.getString(getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("0");
-        /*if (android.os.Build.VERSION.SDK_INT >= 18) {
+        boolean isMock;// = !Settings.Secure.getString(getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("0");
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             isMock = (location==null || location.isFromMockProvider());
         } else {
             isMock = !Settings.Secure.getString(getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("0");
-        }*/
+        }
 
-        /*
-        //debug block
+        /*//debug block
         String message = isMock ? "mock" : "good!";
         Toast.makeText(this, "georesult = "+message, Toast.LENGTH_LONG).show();
-        Log.e("Punisher","georesult = "+message);
-        */
+        Log.e("Punisher","georesult = "+message);*/
 
         return isMock;
     }
