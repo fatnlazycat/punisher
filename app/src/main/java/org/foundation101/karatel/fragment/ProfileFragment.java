@@ -30,12 +30,13 @@ import android.widget.Toast;
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
-import org.foundation101.karatel.Karatel;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.MultipartUtility;
 import org.foundation101.karatel.PunisherUser;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.TipsActivity;
+import org.foundation101.karatel.utils.MediaUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -67,7 +68,7 @@ public class ProfileFragment extends Fragment {
         setHasOptionsMenu(true);
 
         //Google Analytics part
-        ((Karatel)getActivity().getApplication()).sendScreenName(TAG);
+        ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
     }
 
     @Override
@@ -94,15 +95,30 @@ public class ProfileFragment extends Fragment {
         ((TextView)memberEmail.getChildAt(0)).setText(R.string.email);
         memberEmail.getChildAt(1).setVisibility(View.GONE);
         emailEditText = (EditText) memberEmail.getChildAt(2);
-        emailEditText.setEnabled(false);
+        //emailEditText.setEnabled(false);//! - disabled views don't receive neither onClick nor onTouch events!
         //emailEditText.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        emailEditText.setFocusable(false);
+        emailEditText.setAlpha(0.4f);
+        emailEditText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (getActivity() != null) ((MainActivity)getActivity()).changeEmail(v);
+            }
+        });
 
         memberPassword = (ViewGroup) v.findViewById(R.id.profile_password);
         ((TextView)memberPassword.getChildAt(0)).setText(R.string.passw);
         memberPassword.getChildAt(1).setVisibility(View.GONE);
         passwordEditText = (EditText)memberPassword.getChildAt(2);
-        passwordEditText.setEnabled(false);
         passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        passwordEditText.setFocusable(false);
+        passwordEditText.setAlpha(0.4f);
+        passwordEditText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (getActivity() != null) ((MainActivity)getActivity()).changePassword(v);
+            }
+        });
 
         memberSurname = (ViewGroup) v.findViewById(R.id.profile_surname);
         ((TextView)memberSurname.getChildAt(0)).setText(R.string.surname);
@@ -167,16 +183,16 @@ public class ProfileFragment extends Fragment {
                 } else {
                     InputStream inputStream = getContext().getContentResolver().openInputStream(data.getData());
                     Bitmap bigImage = BitmapFactory.decodeStream(inputStream, null, options);
-                    int orientation = Karatel.getOrientation(getActivity(), data.getData());
-                    setNewAvatar(Karatel.rotateBitmap(bigImage, orientation));
+                    int orientation = MediaUtils.getOrientation(getActivity(), data.getData());
+                    setNewAvatar(MediaUtils.rotateBitmap(bigImage, orientation));
                 }
             }
             if (requestCode == CameraManager.IMAGE_CAPTURE_INTENT && resultCode == Activity.RESULT_OK) {
                 Bitmap bigImage = BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options);
 
-                int orientation = Karatel.getOrientation(CameraManager.lastCapturedFile);
+                int orientation = MediaUtils.getOrientation(CameraManager.lastCapturedFile);
 
-                setNewAvatar(Karatel.rotateBitmap(bigImage, orientation));
+                setNewAvatar(MediaUtils.rotateBitmap(bigImage, orientation));
                 boolean b = new File(CameraManager.lastCapturedFile).delete();
             }
         } catch (IOException e) {
@@ -286,7 +302,8 @@ public class ProfileFragment extends Fragment {
                 JSONObject json = new JSONObject(s);
                 switch (json.getString("status")){
                     case Globals.SERVER_SUCCESS : {
-                        Toast.makeText(getContext(), R.string.profile_changes_saved, Toast.LENGTH_LONG).show();
+                        if (getContext() != null)
+                            Toast.makeText(getContext(), R.string.profile_changes_saved, Toast.LENGTH_LONG).show();
                         Globals.user.name = name;
                         Globals.user.surname = surname;
                         Globals.user.secondName = secondName;

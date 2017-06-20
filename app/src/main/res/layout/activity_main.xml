@@ -40,8 +40,9 @@
         android:id="@+id/drawerListView"
         android:background="@android:color/white"
         android:layout_gravity="start"
-        android:paddingLeft="@dimen/activity_horizontal_margin"
+
         android:divider="@null">
     </ListView>
+    <!--android:paddingLeft="@dimen/activity_horizontal_margin"-->
 
 </android.support.v4.widget.DrawerLayout>

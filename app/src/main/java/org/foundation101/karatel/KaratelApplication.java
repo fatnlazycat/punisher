@@ -1,25 +1,17 @@
 package org.foundation101.karatel;
 
 import android.app.Application;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.Matrix;
 import android.location.Location;
-import android.media.ExifInterface;
-import android.net.Uri;
 import android.os.Build;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
@@ -39,10 +31,15 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 //import org.acra.annotation.*;
 
 //@ReportsCrashes(formUri = "http://www.yourselectedbackend.com/reportpath")
-public class Karatel extends Application {
+public class KaratelApplication extends Application {
     public static boolean MAIN_ACTIVITY_FROM_PUSH = false;
 
     private static Retrofit retrofit = null;
+
+    private static KaratelApplication instance;
+    public static KaratelApplication getInstance() {
+        return instance;
+    }
 
     //Google Analytics part
     private Tracker mTracker;
@@ -63,6 +60,7 @@ public class Karatel extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        instance = this;
         initACRA();
         //ACRA.init(this);
     }
@@ -74,7 +72,8 @@ public class Karatel extends Application {
     }
 
     void initACRA() {
-        if (BuildConfig.DEBUG) {
+        Log.d("KaratelApplication", "BuildConfig.DEBUG = " + BuildConfig.DEBUG);
+        if (!BuildConfig.DEBUG) {
             Mint.initAndStartSession(this, "c609df56");
             //Mint.startANRMonitoring(5000, true);
         }
@@ -145,80 +144,6 @@ public class Karatel extends Application {
                     .build();
         }
         return retrofit;
-    }
-
-    //by default the camera rotates the image so we need to rotate it back
-    public static Bitmap rotateBitmap(Bitmap bitmap, int orientation) {
-        Matrix matrix = new Matrix();
-        switch (orientation) {
-            case ExifInterface.ORIENTATION_NORMAL:
-                return bitmap;
-            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
-                matrix.setScale(-1, 1);
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_180:
-                matrix.setRotate(180);
-                break;
-            case 180:
-                matrix.setRotate(180);
-                break;
-            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
-                matrix.setRotate(180);
-                matrix.postScale(-1, 1);
-                break;
-            case ExifInterface.ORIENTATION_TRANSPOSE:
-                matrix.setRotate(90);
-                matrix.postScale(-1, 1);
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_90:
-                matrix.setRotate(90);
-                break;
-            case 90:
-                matrix.setRotate(90);
-                break;
-            case ExifInterface.ORIENTATION_TRANSVERSE:
-                matrix.setRotate(-90);
-                matrix.postScale(-1, 1);
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_270:
-                matrix.setRotate(-90);
-                break;
-            case 270:
-                matrix.setRotate(-90);
-                break;
-            default:
-                return bitmap;
-        }
-        try {
-            Bitmap bmRotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-            bitmap.recycle();
-            return bmRotated;
-        }
-        catch (OutOfMemoryError | NullPointerException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public static int getOrientation(Context context, Uri photoUri) {
-        /* it's on the external media. */
-        Cursor cursor = context.getContentResolver().query(photoUri,
-                new String[] { MediaStore.Images.ImageColumns.ORIENTATION }, null, null, null);
-
-        if (cursor == null || cursor.getCount() != 1) {
-            return -1;
-        }
-
-        cursor.moveToFirst();
-        int result = cursor.getInt(0);
-        cursor.close();
-        return result;
-    }
-
-    public static int getOrientation(String imageFileName) throws IOException {
-        ExifInterface ei = new ExifInterface(imageFileName);
-        int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-        return orientation;
     }
 
     private void copyFile(File sourceFile, File destFile) throws IOException {

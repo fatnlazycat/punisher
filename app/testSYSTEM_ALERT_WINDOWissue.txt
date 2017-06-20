@@ -1,0 +1,11 @@
+Боремся с:
+java.lang.SecurityException: org.foundation101.karatel from uid 10217 not allowed to perform SYSTEM_ALERT_WINDOW
+
+App versions 1.16
+OS Versions 6.0.1
+Devices samsung SM-A500H
+
+Надо найти Samsung с API от 23, т.к. уже тестировал на Nexus и Redmi - краша нет, просто не показывает диалог, если нет разрешения.
+
+Поведение программы: в LoginActivity должен появляться SYSTEM_ALERT_WINDOW диалог, при нажатии на кнопку которого программа закрывается.
+Логи можно отслеживать по тегу "system window issue"

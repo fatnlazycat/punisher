@@ -25,9 +25,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
+import org.foundation101.karatel.utils.MediaUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,11 +35,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
-
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -111,76 +106,7 @@ public class ShowMediaActivity extends AppCompatActivity {
         //empty method to handle click events
     }
 
-    /*
-    a method from Android reference docs
-    */
-    public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        // Raw height and width of image
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
-
-        if (height > reqHeight || width > reqWidth) {
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2;
-            }
-        }
-
-        //now define if the resulting image is still bigger than the texture size
-        int newWidth = width / inSampleSize;
-        int newHeight = height / inSampleSize;
-        int textureSize = getMaxTextureSize();
-        if (Math.max(newWidth, newHeight) > textureSize) inSampleSize *= 2; //? - maybe we should use Math.min() here?
-
-        return inSampleSize;
-    }
-
-    public static int getMaxTextureSize() {
-        // Safe minimum default size
-        final int IMAGE_MAX_BITMAP_DIMENSION = 128;
-
-        // Get EGL Display
-        EGL10 egl = (EGL10) EGLContext.getEGL();
-        EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
-
-        // Initialise
-        int[] version = new int[2];
-        egl.eglInitialize(display, version);
-
-        // Query total number of configurations
-        int[] totalConfigurations = new int[1];
-        egl.eglGetConfigs(display, null, 0, totalConfigurations);
-
-        // Query actual list configurations
-        EGLConfig[] configurationsList = new EGLConfig[totalConfigurations[0]];
-        egl.eglGetConfigs(display, configurationsList, totalConfigurations[0], totalConfigurations);
-
-        int[] textureSize = new int[1];
-        int maximumTextureSize = 0;
-
-        // Iterate through all the configurations to located the maximum texture size
-        for (int i = 0; i < totalConfigurations[0]; i++) {
-            // Only need to check for width since opengl textures are always squared
-            egl.eglGetConfigAttrib(display, configurationsList[i], EGL10.EGL_MAX_PBUFFER_WIDTH, textureSize);
-
-            // Keep track of the maximum texture size
-            if (maximumTextureSize < textureSize[0])
-                maximumTextureSize = textureSize[0];
-        }
-
-        // Release
-        egl.eglTerminate(display);
-
-        // Return largest texture size found, or default
-        return Math.max(maximumTextureSize, IMAGE_MAX_BITMAP_DIMENSION);
-    }
-
-    Point getDesiredSize() {
+         Point getDesiredSize() {
         Display display = getWindowManager().getDefaultDisplay();
         Point point = new Point();
         display.getSize(point);
@@ -237,7 +163,7 @@ public class ShowMediaActivity extends AppCompatActivity {
 
         Bitmap decodeSampledBitmapFromFile(String fileName) {
             BitmapFactory.Options options = new BitmapFactory.Options();
-            Point point = getDesiredSize();
+            Point point = MediaUtils.getDesiredSize(ShowMediaActivity.this);
             try {
                 if (fileName.matches("https?://.+")) {
                     String baseUrl = Globals.SERVER_URL.replace("/api/v1/", "");
@@ -255,18 +181,18 @@ public class ShowMediaActivity extends AppCompatActivity {
                         Log.d(TAG, "server contact failed");
                     }
 
-                    int orientation = Karatel.getOrientation(newFilePath);
+                    int orientation = MediaUtils.getOrientation(newFilePath);
 
                     //first run to determine image size
                     options.inJustDecodeBounds = true;
                     BitmapFactory.decodeFile(newFilePath, options);
 
                     //calculate sample size
-                    options.inSampleSize = calculateInSampleSize(options, point.x, point.y);
+                    options.inSampleSize = MediaUtils.calculateInSampleSize(options, point.x, point.y);
 
                     //second run to get bitmap & set to resulting picture
                     options.inJustDecodeBounds = false;
-                    picture = Karatel.rotateBitmap(BitmapFactory.decodeFile(newFilePath, options), orientation);
+                    picture = MediaUtils.rotateBitmap(BitmapFactory.decodeFile(newFilePath, options), orientation);
                     boolean fileDeletedSuccessfully = newFile.delete();
                     Log.d(TAG, "fileDeletedSuccessfully = " + fileDeletedSuccessfully);
                 } else {
@@ -275,18 +201,18 @@ public class ShowMediaActivity extends AppCompatActivity {
                     BitmapFactory.decodeFile(fileName, options);
 
                     //calculate sample size
-                    options.inSampleSize = calculateInSampleSize(options, point.x, point.y);
+                    options.inSampleSize = MediaUtils.calculateInSampleSize(options, point.x, point.y);
 
                     //second run to get bitmap
                     options.inJustDecodeBounds = false;
 
-                    int orientation = Karatel.getOrientation(fileName);
+                    int orientation = MediaUtils.getOrientation(fileName);
                     try {
-                        picture = Karatel.rotateBitmap(BitmapFactory.decodeFile(fileName, options), orientation);
+                        picture = MediaUtils.rotateBitmap(BitmapFactory.decodeFile(fileName, options), orientation);
                     } catch (OutOfMemoryError err) {
                         Log.d(TAG, "reducing in sample size");
                         options.inSampleSize *= 4;
-                        picture = Karatel.rotateBitmap(BitmapFactory.decodeFile(fileName, options), orientation);
+                        picture = MediaUtils.rotateBitmap(BitmapFactory.decodeFile(fileName, options), orientation);
                     }
                 }
             } catch (final IOException e) {

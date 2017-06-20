@@ -70,7 +70,7 @@ import org.foundation101.karatel.CreationResponse;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
-import org.foundation101.karatel.Karatel;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Request;
 import org.foundation101.karatel.UpdateEntity;
@@ -83,6 +83,7 @@ import org.foundation101.karatel.adapter.RequisitesListAdapter;
 import org.foundation101.karatel.fragment.RequestListFragment;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
+import org.foundation101.karatel.utils.MediaUtils;
 import org.foundation101.karatel.view.ExpandedGridView;
 import org.foundation101.karatel.view.MyScrollView;
 import org.json.JSONArray;
@@ -95,7 +96,6 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -183,6 +183,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
         requisitesList = (LinearLayout) findViewById(R.id.requisitesList);
 
+        TextView addedPhotoVideoTextView = (TextView)findViewById(R.id.addedPhotoVideoTextView);
         progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
         punishButton = (Button) findViewById(R.id.punishButton);
         saveButton = (Button) findViewById(R.id.saveButton);
@@ -190,7 +191,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         if (checkGooglePlayServices()) { buildGoogleApiClient(); }
         initOldAndroidLocation();
 
-        ((Karatel)getApplication()).restoreUserFromPreferences();
+        ((KaratelApplication)getApplication()).restoreUserFromPreferences();
 
         //dimension of the thumbnail - the thumbnail should have the same size as MediaStore.Video.Thumbnails.MICRO_KIND
         thumbDimension = getResources().getDimensionPixelOffset(R.dimen.thumbnail_size);
@@ -311,7 +312,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             evidenceAdapter.setEditTrigger(false);
             ImageButton imageButtonAddEvidence = (ImageButton)findViewById(R.id.imageButtonAddEvidence);
             imageButtonAddEvidence.setVisibility(View.GONE);
-            TextView addedPhotoVideoTextView = (TextView)findViewById(R.id.addedPhotoVideoTextView);
             addedPhotoVideoTextView.setText(getString(R.string.addedPhotoVideo));
 
             toolbar.setSubtitle("Заявка № " + id_number_server);
@@ -328,11 +328,14 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             TextView textViewViolationDisclaimer = (TextView) findViewById(R.id.textViewViolationDisclaimer);
             if (getResources().getString(disclaimerId).isEmpty()) textViewViolationDisclaimer.setVisibility(View.GONE);
             else textViewViolationDisclaimer.setText(disclaimerId);
+
+            if (violation.getMediaTypes() == Violation.VIDEO_ONLY)
+                addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
         }
 
         makeRequisitesViews();
 
-        ((Karatel)getApplication()).sendScreenName(violation.type);
+        ((KaratelApplication)getApplication()).sendScreenName(violation.type);
     }
 
     void makeRequisitesViews(){
@@ -448,8 +451,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     if (evidenceFileName.endsWith(CameraManager.JPG)) {
                         BitmapFactory.Options options = new BitmapFactory.Options();
                         options.inSampleSize = 4;
-                        int orientation = Karatel.getOrientation(evidenceFileName);
-                        thumbnail = Karatel.rotateBitmap(
+                        int orientation = MediaUtils.getOrientation(evidenceFileName);
+                        thumbnail = MediaUtils.rotateBitmap(
                                 ThumbnailUtils.extractThumbnail(
                                         BitmapFactory.decodeFile(evidenceFileName, options)
                                         , thumbDimension, thumbDimension
@@ -495,17 +498,35 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             try {
                 Bitmap bmp;
                 if (CameraManager.lastCapturedFile.endsWith(CameraManager.JPG)) {
-                    int orientation = Karatel.getOrientation(CameraManager.lastCapturedFile);
+                    int orientation = MediaUtils.getOrientation(CameraManager.lastCapturedFile);
 
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     options.inSampleSize = 4;
-                    bmp = Karatel.rotateBitmap(
+                    bmp = MediaUtils.rotateBitmap(
                             ThumbnailUtils.extractThumbnail(
                                     BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options)
                                     , thumbDimension, thumbDimension
                             )
                             , orientation
                     );
+
+                    int index = CameraManager.lastCapturedFile.lastIndexOf(CameraManager.JPG);
+                    index = (index < 0) ? 0 : index;
+                    String nameForReducedFile = new StringBuilder(CameraManager.lastCapturedFile)
+                            .insert(index, "(2)").toString();
+                    File reducedFile = MediaUtils.reduceFileDimensions(
+                            new File(CameraManager.lastCapturedFile),
+                            nameForReducedFile,
+                            getApplicationContext());
+                    if (!CameraManager.lastCapturedFile.equals(reducedFile.getPath())) {
+                        File lastCameraFile = new File(CameraManager.lastCapturedFile);
+
+                        boolean fileOperationsResult =
+                                lastCameraFile.delete() &&
+                                reducedFile.renameTo(lastCameraFile);
+
+                        if (!fileOperationsResult) throw new IOException("Can't procced files");
+                    }
                 } else {
                     bmp = ThumbnailUtils.createVideoThumbnail(CameraManager.lastCapturedFile, MediaStore.Video.Thumbnails.MICRO_KIND);
                 }
@@ -608,7 +629,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
          *& fill the table again, because the user could add or delete something
          */
             if (mode == MODE_EDIT) {//this condition works only in edit mode - delete all records previously added to db
-                int i = db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idInDbString});
+                db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idInDbString});
             }
             for (int i = 0; i < evidenceAdapter.content.size(); i++) {
                 cv.put(DBHelper.ID, rowID);
@@ -681,6 +702,10 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             Toast.makeText(this, R.string.cannot_define_location, Toast.LENGTH_LONG).show();
         } else {
             try {
+                if (!evidenceAdapter.sizeCheck()) {
+                    Toast.makeText(this, R.string.request_too_big, Toast.LENGTH_LONG).show();
+                    return;
+                }
                 RequestListFragment.punishPerformed = true;
                 saveToBase(null); //we pass null to point that it's called from punish()
                 new ViolationSender(this).execute(violation);
@@ -740,7 +765,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             locationGoogle = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
         }
 
-        if (((Karatel)getApplicationContext()).locationIsMock(locationGoogle)) {
+        if (((KaratelApplication)getApplicationContext()).locationIsMock(locationGoogle)) {
             return null;
         } else {
             return locationGoogle;
@@ -763,7 +788,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         public void onLocationChanged(Location location) {
             if (latitude == null || latitude == 0) {//use this only if no result from FusedLocationAPI
 
-                if (((Karatel)getApplicationContext()).locationIsMock(location)){
+                if (((KaratelApplication)getApplicationContext()).locationIsMock(location)){
                     if (!mockLocationDialogShown) {
                         mockLocationDialogShown = true;
                         AlertDialog.Builder builder = new AlertDialog.Builder(ViolationActivity.this);
@@ -889,7 +914,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     @Override
     public void onLocationChanged(final Location location) {
-        if (mode == MODE_CREATE && !((Karatel)getApplicationContext()).locationIsMock(location)){
+        if (mode == MODE_CREATE && !((KaratelApplication)getApplicationContext()).locationIsMock(location)){
             Double latToCheck = latitude!=null ? latitude : 0;
             Double lonToCheck = longitude!=null ? longitude : 0;
             Double absLat = Math.abs(latToCheck - location.getLatitude());
@@ -966,7 +991,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         tabChangeListener.onTabChanged(getString(R.string.request_status));
     }
 
-    class ViolationSender extends AsyncTask<Violation, Void, CreationResponse> {
+    private class ViolationSender extends AsyncTask<Violation, Void, CreationResponse> {
 
         Context context;
 
@@ -977,6 +1002,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            punishButton.setEnabled(false);
             progressBar.setVisibility(View.VISIBLE);
             Globals.hideSoftKeyboard(ViolationActivity.this);
         }
@@ -1082,7 +1108,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                                 RequestBody.create(MediaType.parse(mimeType), new File(mediaFileName)));
                     }
 
-                    RetrofitMultipartUploader api = Karatel.getClient().create(RetrofitMultipartUploader.class);
+                    RetrofitMultipartUploader api = KaratelApplication.getClient().create(RetrofitMultipartUploader.class);
                     Call<CreationResponse> call = api.upload(Globals.sessionToken, typeServerSuffix, requestBodyBuilder.build());
                     Response<CreationResponse> json = call.execute();
                     if (json.isSuccessful()) {
@@ -1138,7 +1164,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         @Override
         protected void onPostExecute(CreationResponse answer) {
             super.onPostExecute(answer);
-            progressBar.setVisibility(View.GONE);
 
             if (answer == null) {
                 try {
@@ -1169,6 +1194,9 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             }
 
             db.close();
+
+            if (progressBar != null) progressBar.setVisibility(View.GONE);
+            if (punishButton != null) punishButton.setEnabled(true);
         }
     }
 
@@ -1194,9 +1222,9 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     Log.d(TAG, "server contact failed");
                 }
 
-                int orientation = Karatel.getOrientation(filePath);
+                int orientation = MediaUtils.getOrientation(filePath);
 
-                Bitmap picture = Karatel.rotateBitmap(BitmapFactory.decodeFile(filePath, null), orientation);
+                Bitmap picture = MediaUtils.rotateBitmap(BitmapFactory.decodeFile(filePath, null), orientation);
                 if (picture != null) {
                     int width = getResources().getDimensionPixelSize(R.dimen.evidence_width);
                     int height = getResources().getDimensionPixelSize(R.dimen.evidence_height);

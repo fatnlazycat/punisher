@@ -7,7 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.foundation101.karatel.Karatel;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 
 /**
@@ -23,7 +23,7 @@ public class PartnersFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ((Karatel)getActivity().getApplication()).sendScreenName(TAG);
+        ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
     }
 
     @Nullable

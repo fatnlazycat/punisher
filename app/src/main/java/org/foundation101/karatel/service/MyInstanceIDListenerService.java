@@ -1,13 +1,8 @@
 package org.foundation101.karatel.service;
 
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.android.gms.iid.InstanceIDListenerService;
-
-import org.foundation101.karatel.Karatel;
-import org.foundation101.karatel.activity.MainActivity;
 
 
 public class MyInstanceIDListenerService extends InstanceIDListenerService {

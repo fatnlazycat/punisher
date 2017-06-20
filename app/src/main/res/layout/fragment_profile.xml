@@ -92,21 +92,25 @@
                 android:layout_marginTop="16dp"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:background="@android:color/white"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:clickable="true"
+                android:onClick="changeEmail"
+                android:id="@+id/llEmail">
 
                 <include layout="@layout/item_violation_requisite"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:clickable="false"
                     android:id="@+id/profile_email"/>
                 <ImageButton
                     android:layout_width="50dp"
                     android:layout_height="match_parent"
                     android:layout_weight="0"
                     android:layout_gravity="center_vertical"
+                    android:clickable="false"
                     android:src="@drawable/ic_arrow"
-                    android:background="@drawable/selector_common_button"
-                    android:onClick="changeEmail"/>
+                    android:background="@drawable/selector_common_button"/>
             </LinearLayout>
 
             <LinearLayout
@@ -115,28 +119,33 @@
                 android:layout_marginTop="16dp"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:background="@android:color/white"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:clickable="true"
+                android:onClick="changePassword">
 
                 <include layout="@layout/item_violation_requisite"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:clickable="false"
                     android:id="@+id/profile_password"/>
                 <ImageButton
                     android:layout_width="50dp"
                     android:layout_height="match_parent"
                     android:layout_weight="0"
                     android:layout_gravity="center_vertical"
+                    android:clickable="false"
                     android:src="@drawable/ic_arrow"
-                    android:background="@drawable/selector_common_button"
-                    android:onClick="changePassword"/>
+                    android:background="@drawable/selector_common_button"/>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:clickable="true"
+                android:onClick="bindFacebook">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -149,7 +158,9 @@
                     android:text="@string/bindProfile"
                     android:textSize="16sp"
                     android:gravity="center"
-                    android:drawableLeft="@mipmap/facebook"/>
+                    android:drawableLeft="@mipmap/facebook"
+                    android:clickable="false"
+                    android:focusable="false"/>
                 <ImageButton
                     android:layout_width="50dp"
                     android:layout_height="match_parent"
@@ -157,7 +168,8 @@
                     android:layout_gravity="center_vertical"
                     android:src="@drawable/ic_arrow"
                     android:background="@drawable/selector_common_button"
-                    android:onClick="bindFacebook" />
+                    android:clickable="false"
+                    android:focusable="false"/>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

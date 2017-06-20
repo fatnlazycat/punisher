@@ -1,7 +1,6 @@
 package org.foundation101.karatel.service;
 
 import android.app.IntentService;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -13,10 +12,8 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.Karatel;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
-import org.foundation101.karatel.activity.TipsActivity;
 
 import java.io.IOException;
 
@@ -72,7 +69,7 @@ public class RegistrationIntentService extends IntentService {
             }
         } catch (Exception e) {
             Log.d(TAG, "Failed to complete token refresh", e);
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(TipsActivity.BROADCAST_RECEIVER_TAG));
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG));
 
             // If an exception happens while fetching the new token or updating our registration data
             // on a third-party server, this ensures that we'll attempt the update at a later time.
@@ -111,7 +108,7 @@ public class RegistrationIntentService extends IntentService {
     public void logoutToChangeToken(){
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(MainActivity.BROADCAST_RECEIVER_TAG));
         /*
-        ((Karatel)getApplication()).showOneButtonDialogFromService(
+        ((KaratelApplication)getApplication()).showOneButtonDialogFromService(
                 "Увага! Змінився токен Google Cloud Messaging.",
                 "Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.",
                 new DialogInterface.OnClickListener() {

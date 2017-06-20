@@ -18,14 +18,13 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.Karatel;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.HttpHelper;
 import org.json.JSONException;
@@ -48,7 +47,7 @@ public class ChangeEmailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_change_email);
 
         //Google Analytics part
-        ((Karatel)getApplication()).sendScreenName(TAG);
+        ((KaratelApplication)getApplication()).sendScreenName(TAG);
 
         toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);

@@ -9,11 +9,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
-
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.Karatel;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Violation;
 import org.foundation101.karatel.activity.ViolationActivity;
@@ -33,7 +30,7 @@ public class MainFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         //Google Analytics part
-        ((Karatel)getActivity().getApplication()).sendScreenName(TAG);
+        ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
     }
 
     @Override

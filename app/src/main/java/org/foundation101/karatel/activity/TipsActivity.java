@@ -1,20 +1,14 @@
 package org.foundation101.karatel.activity;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.content.LocalBroadcastManager;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
@@ -32,7 +26,7 @@ import com.facebook.login.LoginResult;
 
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.Karatel;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.PunisherUser;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.HttpHelper;
@@ -46,7 +40,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TipsActivity extends Activity {
-    static final String TAG = "Login";
+    static final String TAG = "LoginActivity";
     EditText editTextLoginEmail, editTextLoginPassword;
     FrameLayout progressBar;
     SharedPreferences preferences, globalPreferences;
@@ -54,10 +48,10 @@ public class TipsActivity extends Activity {
     // facebook part
     private CallbackManager fbCallbackManager;
 
-    private final BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
+    /*private final BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            ((Karatel)getApplication()).showOneButtonDialogFromService(
+            ((KaratelApplication)getApplication()).showOneButtonDialogFromService(
                     "Помилка отримання токена",
                     "Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.",
                     new DialogInterface.OnClickListener() {
@@ -69,7 +63,7 @@ public class TipsActivity extends Activity {
                     }
             );
         }
-    };
+    };*/
     public static final String BROADCAST_RECEIVER_TAG = "myBroadcastReceiver_TipsActivity";
 
     @Override
@@ -82,7 +76,7 @@ public class TipsActivity extends Activity {
 
         setContentView(R.layout.activity_login);
 
-        ((Karatel)getApplication()).sendScreenName(TAG);
+        ((KaratelApplication)getApplication()).sendScreenName(TAG);
 
         progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
 
@@ -100,15 +94,18 @@ public class TipsActivity extends Activity {
             editTextLoginPassword.requestFocus();
         }
 
-        LocalBroadcastManager.getInstance(getApplicationContext())
-                .registerReceiver(myBroadcastReceiver, new IntentFilter(BROADCAST_RECEIVER_TAG));
+        /*LocalBroadcastManager.getInstance(getApplicationContext())
+                .registerReceiver(myBroadcastReceiver, new IntentFilter(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG));
+        Log.d(TAG, "broadcast receiver registered");*/
+
+        //LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG));
     }
 
-    @Override
+    /*@Override
     protected void onDestroy() {
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(myBroadcastReceiver);
         super.onDestroy();
-    }
+    }*/
 
     public void login(View view) {
         String email = editTextLoginEmail.getText().toString();

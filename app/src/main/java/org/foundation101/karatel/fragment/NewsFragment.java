@@ -1,7 +1,6 @@
 package org.foundation101.karatel.fragment;
 
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -17,9 +16,8 @@ import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
-import org.foundation101.karatel.Karatel;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.activity.NewsActivity;
 import org.foundation101.karatel.adapter.NewsListAdapter;
 import org.foundation101.karatel.NewsItem;
 
@@ -29,9 +27,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 
 public class NewsFragment extends Fragment implements AdapterView.OnItemClickListener{
@@ -50,7 +45,7 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
         super.onCreate(savedInstanceState);
 
         //Google Analytics part
-        ((Karatel)getActivity().getApplication()).sendScreenName(TAG);
+        ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
     }
 
     @Override

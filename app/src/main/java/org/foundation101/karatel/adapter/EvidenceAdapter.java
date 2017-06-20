@@ -8,6 +8,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,17 +22,20 @@ import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.ShowMediaActivity;
 import org.foundation101.karatel.activity.ViolationActivity;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
  * Created by Dima on 04.05.2016.
  */
 public class EvidenceAdapter extends BaseAdapter {
-    Context context;
+    public static String TAG = "EvidenceAdapter";
+    private Context context;
     public ArrayList<String> content = new ArrayList<>();
     public ArrayList<Bitmap> mediaContent = new ArrayList<>();
     public ArrayList<String> filesDeletedDuringSession = new ArrayList<>();
-    boolean editTrigger = true;
+    private boolean editTrigger = true;
 
     public void setEditTrigger(boolean editTrigger) {
         this.editTrigger = editTrigger;
@@ -108,4 +112,13 @@ public class EvidenceAdapter extends BaseAdapter {
         return convertView;
     }
 
+    public boolean sizeCheck() throws IOException {
+        long count = 0;
+        for (String evidenceFileName : content) {
+            long fileLength = new File(evidenceFileName).length();
+            count += fileLength;
+            Log.d(TAG, "fileLength = " + fileLength + ", count = " + count);
+        }
+        return (count < Globals.MAX_SERVER_REQUEST_SIZE * 0.99); //99% to leave space for other data
+    }
 }

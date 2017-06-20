@@ -85,14 +85,18 @@
                             android:layout_width="match_parent"
                             android:layout_height="76dp"
                             android:layout_marginTop="16dp"
-                            android:background="@android:color/background_light">
+                            android:background="@android:color/background_light"
+                            android:clickable="true"
+                            android:onClick="photoVideoPopupMenu">
 
                             <ImageButton
                                 android:layout_width="68dp"
                                 android:layout_height="76dp"
                                 android:id="@+id/uploadButton"
                                 android:src="@mipmap/ic_upload"
-                                android:background="@android:color/transparent"/>
+                                android:background="@android:color/transparent"
+                                android:clickable="false"
+                                android:focusable="false"/>
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -100,6 +104,8 @@
                                 android:layout_gravity="center_vertical"
                                 android:textSize="16sp"
                                 android:text="@string/add_photo_video"
+                                android:clickable="false"
+                                android:focusable="false"
                                 android:id="@+id/addedPhotoVideoTextView"/>
 
                             <ImageButton
@@ -109,7 +115,8 @@
                                 android:id="@+id/imageButtonAddEvidence"
                                 android:src="@mipmap/ic_plus"
                                 android:background="@drawable/selector_common_button"
-                                android:onClick="photoVideoPopupMenu"/>
+                                android:clickable="false"
+                                android:focusable="false"/>
                         </LinearLayout>
 
                         <org.foundation101.karatel.view.ExpandedGridView

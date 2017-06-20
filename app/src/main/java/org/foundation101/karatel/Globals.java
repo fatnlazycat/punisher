@@ -33,17 +33,19 @@ public class Globals {
     public static final String DOC_TO_VIEW = "PUNISHER_DOC_TO_VIEW";
     public static final String DOC_TO_VIEW_TITLE = "PUNISHER_DOC_TO_VIEW_TITLE";
     public static final String REGISTRATION_COMPLETE = "PUNISHER_REGISTARTION_COMPLETE";
+    public static final String GCM_ERROR_BROADCAST_RECEIVER_TAG = "PUNISHER_GCM_ERROR_BROADCAST_RECEIVER_TAG";
     public static final String MAIN_ACTIVITY_SAVED_INSTANCE_STATE = "PUNISHER_MAIN_ACTIVITY_SAVED_INSTANCE_STATE";
 
     //fragment tags for MainActivity
     public static final int MAIN_ACTIVITY_PUNISH_FRAGMENT = 1;
     public static final int MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT = 2;
     public static final int MAIN_ACTIVITY_ABOUT_FRAGMENT = 3;
-    public static final int MAIN_ACTIVITY_PARTENRS_FRAGMENT = 4;
+    public static final int MAIN_ACTIVITY_PARTNERS_FRAGMENT = 4;
     public static final int MAIN_ACTIVITY_NEWS_FRAGMENT = 5;
     public static final int MAIN_ACTIVITY_CONTACTS_FRAGMENT = 6;
-    public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 7;
-    public static final int MAIN_ACTIVITY_EXIT = 8;
+    public static final int MAIN_ACTIVITY_DONATE = 7;
+    public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 8;
+    public static final int MAIN_ACTIVITY_EXIT = 9;
 
     public static final String PUSH_TOKEN = "PUSH_TOKEN";
 
@@ -61,12 +63,14 @@ public class Globals {
 
     //interaction with server api
     public static final String SERVER_URL = "https://karatel-api.foundation101.org/api/v1/"; //-api -test
+    public static final int MAX_SERVER_REQUEST_SIZE = 100 * 1024 * 1024; //100 mb
     public static final String SERVER_SUCCESS = "success";
     public static final String SERVER_ERROR = "error";
     public static final String APP_CLOSED = "APP_CLOSED";/*used in ChangePasswordActivity to close it after exiting
         the matter is that finishAffinity() is called in MainActivity -> doesn't affect Activities AFTER MainActivity
         So need to close them in onResume() using this tag
         */
+
     public static String sessionToken;
     public static PunisherUser user;
 
@@ -116,7 +120,7 @@ public class Globals {
     }
 
     public static void showError(Context context, int errorMessageResId, Exception e){
-        Toast.makeText(context, errorMessageResId, Toast.LENGTH_LONG).show();
+        if (context != null) Toast.makeText(context, errorMessageResId, Toast.LENGTH_LONG).show();
         if (e != null) {
             //String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
             Log.d("Punisher error", "", e);

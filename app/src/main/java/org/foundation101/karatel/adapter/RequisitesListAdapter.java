@@ -41,6 +41,7 @@ import org.foundation101.karatel.activity.ViolationActivity;
 import org.foundation101.karatel.fragment.ChangeAvatarFragment;
 import org.foundation101.karatel.fragment.OpenSettingsFragment;
 import org.foundation101.karatel.fragment.ProfileFragment;
+import org.foundation101.karatel.utils.MapUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -199,19 +200,21 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
                     mMap.addMarker(marker);
                     hasMarker = true;
 
+                    MapUtils.fetchAddressInto(latLng, addressEditText);
+
                     //reverse geocoding
-                    try {
+                    /*try {
                         List<Address> addresses = geoCoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
                         if (addresses.size() > 0) {
                             StringBuilder sb = new StringBuilder("");
                             for (int i=0; i < addresses.get(0).getMaxAddressLineIndex(); i++){
                                 sb.append(addresses.get(0).getAddressLine(i) + " ");
                             }
-                            if (addressEditText != null) addressEditText.setText(sb.toString());
+                            setAddressText(sb.toString());
                         }
                     } catch (IOException e) {
                         Globals.showError(context, "can't find address", e);
-                    }
+                    }*/
                 }
             });
             mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
@@ -294,6 +297,10 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
             outState.putFloat(MAP_ZOOM, mMap.getCameraPosition().zoom);
             outState.putBoolean(MAP_HAS_MARKER, hasMarker);
         }
+    }
+
+    void setAddressText(String text){
+        if (addressEditText != null) addressEditText.setText(text);
     }
 
     class MyTextWatcher implements TextWatcher{

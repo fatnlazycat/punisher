@@ -39,7 +39,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
-import org.foundation101.karatel.Karatel;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.Request;
 import org.foundation101.karatel.activity.MainActivity;
@@ -90,7 +90,7 @@ public class RequestListFragment extends Fragment {
         db = new DBHelper(getContext(), DBHelper.DATABASE, 1).getReadableDatabase();
         setHasOptionsMenu(true);
 
-        ((Karatel)getActivity().getApplication()).sendScreenName(TAG);
+        ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
     }
 
     @Override

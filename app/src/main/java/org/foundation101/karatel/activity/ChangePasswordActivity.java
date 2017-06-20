@@ -27,14 +27,12 @@ import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
-import org.foundation101.karatel.Karatel;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-
-import javax.microedition.khronos.opengles.GL;
 
 public class ChangePasswordActivity extends AppCompatActivity {
     static final String TAG = "ChangePassword";
@@ -53,7 +51,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
 
         //Google Analytics part
-        ((Karatel)getApplication()).sendScreenName(TAG);
+        ((KaratelApplication)getApplication()).sendScreenName(TAG);
 
         progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
 

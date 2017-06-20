@@ -44,7 +44,7 @@ import com.facebook.login.LoginResult;
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
-import org.foundation101.karatel.Karatel;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.DrawerAdapter;
 import org.foundation101.karatel.fragment.AboutFragment;
@@ -120,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
         progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
 
-        ((Karatel)getApplication()).restoreUserFromPreferences();
+        ((KaratelApplication)getApplication()).restoreUserFromPreferences();
 
         toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -163,8 +163,11 @@ public class MainActivity extends AppCompatActivity {
                 if (currentFragment == position) {//do not create duplicates
                     return;
                 }
-                currentFragment = position;
                 String tag = fragmentTags.get(position);
+                if (!tag.isEmpty()) { //empty tags are for donate & exit - no special fragment
+                    currentFragment = position;
+                    toolbar.setTitle(tag);
+                }
                 switch (position){
                     case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new MainFragment(), tag)
@@ -182,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
                                 .addToBackStack(tag).commit();
                         break;
                     }
-                    case Globals.MAIN_ACTIVITY_PARTENRS_FRAGMENT: {
+                    case Globals.MAIN_ACTIVITY_PARTNERS_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new PartnersFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
@@ -198,6 +201,10 @@ public class MainActivity extends AppCompatActivity {
                                 .addToBackStack(tag).commit();
                         break;
                     }
+                    case Globals.MAIN_ACTIVITY_DONATE: {
+                        openDonatePage();
+                        break;
+                    }
                     case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new ProfileFragment(), tag)
                                 .addToBackStack(tag).commit();
@@ -207,7 +214,6 @@ public class MainActivity extends AppCompatActivity {
                         new SignOutSender().execute();
                     }
                 }
-                toolbar.setTitle(tag);
             }
         });
 
@@ -217,8 +223,8 @@ public class MainActivity extends AppCompatActivity {
         if (!loggedIn()){ //this happens when we tap push notification icon after logging out - we are not signed in so close the app
             finish();
         } else {
-            if (Karatel.MAIN_ACTIVITY_FROM_PUSH) {
-                Karatel.MAIN_ACTIVITY_FROM_PUSH = false;
+            if (KaratelApplication.MAIN_ACTIVITY_FROM_PUSH) {
+                KaratelApplication.MAIN_ACTIVITY_FROM_PUSH = false;
                 currentFragment = Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT;
                 tag = fragmentTags.get(currentFragment);
                 ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
@@ -239,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
                             ft.replace(R.id.frameLayoutMain, new AboutFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
-                        case Globals.MAIN_ACTIVITY_PARTENRS_FRAGMENT: {
+                        case Globals.MAIN_ACTIVITY_PARTNERS_FRAGMENT: {
                             ft.replace(R.id.frameLayoutMain, new PartnersFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
@@ -331,9 +337,10 @@ public class MainActivity extends AppCompatActivity {
         result.put(Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT,       getResources().getString(R.string.do_punish));
         result.put(Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT, getResources().getString(R.string.punishment_requests));
         result.put(Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT,        getResources().getString(R.string.about_header));
-        result.put(Globals.MAIN_ACTIVITY_PARTENRS_FRAGMENT,     getResources().getString(R.string.partners_header));
+        result.put(Globals.MAIN_ACTIVITY_PARTNERS_FRAGMENT,     getResources().getString(R.string.partners_header));
         result.put(Globals.MAIN_ACTIVITY_NEWS_FRAGMENT,         getResources().getString(R.string.news_header));
         result.put(Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT,     getResources().getString(R.string.contacts_header));
+        result.put(Globals.MAIN_ACTIVITY_DONATE,                "");
         result.put(Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT,      getResources().getString(R.string.profile_header));
         result.put(Globals.MAIN_ACTIVITY_EXIT,                  "");//exit - no tag
 
@@ -371,6 +378,12 @@ public class MainActivity extends AppCompatActivity {
         String tag = fragmentTags.get(currentFragment);
         toolbar.setTitle(tag);
         fManager.beginTransaction().replace(R.id.frameLayoutMain, new MainFragment(), tag).commit();
+    }
+
+    public void openDonatePage() {
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getResources().getString(R.string.url_donate)));
+        if (browserIntent.resolveActivity(getPackageManager()) != null)
+            startActivity(browserIntent);
     }
 
     public void open101(View view) {
@@ -565,7 +578,7 @@ public class MainActivity extends AppCompatActivity {
                         globalPreferences.getString(Globals.PUSH_TOKEN, "") : "";
 
 
-                    RetrofitSignOutSender api = Karatel.getClient().create(RetrofitSignOutSender.class);
+                    RetrofitSignOutSender api = KaratelApplication.getClient().create(RetrofitSignOutSender.class);
                     Call<String> call = api.signOut(Globals.sessionToken, gcmToken);
                     Response<String> json = call.execute();
                     if (json.isSuccessful()) {
@@ -619,7 +632,7 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
             }
 
             //Google Analytics part
-            ((Karatel)getApplication()).sendScreenName(TAG);
+            ((KaratelApplication)getApplication()).sendScreenName(TAG);
             Log.d(TAG, "Task=" + getTaskId());
             finishAffinity();
         }

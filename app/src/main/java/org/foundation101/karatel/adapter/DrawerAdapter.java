@@ -4,10 +4,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.foundation101.karatel.DBHelper;
@@ -57,7 +61,8 @@ public class DrawerAdapter extends BaseAdapter {
                 setDivider(menuItemText);
                 break;
             case 6:
-                setDivider(menuItemText);
+                //setDivider(menuItemText);
+                setDonateItem(menuItemText);
                 break;
         }
 
@@ -82,10 +87,29 @@ public class DrawerAdapter extends BaseAdapter {
         return convertView;
     }
 
-    void setDivider(TextView view){
+    private void setDivider(TextView view){
         view.setCompoundDrawablesRelativeWithIntrinsicBounds(0, R.drawable.divider_drawable, 0, 0);
         view.setCompoundDrawablePadding(dpToPx(12));
         view.setPadding(0, 0, 0, dpToPx(12));
+    }
+
+    private void setDonateItem(TextView view) {
+        //background part
+        View llItemDrawer = (View) view.getParent();
+        llItemDrawer.setBackgroundColor(ContextCompat.getColor(context, R.color.darkGreen));
+
+        //text part
+        view.setTextColor(ContextCompat.getColor(context, android.R.color.white));
+        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
+        //view.setTypeface(view.getTypeface(), Typeface.BOLD);
+
+        //drawable part
+        Drawable image = ContextCompat.getDrawable(context, R.mipmap.ic_donate);
+        int h = dpToPx(58);
+        int w = dpToPx(50);
+        image.setBounds( 0, 0, w, h );
+        view.setCompoundDrawables( image, null, null, null );
+        view.setCompoundDrawablePadding(dpToPx(12));
     }
 
     public int dpToPx(int dp){

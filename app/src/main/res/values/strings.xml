@@ -80,6 +80,7 @@
     <string name="office_address">04215, м. Київ, пр. Георгія Гонгадзе, 32-Б.\nГО «Фундація.101»</string>
     <string name="url_foundation101">https://www.foundation101.org</string>
     <string name="url_peoples_project">http://www.peoplesproject.com</string>
+    <string name="url_donate">http://go.101.ua/support</string>
     <string name="change_profile_photo">Змінити фото профілю</string>
     <string name="cancel">СКАСУВАТИ</string>
     <string name="choose_picture">Оберіть картинку</string>
@@ -134,4 +135,5 @@
     <string name="facebook_disclaimer">Увійти через Facebook можливо, якщо Ви створили профіль та зв\'язали його зі своїм FB-акаунтом</string>
     <string name="you_request_is_being_moderated">Ваша заявка знаходиться на модерації</string>
     <string name="media_format_not_supported">Формат медіафайлу не підтримується</string>
+    <string name="request_too_big">Розмір фото та відео файлів завеликий. Максимум 100Mb. Видаліть зайві матеріали.</string>
 </resources>
