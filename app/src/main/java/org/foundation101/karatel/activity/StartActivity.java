@@ -29,14 +29,14 @@ public class StartActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+            Log.d(TAG, "onReceive " + action);
             switch (action) {
                 case Globals.REGISTRATION_COMPLETE : {
-                    Log.d(TAG, "onReceive " + Globals.REGISTRATION_COMPLETE);
                     leaveStartPage(/*null*/);
                     break;
                 }
+                case MainActivity.BROADCAST_RECEIVER_TAG : //fallthrough - these two behave the same
                 case Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG : {
-                    Log.d(TAG, "onReceive " + Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG);
                     alertDialog = showGCMErrorDialog();
                     /*((KaratelApplication)getApplication()).showOneButtonDialogFromService(
                             "Помилка отримання токена",
@@ -62,10 +62,7 @@ public class StartActivity extends Activity {
         //Toast.makeText(this, R.string.tap_to_enter, Toast.LENGTH_LONG).show();
 
         //register receiver before starting the service (what if the service returns faster than the receiver is registered?)
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Globals.REGISTRATION_COMPLETE);
-        intentFilter.addAction(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG);
-        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(myBroadcastReceiver, intentFilter);
+        registerReceiver();
         Log.d(TAG, "broadcast receiver registered");
 
         //start push notification service
@@ -76,6 +73,14 @@ public class StartActivity extends Activity {
         } else {
             finish();
         }
+    }
+
+    private void registerReceiver() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Globals.REGISTRATION_COMPLETE);
+        intentFilter.addAction(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG);
+        intentFilter.addAction(MainActivity.BROADCAST_RECEIVER_TAG);
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(myBroadcastReceiver, intentFilter);
     }
 
     @Override

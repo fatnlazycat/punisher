@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
     private final BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Boolean justLogout = intent.getBooleanExtra(TAG_JUST_LOGOUT, true);
+            Boolean justLogout = intent.getBooleanExtra(TAG_JUST_LOGOUT, false);
             if (justLogout){
                 new SignOutSender().execute();
             } else {
@@ -305,9 +305,9 @@ public class MainActivity extends AppCompatActivity {
             }
             toolbar.setTitle(tag);
             fManager.popBackStackImmediate(tag, 0);
-        } /*else {
-            super.onBackPressed();
-        }*/
+        } else {
+            moveTaskToBack(true);
+        }
     }
 
     //hides the software keyboard

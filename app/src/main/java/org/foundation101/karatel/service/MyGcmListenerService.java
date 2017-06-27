@@ -40,6 +40,7 @@ public class MyGcmListenerService extends GcmListenerService {
     @Override
     public void onMessageReceived(String from, Bundle data) {
         String message = data.getString("message");
+        message = message == null ? "" : message;
         Log.d(TAG, "From: " + from);
         Log.d(TAG, "Message: " + message);
 

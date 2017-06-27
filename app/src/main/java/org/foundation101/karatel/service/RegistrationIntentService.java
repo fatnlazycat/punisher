@@ -69,7 +69,8 @@ public class RegistrationIntentService extends IntentService {
             }
         } catch (Exception e) {
             Log.d(TAG, "Failed to complete token refresh", e);
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG));
+            Intent tokenFailed = new Intent(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG);
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(tokenFailed);
 
             // If an exception happens while fetching the new token or updating our registration data
             // on a third-party server, this ensures that we'll attempt the update at a later time.
@@ -106,7 +107,8 @@ public class RegistrationIntentService extends IntentService {
     // [END subscribe_topics]
 
     public void logoutToChangeToken(){
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(MainActivity.BROADCAST_RECEIVER_TAG));
+        Intent logoutIntent = new Intent(MainActivity.BROADCAST_RECEIVER_TAG);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(logoutIntent);
         /*
         ((KaratelApplication)getApplication()).showOneButtonDialogFromService(
                 "Увага! Змінився токен Google Cloud Messaging.",
