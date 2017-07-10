@@ -188,6 +188,7 @@ public class ProfileFragment extends Fragment {
                 }
             }
             if (requestCode == CameraManager.IMAGE_CAPTURE_INTENT && resultCode == Activity.RESULT_OK) {
+                CameraManager.setLastCapturedFile(data.getStringExtra(eu.aejis.mycustomcamera.IntentExtras.MEDIA_FILE));
                 Bitmap bigImage = BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options);
 
                 int orientation = MediaUtils.getOrientation(CameraManager.lastCapturedFile);
@@ -195,7 +196,7 @@ public class ProfileFragment extends Fragment {
                 setNewAvatar(MediaUtils.rotateBitmap(bigImage, orientation));
                 boolean b = new File(CameraManager.lastCapturedFile).delete();
             }
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             Globals.showError(getActivity(), R.string.error, e);
         }
     }

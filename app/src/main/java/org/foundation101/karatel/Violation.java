@@ -55,6 +55,12 @@ public class Violation implements Serializable{
         return violationNames[Arrays.asList(violationTypes).indexOf(type)];
     }
 
+    public static int getMediaTypesFromType(Context context, String type){
+        int[] violationMediaTypes = context.getResources().getIntArray(R.array.violationMediaTypes);
+        String[] violationTypes = context.getResources().getStringArray(R.array.violationTypes);
+        return violationMediaTypes[Arrays.asList(violationTypes).indexOf(type)];
+    }
+
     public String name, type;
     public int drawableId;
     public boolean usesCamera;

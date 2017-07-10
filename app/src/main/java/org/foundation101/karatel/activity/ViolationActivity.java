@@ -110,8 +110,10 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-public class ViolationActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class ViolationActivity extends AppCompatActivity implements
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        LocationListener {
 
     final int RQS_GooglePlayServices = 1000;
 
@@ -160,6 +162,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     android.location.LocationListener locationListener;
     static final int REQUEST_CHECK_SETTINGS = 2000;
 
+    boolean videoOnly = false;
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -181,12 +185,12 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_violation);
 
-        requisitesList = (LinearLayout) findViewById(R.id.requisitesList);
+        requisitesList                      = (LinearLayout)findViewById(R.id.requisitesList);
 
-        TextView addedPhotoVideoTextView = (TextView)findViewById(R.id.addedPhotoVideoTextView);
-        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
-        punishButton = (Button) findViewById(R.id.punishButton);
-        saveButton = (Button) findViewById(R.id.saveButton);
+        TextView addedPhotoVideoTextView    = (TextView)    findViewById(R.id.addedPhotoVideoTextView);
+        progressBar                         = (FrameLayout) findViewById(R.id.frameLayoutProgress);
+        punishButton                        = (Button)      findViewById(R.id.punishButton);
+        saveButton                          = (Button)      findViewById(R.id.saveButton);
 
         if (checkGooglePlayServices()) { buildGoogleApiClient(); }
         initOldAndroidLocation();
@@ -231,7 +235,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             requisitesAdapter.content = requisitesAdapter.makeContent(violation.type);
             if (violation.usesCamera) {//create mode means we have to capture video at start
                 CameraManager cameraManager = CameraManager.getInstance(this);
-                cameraManager.startCamera(CameraManager.VIDEO_CAPTURE_INTENT);
+                videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
+                cameraManager.startCustomCamera(CameraManager.VIDEO_CAPTURE_INTENT, true, videoOnly);
             }
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
             id = intent.getIntExtra(Globals.ITEM_ID, 0);
@@ -252,6 +257,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 time_stamp = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
                 status = cursor.getInt(cursor.getColumnIndex("status"));
                 violation.setType(cursor.getString(cursor.getColumnIndex("type")));
+                violation.setMediaTypes(Violation.getMediaTypesFromType(this, violation.getType()));
+                videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
                 requisitesAdapter.content = requisitesAdapter.makeContent(violation.type);
                 for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                     requisitesAdapter.content.get(i).value =
@@ -329,8 +336,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             if (getResources().getString(disclaimerId).isEmpty()) textViewViolationDisclaimer.setVisibility(View.GONE);
             else textViewViolationDisclaimer.setText(disclaimerId);
 
-            if (violation.getMediaTypes() == Violation.VIDEO_ONLY)
-                addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
+            if (videoOnly) addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
         }
 
         makeRequisitesViews();
@@ -494,9 +500,10 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (resultCode == RESULT_OK &&
-                (requestCode == CameraManager.IMAGE_CAPTURE_INTENT || requestCode == CameraManager.VIDEO_CAPTURE_INTENT)) {
+                (requestCode == CameraManager.GENERIC_CAMERA_CAPTURE_INTENT)) {
             try {
                 Bitmap bmp;
+                CameraManager.setLastCapturedFile(intent.getStringExtra(eu.aejis.mycustomcamera.IntentExtras.MEDIA_FILE));
                 if (CameraManager.lastCapturedFile.endsWith(CameraManager.JPG)) {
                     int orientation = MediaUtils.getOrientation(CameraManager.lastCapturedFile);
 
@@ -662,6 +669,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             dialog.show();*/
             return false;
         } else return true;
+    }
+
+    public void launchCamera(View view) {
+        int actionFlag = (violation.getMediaTypes() == Violation.VIDEO_ONLY) ?
+                CameraManager.VIDEO_CAPTURE_INTENT :
+                0; //0 means photoOrVideo not defined - user switches this in the camera
+        CameraManager.getInstance(this).startCustomCamera(actionFlag, false, videoOnly);
     }
 
     public void photoVideoPopupMenu(View view) {

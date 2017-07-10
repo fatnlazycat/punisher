@@ -136,4 +136,5 @@
     <string name="you_request_is_being_moderated">Ваша заявка знаходиться на модерації</string>
     <string name="media_format_not_supported">Формат медіафайлу не підтримується</string>
     <string name="request_too_big">Розмір фото та відео файлів завеликий. Максимум 100Mb. Видаліть зайві матеріали.</string>
+    <string name="title_activity_camera">CameraActivity</string>
 </resources>

@@ -1,1 +1,3 @@
-include ':app'
+include ':app', ':MyCustomCamera'
+
+//project (':MyCustomCamera').projectDir = new File("C:\\Users\\Dima\\StudioProjects\\MyCustomCamera\\app\\build\\outputs\\aar")
