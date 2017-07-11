@@ -13,9 +13,12 @@ import android.widget.Toast;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Dima on 11.05.2016.
@@ -62,7 +65,7 @@ public class Globals {
     public static final String USER_AVATAR = "USER_AVATAR";
 
     //interaction with server api
-    public static final String SERVER_URL = "https://karatel-test.foundation101.org/api/v1/"; //-api -test
+    public static final String SERVER_URL = "https://karatel-api.foundation101.org/api/v1/"; //-api -test
     public static final int MAX_SERVER_REQUEST_SIZE = 100 * 1024 * 1024; //100 mb
     public static final String SERVER_SUCCESS = "success";
     public static final String SERVER_ERROR = "error";
@@ -80,6 +83,13 @@ public class Globals {
     //map of complain statuses: key-indexes on server, value-index in array in apk resources
     public static HashMap<Integer, Integer> statusesMap = new HashMap<>();
 
+    static String[] monthsNames = {
+            " січня ",    " лютого ",
+            " березня ",  " квітня ",    " травня ",
+            " червня ",   " липня ",    " серпня ",
+            " вересня ",  " жовтня ",   " листопада ",
+            " грудня "
+    };
 
     //hides the software keyboard
     public static void hideSoftKeyboard(Activity activity, MotionEvent event) {
@@ -113,9 +123,23 @@ public class Globals {
             Date date = inFormatter.parse(inDate);
             outDate = outFormatter.format(date);
 
-        } catch (ParseException e) {
+            Pattern p = Pattern. compile("(\\d+\\s*)+"); //digits and spaces -> no letters
+            Matcher m = p.matcher(outDate);
+            if (m.matches()) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(date);
+                Integer monthNumber = calendar.get(Calendar.MONTH);
+                String month = monthsNames.length > monthNumber ? monthsNames[monthNumber] : monthNumber.toString();
+                outDate = "" +
+                        calendar.get(Calendar.DAY_OF_MONTH) +
+                        month +
+                        calendar.get(Calendar.YEAR);
+            }
+        } catch (Exception e) {
             Log.e("Punisher", e.getMessage());
         }
+
+        //now check if the result contains month as letters, if not - use month from array
         return outDate;
     }
 

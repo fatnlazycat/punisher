@@ -9,6 +9,8 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -30,6 +32,7 @@ import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -90,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             Boolean justLogout = intent.getBooleanExtra(TAG_JUST_LOGOUT, false);
             if (justLogout){
-                new SignOutSender().execute();
+                new SignOutSender(MainActivity.this).execute();
             } else {
                 final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(MainActivity.this, R.style.AppTheme);
                 dialogBuilder.setTitle("Увага! Змінився токен Google Cloud Messaging.")
@@ -99,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();
-                                new SignOutSender().execute();
+                                new SignOutSender(MainActivity.this).execute();
                             }
                         })
                         .setCancelable(false);
@@ -211,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     }
                     case Globals.MAIN_ACTIVITY_EXIT: {
-                        new SignOutSender().execute();
+                        new SignOutSender(MainActivity.this).execute();
                     }
                 }
             }
@@ -549,31 +552,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private class SignOutSender extends AsyncTask<Void, Void, String>{
+    static class SignOutSender extends AsyncTask<Void, Void, String>{
         static final String TAG = "Logout";
         final String BANNED = "banned";
 
-        SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        SignOutSender(Activity activity) {
+            this.activity = activity;
+            if (activity != null && activity instanceof MainActivity)
+                this.progressBar = ((MainActivity)activity).progressBar;
+        }
+
+        Activity activity;
+        View progressBar;
+
+        SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(KaratelApplication.getInstance());
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progressBar.setVisibility(View.VISIBLE);
-            if (HttpHelper.internetConnected(MainActivity.this)) {
-                Toast.makeText(MainActivity.this, R.string.loggingOut, Toast.LENGTH_LONG).show();
+            if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+            if (HttpHelper.internetConnected(KaratelApplication.getInstance())) {
+                Toast.makeText(KaratelApplication.getInstance(), R.string.loggingOut, Toast.LENGTH_LONG).show();
             }
         }
 
         @Override
         protected String doInBackground(Void... params) {
             String result;
-            /*Log.d(TAG, "start long calculation");
-            for (int i = 0; i < 90000000; i++){
-                if (i % 1000000 == 0) Log.d(TAG, "i= " + i);
-            }
-            Log.d(TAG, "end long calculation");*/
             try {
-                if (HttpHelper.internetConnected(MainActivity.this)){
+                if (HttpHelper.internetConnected(KaratelApplication.getInstance())){
                     String gcmToken = globalPreferences.contains(Globals.PUSH_TOKEN) ?
                         globalPreferences.getString(Globals.PUSH_TOKEN, "") : "";
 
@@ -599,12 +606,19 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
                 } else return HttpHelper.ERROR_JSON;
 
             } catch (final IOException e){
-                MainActivity.this.runOnUiThread(new Runnable() {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Globals.showError(KaratelApplication.getInstance(), R.string.cannot_connect_server, e);
+                    }
+                });
+
+                /*MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
                     }
-                });
+                });*/
                 return HttpHelper.ERROR_JSON;
             }
             return result == null ? "" : result;
@@ -613,15 +627,15 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            progressBar.setVisibility(View.GONE);
+            if (progressBar != null) progressBar.setVisibility(View.GONE);
             if (!s.isEmpty() && !s.equals(BANNED)) {
                 try {
                     JSONObject json = new JSONObject(s);
                     if (json.getString("status").equals(Globals.SERVER_ERROR)) {
-                        Toast.makeText(MainActivity.this, json.getString("error"), Toast.LENGTH_LONG).show();
+                        Toast.makeText(KaratelApplication.getInstance(), json.getString("error"), Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
-                    Globals.showError(MainActivity.this, R.string.error, e);
+                    Globals.showError(KaratelApplication.getInstance(), R.string.error, e);
                 }
                 return;
             }
@@ -632,9 +646,8 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
             }
 
             //Google Analytics part
-            ((KaratelApplication)getApplication()).sendScreenName(TAG);
-            Log.d(TAG, "Task=" + getTaskId());
-            finishAffinity();
+            KaratelApplication.getInstance().sendScreenName(TAG);
+            if (activity != null) activity.finishAffinity();
         }
     }
 }
