@@ -30,7 +30,7 @@ import java.util.Locale;
  */
 public class NewsListAdapter extends BaseAdapter {
     public static final String INPUT_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss Z";
-    public static final String OUTPUT_DATE_FORMAT = "dd MMMMMMMM yyyy";
+    public static final String OUTPUT_DATE_FORMAT = "dd MMMM yyyy";
 
     public NewsListAdapter(ArrayList<NewsItem> content){
         this.content = content;

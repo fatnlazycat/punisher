@@ -127,7 +127,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="8dp"
                     android:id="@+id/buttonTwitter"
-                    android:tag="https://twitter.com/fund101"
+                    android:tag="https://twitter.com/karatel101"
                     android:src="@mipmap/ic_tw"
                     android:background="@drawable/selector_common_button"
                     android:onClick="openSocialLink"/>

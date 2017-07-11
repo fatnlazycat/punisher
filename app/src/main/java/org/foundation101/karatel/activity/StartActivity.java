@@ -38,17 +38,6 @@ public class StartActivity extends Activity {
                 case MainActivity.BROADCAST_RECEIVER_TAG : //fallthrough - these two behave the same
                 case Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG : {
                     alertDialog = showGCMErrorDialog();
-                    /*((KaratelApplication)getApplication()).showOneButtonDialogFromService(
-                            "Помилка отримання токена",
-                            "Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.",
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                    finishAffinity();
-                                }
-                            }
-                    );*/
                     break;
                 }
             }
@@ -135,7 +124,7 @@ public class StartActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        finishAffinity();
+                        new MainActivity.SignOutSender(StartActivity.this).execute();
                     }
                 })
                 .setCancelable(false)

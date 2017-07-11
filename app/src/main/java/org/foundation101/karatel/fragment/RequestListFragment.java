@@ -213,7 +213,8 @@ public class RequestListFragment extends Fragment {
     }
 
     void showNoRequestsLayout(){
-        recycler.setVisibility(View.GONE);
+        //recycler.setVisibility(View.GONE);
+        swipeRefreshLayout.setVisibility(View.GONE);
         LinearLayout layoutNoRequests = (LinearLayout)mainView.findViewById(R.id.layoutNoRequests);
         layoutNoRequests.setVisibility(View.VISIBLE);
     }

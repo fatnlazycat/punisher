@@ -6,6 +6,40 @@
     android:background="@color/colorBackground"
     tools:context=".fragment.RequestListFragment">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:orientation="vertical"
+        android:id="@+id/layoutNoRequests">
+
+        <ImageView
+            android:id="@+id/imageViewNoRequests"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="94dp"
+            android:layout_marginBottom="56dp"
+            android:src="@mipmap/ill_empty"/>
+
+        <TextView
+            android:id="@+id/textViewNoRequests"
+            android:layout_width="192dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:text="@string/you_have_made_no_requests_yet"
+            android:textSize="16sp"/>
+
+        <Button
+            android:id="@+id/buttonMakeFirstRequest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/create_request"
+            android:onClick="createRequest"
+            android:layout_marginTop="56dp"
+            style="@style/GreenButton"/>
+    </LinearLayout>
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -78,40 +112,6 @@
             android:layout_height="match_parent"
             android:id="@+id/recyclerViewRequests" />
     </android.support.v4.widget.SwipeRefreshLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:orientation="vertical"
-        android:id="@+id/layoutNoRequests">
-
-        <ImageView
-            android:id="@+id/imageViewNoRequests"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="94dp"
-            android:layout_marginBottom="56dp"
-            android:src="@mipmap/ill_empty"/>
-
-        <TextView
-            android:id="@+id/textViewNoRequests"
-            android:layout_width="192dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:gravity="center"
-            android:text="@string/you_have_made_no_requests_yet"
-            android:textSize="16sp"/>
-
-        <Button
-            android:id="@+id/buttonMakeFirstRequest"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/create_request"
-            android:onClick="createRequest"
-            android:layout_marginTop="56dp"
-            style="@style/GreenButton"/>
-    </LinearLayout>
 
     <include layout="@layout/frame_progress_bar"
         android:layout_width="match_parent"
