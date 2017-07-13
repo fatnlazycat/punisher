@@ -121,7 +121,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     public static final String TAG = "ViolationActivity";
 
     RequisitesListAdapter requisitesAdapter;
-    LinearLayout requisitesList;
+    LinearLayout requisitesList, llAddEvidence;
     RelativeLayout tabStatus;
     EvidenceAdapter evidenceAdapter = new EvidenceAdapter(this);
     HistoryAdapter historyAdapter;
@@ -182,6 +182,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         setContentView(R.layout.activity_violation);
 
         requisitesList = (LinearLayout) findViewById(R.id.requisitesList);
+        llAddEvidence = (LinearLayout) findViewById(R.id.llAddEvidence);
 
         TextView addedPhotoVideoTextView = (TextView)findViewById(R.id.addedPhotoVideoTextView);
         progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
@@ -331,6 +332,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
             if (violation.getMediaTypes() == Violation.VIDEO_ONLY)
                 addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
+
+            llAddEvidence.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    photoVideoPopupMenu(v);
+                }
+            });
         }
 
         makeRequisitesViews();

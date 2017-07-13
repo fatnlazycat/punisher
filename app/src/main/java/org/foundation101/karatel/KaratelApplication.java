@@ -24,6 +24,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -137,10 +139,23 @@ public class KaratelApplication extends Application {
 
 
     public static Retrofit getClient() {
-        if (retrofit==null) {
+        if (retrofit == null) {
+            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+            HttpLoggingInterceptor.Level logLevel = BuildConfig.DEBUG ?
+                    HttpLoggingInterceptor.Level.BODY :
+                    HttpLoggingInterceptor.Level.NONE;
+            logging.setLevel(logLevel);
+
+            OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+
+            // add your other interceptors …
+            // add logging as last interceptor
+            httpClient.addInterceptor(logging);
+
             retrofit = new Retrofit.Builder()
                     .baseUrl(Globals.SERVER_URL)
                     .addConverterFactory(JacksonConverterFactory.create())
+                    .client(httpClient.build())
                     .build();
         }
         return retrofit;
