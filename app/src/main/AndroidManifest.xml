@@ -184,7 +184,7 @@
         <activity
             android:name="eu.aejis.mycustomcamera.CameraActivity"
             android:configChanges="orientation|screenSize"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="portrait"/>
     </application>
 
 </manifest>
