@@ -123,7 +123,7 @@ public class ViolationActivity extends AppCompatActivity implements
     public static final String TAG = "ViolationActivity";
 
     RequisitesListAdapter requisitesAdapter;
-    LinearLayout requisitesList;
+    LinearLayout requisitesList, llAddEvidence;
     RelativeLayout tabStatus;
     EvidenceAdapter evidenceAdapter = new EvidenceAdapter(this);
     HistoryAdapter historyAdapter;

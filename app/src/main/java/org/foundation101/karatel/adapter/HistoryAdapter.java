@@ -143,6 +143,7 @@ public class HistoryAdapter extends BaseAdapter {
                 holder.answerLayout.setVisibility(View.VISIBLE );
                 holder.imageAnswer.getSettings().setLoadWithOverviewMode(true);
                 holder.imageAnswer.getSettings().setUseWideViewPort(true);
+                holder.imageAnswer.getSettings().setJavaScriptEnabled(true); //for the pdf viewer
                 final String docUrl = getDocUrl(thisUpdate.documents[0]);
                 holder.imageAnswer.loadUrl(docUrl);
                 holder.imageAnswer.setWebViewClient(new WebViewClient(){
