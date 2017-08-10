@@ -1,0 +1,55 @@
+{
+  "violations": [
+    {
+      "name": "Вимагання хабара",
+      "type": "Bribe",
+      "category": 2,
+      "usesCamera": true,
+      "active": true,
+      "mediaTypes": 1
+    }, {
+      "name": "Хамство",
+      "type": "Insult",
+      "category": 2,
+      "usesCamera": true,
+      "active": true,
+      "mediaTypes": 1
+    }, {
+      "name": "Продаж простроченого товару",
+      "type": "SaleOfGood",
+      "category": 2,
+      "usesCamera": false,
+      "active": true,
+      "mediaTypes": 0
+    }, {
+      "name": "Куріння в закладах харчування",
+      "type": "NoSmoking",
+      "category": 2,
+      "usesCamera": true,
+      "active": true,
+      "mediaTypes": 0
+    }, {
+      "name": "Яма на дорозі",
+      "type": "PitRoad",
+      "category": 2,
+      "usesCamera": false,
+      "active": true,
+      "mediaTypes": 0
+    }, {
+      "name": "Порушення благоустрою",
+      "type": "Damage",
+      "category": 2,
+      "usesCamera": false,
+      "active": true,
+      "mediaTypes": 0
+    }, {
+      "name": "Порушення правил паркування",
+      "type": "WrongParking",
+      "category": 2,
+      "usesCamera": false,
+      "active": false,
+      "mediaTypes": 0,
+      "textInactive": "Між громадською організацією «ФУНДАЦІЯ.101» та Департаментом патрульної поліції Національної поліції України було проведено переговори, за результатами яких було прийнято рішення тимчасово призупинити роботу категорії «Порушення правил паркування» до моменту внесення змін в Кодекс України про адміністративні правопорушення, які дозволять ефективно притягати до відповідальності порушників правил дорожнього руху."
+    }
+  ]
+}

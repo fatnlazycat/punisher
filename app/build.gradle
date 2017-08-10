@@ -8,8 +8,8 @@ android {
         applicationId "org.foundation101.karatel"
         minSdkVersion 16
         targetSdkVersion 22
-        versionCode 28
-        versionName "1.22" //don't forget to remove -test in api endpoint!!!
+        versionCode 29
+        versionName "1.23" //don't forget to remove -test in api endpoint!!!
     }
     buildTypes {
         release {

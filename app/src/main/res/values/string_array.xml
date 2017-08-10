@@ -25,7 +25,7 @@
         </item>
     </string-array>
 
-    <string-array name="violations">
+    <!--<string-array name="violations">
         <item>Вимагання хабара</item>
         <item>Хамство</item>
         <item>Продаж простроченого товару</item>
@@ -33,8 +33,9 @@
         <item>Куріння в закладах харчування</item>
         <item>Яма на дорозі</item>
         <item>Порушення благоустрою</item>
-    </string-array>
+    </string-array>-->
 
+    <!--still need this - for db-->
     <string-array name="violationTypes">
         <item>Bribe</item>
         <item>Insult</item>
@@ -45,7 +46,7 @@
         <item>Damage</item>
     </string-array>
 
-    <string-array name="violationUsesCamera">
+    <!--<string-array name="violationUsesCamera">
         <item>true</item>
         <item>true</item>
         <item>false</item>
@@ -55,7 +56,7 @@
         <item>false</item>
     </string-array>
 
-    <!-- 0 - photo + video; 1 - video only -->
+    &lt;!&ndash; 0 - photo + video; 1 - video only &ndash;&gt;
     <integer-array name="violationMediaTypes">
         <item>1</item>
         <item>1</item>
@@ -64,7 +65,15 @@
         <item>0</item>
         <item>0</item>
         <item>0</item>
-    </integer-array>
+    </integer-array>-->
+
+    <!--{
+    "name": "Книга скарг",
+    "type": "BusinessViolations",
+    "category": 1,
+    "usesCamera": false,
+    "mediaTypes": 0
+    },-->
 
     <string-array name="violationStatuses">
         <item>Чернетка</item>

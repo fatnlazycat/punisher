@@ -252,7 +252,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
                 time_stamp = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
                 status = cursor.getInt(cursor.getColumnIndex("status"));
-                violation.setType(cursor.getString(cursor.getColumnIndex("type")));
+                String type = cursor.getString(cursor.getColumnIndex("type"));
+                violation = Violation.getByType(this, type);
                 requisitesAdapter.content = requisitesAdapter.makeContent(violation.type);
                 for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                     requisitesAdapter.content.get(i).value =
@@ -269,7 +270,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 longitude = request.address_lon;
                 time_stamp = request.created_at;
                 status = request.complain_status_id;
-                violation.setType(request.type);
+                violation = Violation.getByType(this, request.type);
                 requisitesAdapter.content = requisitesAdapter.makeContent(violation.type);
                 for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                     try {
@@ -297,7 +298,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
-        actionBar.setTitle(Violation.getViolationNameFromType(this, violation.getType()));
+        actionBar.setTitle(violation.getName());
 
         //setting views for appropriate mode
         if (mode > MODE_EDIT){
@@ -343,7 +344,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
         makeRequisitesViews();
 
-        ((KaratelApplication)getApplication()).sendScreenName(violation.type);
+        KaratelApplication.getInstance().sendScreenName(violation.type);
     }
 
     void makeRequisitesViews(){

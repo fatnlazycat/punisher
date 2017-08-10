@@ -1,8 +1,10 @@
 package org.foundation101.karatel.fragment;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,10 +18,9 @@ import org.foundation101.karatel.Violation;
 import org.foundation101.karatel.activity.ViolationActivity;
 import org.foundation101.karatel.adapter.ViolationsAdapter;
 
-import java.util.ArrayList;
-
 public class MainFragment extends Fragment {
     static final String TAG = "ChooseForm";
+    AlertDialog alertDialog;
 
     public MainFragment() {
         // Required empty public constructor
@@ -30,7 +31,7 @@ public class MainFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         //Google Analytics part
-        ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
+        KaratelApplication.getInstance().sendScreenName(TAG);
     }
 
     @Override
@@ -42,36 +43,44 @@ public class MainFragment extends Fragment {
         //init  gridView with violations
         GridView violationsGridView = (GridView) v.findViewById(R.id.gridViewMain);
         ViolationsAdapter violationsAdapter = new ViolationsAdapter();
-        ViolationsAdapter.content = makeViolationsList();
+        ViolationsAdapter.content = Violation.getViolationsList();
         violationsGridView.setAdapter(violationsAdapter);
         violationsGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(parent.getContext(), ViolationActivity.class)
-                        .putExtra(Globals.VIOLATION_ACTIVITY_MODE, ViolationActivity.MODE_CREATE)
-                        .putExtra(Globals.VIOLATION, ViolationsAdapter.content.get(position));
-                startActivity(intent);
+                Violation violation = ViolationsAdapter.content.get(position);
+                if (violation.isActive()) {
+                    Intent intent = new Intent(parent.getContext(), ViolationActivity.class)
+                            .putExtra(Globals.VIOLATION_ACTIVITY_MODE, ViolationActivity.MODE_CREATE)
+                            .putExtra(Globals.VIOLATION, violation);
+                    startActivity(intent);
+                } else {
+                    showDialog(violation);
+                }
             }
         });
         return v;
     }
 
-    ArrayList<Violation> makeViolationsList() {
-        ArrayList<Violation> result = new ArrayList<>();
-        String[] violationNames = getResources().getStringArray(R.array.violations);
-        String[] violationTypes = getResources().getStringArray(R.array.violationTypes);
-        String[] violationUsesCamera = getResources().getStringArray(R.array.violationUsesCamera);
-        int[] violationMediaTypes = getResources().getIntArray(R.array.violationMediaTypes);
-        int len = violationNames.length;
-        for (int i = 0; i < len; i++) {
-            Violation v =  new Violation();
-            v.setDrawableId(this.getResources().getIdentifier("violation_picture_" + i, "mipmap", getActivity().getPackageName()));
-            v.setName(violationNames[i]);
-            v.setType(violationTypes[i]);
-            v.setUsesCamera(Boolean.parseBoolean(violationUsesCamera[i]));
-            v.setMediaTypes(violationMediaTypes[i]);
-            result.add(v);
-        }
-        return result;
+    void showDialog(Violation violation) {
+        final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
+        dialogBuilder
+                .setMessage(violation.getTextInactive())
+                .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog = dialogBuilder.create();
+        alertDialog.show();
     }
+
+    @Override
+    public void onDetach() {
+        if (alertDialog != null) alertDialog.dismiss();
+        super.onDetach();
+    }
+
+
 }

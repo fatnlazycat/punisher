@@ -31,12 +31,12 @@ import java.net.URL;
 /**
  * This class is not used here - I keep it just for reference of how to handle cursorAdapter inside the recyclerView
  */
-public class CursorAdapterForRecyclerView extends CursorAdapter{
-    View progressBar;
-    RecyclerView recyclerView;
-    Integer status,  _id, idOnServer;
-    Cursor cursor;
-    Context context;
+class CursorAdapterForRecyclerView extends CursorAdapter{
+    private View progressBar;
+    private RecyclerView recyclerView;
+    private Integer status,  _id, idOnServer;
+    private Cursor cursor;
+    private Context context;
 
     public CursorAdapterForRecyclerView(Context context, Cursor c, int flags, View progressBar) {
         super(context, c, flags);
@@ -63,14 +63,14 @@ public class CursorAdapterForRecyclerView extends CursorAdapter{
 
         TextView textViewRequestType=(TextView)view.findViewById(R.id.textViewRequestType);
         String violationType = cursor.getString(cursor.getColumnIndex("type"));
-        textViewRequestType.setText(Violation.getViolationNameFromType(context, violationType));
+        textViewRequestType.setText(Violation.getByType(context, violationType).getName());
     }
 
     public void setProgressBar(View progressBar){
         this.progressBar = progressBar;
     }
 
-    void updateCursor(int status, Integer rowId){
+    private void updateCursor(int status, Integer rowId){
         DBHelper dbHelper = new DBHelper(context, DBHelper.DATABASE, 1);
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
@@ -91,12 +91,12 @@ public class CursorAdapterForRecyclerView extends CursorAdapter{
 
     }
 
-    class ViolationFetcher extends AsyncTask<Void, Void, String> {
+    private class ViolationFetcher extends AsyncTask<Void, Void, String> {
         Context context;
         View itemView;
         Integer idOnServer, rowId, status;
 
-        public ViolationFetcher(Context context, View itemView, int idOnServer, int oldStatus, int rowId){
+        ViolationFetcher(Context context, View itemView, int idOnServer, int oldStatus, int rowId){
             this.context = context;
             this.itemView = itemView;
             this.idOnServer = idOnServer;
