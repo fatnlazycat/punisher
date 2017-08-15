@@ -90,11 +90,13 @@
     <string-array name="drawerMenuItems">
         <item>Покарати за порушення</item>
         <item>Заявки</item>
+        <item>Книга скарг</item>
+        <item>Відеонавчання</item>
+        <item>Підтримати проект</item>
         <item>Про додаток</item>
         <item>Партнери</item>
         <item>Новини</item>
         <item>Зворотній зв’язок</item>
-        <item>Підтримати проект</item>
         <item>Редагувати профіль</item>
         <item>Вийти</item>
     </string-array>

@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -293,7 +294,7 @@ public class RequestListFragment extends Fragment {
                         public void onClick(View view) {
                             undoDeleteRequest(requestToDelete, position);
                         }
-                    }).setActionTextColor(getResources().getColor(R.color.colorPrimary)) //deprecated in 23
+                    }).setActionTextColor(ContextCompat.getColor(KaratelApplication.getInstance(), R.color.colorPrimary))
                     .setCallback(new Snackbar.Callback() {
                         @Override
                         public void onDismissed(Snackbar snackbar, int event) {

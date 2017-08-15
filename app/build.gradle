@@ -8,12 +8,13 @@ android {
         applicationId "org.foundation101.karatel"
         minSdkVersion 16
         targetSdkVersion 22
+        multiDexEnabled true
         versionCode 29
         versionName "1.23" //don't forget to remove -test in api endpoint!!!
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -21,30 +22,45 @@ android {
         exclude 'META-INF/ASL2.0'
         exclude 'META-INF/LICENSE'
     }
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.8.2'
+    compile files('libs/YouTubeAndroidPlayerApi.jar')
+    compile('com.fasterxml:jackson-module-json-org:0.9.1') {
+        exclude group: 'org.json', module: 'json'
+    }
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:support-v4:23.4.0'
     compile 'com.android.support:recyclerview-v7:23.4.0'
     compile 'com.android.support:design:23.4.0'
     compile 'org.jsoup:jsoup:1.9.1'
-    compile ('com.fasterxml:jackson-module-json-org:0.9.1') {exclude group: 'org.json', module: 'json'}
     compile 'com.google.android.gms:play-services-gcm:9.6.1'
     compile 'com.google.android.gms:play-services-maps:9.6.1'
     compile 'com.google.android.gms:play-services-places:9.6.1'
     compile 'com.google.android.gms:play-services-location:9.6.1'
     compile 'com.google.android.gms:play-services-analytics:9.6.1'
     compile 'com.facebook.android:facebook-android-sdk:4.13.2'
-    compile 'ch.acra:acra:4.9.0'
     compile 'com.splunk.mint:mint:5.0.0'
-    compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.squareup.retrofit2:retrofit:2.1.0'
-    compile 'com.squareup.retrofit2:converter-jackson:2.1.0'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.8.0'
+    compile ('com.squareup.picasso:picasso:2.5.2') {
+        exclude group: 'com.google.android', module: 'android'
+    }
+    compile ('com.squareup.retrofit2:retrofit:2.1.0') {
+        exclude group: 'com.google.android', module: 'android'
+    }
+    compile ('com.squareup.retrofit2:converter-jackson:2.1.0') {
+        exclude group: 'com.google.android', module: 'android'
+    }
+    compile ('com.squareup.okhttp3:logging-interceptor:3.8.0') {
+        exclude group: 'com.google.android', module: 'android'
+    }
     compile 'com.google.android.gms:play-services-appindexing:9.6.1'
+    compile 'com.android.support:multidex:1.0.1'
+    //compile 'com.google.apis:google-api-services-youtube:v3-rev183-1.22.0'
+    testCompile 'junit:junit:4.8.2'
 }
 repositories {
     mavenCentral()

@@ -2,8 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.foundation101.karatel">
 
-    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
-    <uses-feature android:name="android.hardware.camera.any"/>
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
+    <uses-feature android:name="android.hardware.camera.any" />
 
     <permission
         android:name="org.foundation101.karatel.permission.C2D_MESSAGE"
@@ -14,12 +16,11 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="org.foundation101.karatel.permission.C2D_MESSAGE" />
-
 
     <application
         android:name=".KaratelApplication"
@@ -38,7 +39,8 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAdfhkyHG6LXCoLD2KQJUpmXagsrKldxUk" />
 
-        <!--receiver
+        <!--
+        receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"
             android:exported="true"
             android:permission="com.google.android.c2dm.permission.SEND">
@@ -47,23 +49,27 @@
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
                 <category android:name="org.foundation101.karatel" />
             </intent-filter>
-        </receiver-->
+        </receiver
+        -->
         <receiver
-            android:name="org.foundation101.karatel.receiver.GcmBroadcastReceiver"
+            android:name=".receiver.GcmBroadcastReceiver"
             android:enabled="true"
             android:exported="true"
-            android:permission="com.google.android.c2dm.permission.SEND" >
+            android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+
                 <category android:name="org.foundation101.karatel" />
             </intent-filter>
         </receiver>
-        <!--receiver android:name=".receiver.BootCompletedReceiver">
+        <!--
+        receiver android:name=".receiver.BootCompletedReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
-        </receiver-->
+        </receiver
+        -->
 
         <service
             android:name=".service.MyGcmListenerService"
@@ -82,9 +88,11 @@
         <service
             android:name=".service.RegistrationIntentService"
             android:exported="false" />
-        <!--service
+        <!--
+            service
             android:name=".service.AlwaysHereService"
-            android:exported="false" /-->
+            android:exported="false" /
+        -->
 
         <activity
             android:name=".activity.StartActivity"
@@ -146,7 +154,7 @@
             android:configChanges="orientation|screenSize"
             android:parentActivityName=".activity.ForgotPasswordActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppThemeWithoutDrawer" >
+            android:theme="@style/AppThemeWithoutDrawer">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.foundation101.karatel.activity.ForgotPasswordActivity" />
@@ -174,6 +182,13 @@
             android:name=".activity.NewsActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.YouTubeActivity"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.ComplainActivity"
+            android:label="@string/title_activity_complain"></activity>
     </application>
 
 </manifest>

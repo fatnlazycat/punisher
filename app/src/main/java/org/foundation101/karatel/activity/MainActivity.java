@@ -32,7 +32,6 @@ import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,12 +50,14 @@ import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.DrawerAdapter;
 import org.foundation101.karatel.fragment.AboutFragment;
+import org.foundation101.karatel.fragment.ComplainsBookFragment;
 import org.foundation101.karatel.fragment.ContactsFragment;
 import org.foundation101.karatel.fragment.MainFragment;
 import org.foundation101.karatel.fragment.NewsFragment;
 import org.foundation101.karatel.fragment.PartnersFragment;
 import org.foundation101.karatel.fragment.ProfileFragment;
 import org.foundation101.karatel.fragment.RequestListFragment;
+import org.foundation101.karatel.fragment.VideoListFragment;
 import org.foundation101.karatel.retrofit.RetrofitSignOutSender;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -183,6 +184,20 @@ public class MainActivity extends AppCompatActivity {
                                 .addToBackStack(tag).commit();
                         break;
                     }
+                    case Globals.MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT: {
+                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new ComplainsBookFragment(), tag)
+                                .addToBackStack(tag).commit();
+                        break;
+                    }
+                    case Globals.MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT: {
+                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new VideoListFragment(), tag)
+                                .addToBackStack(tag).commit();
+                        break;
+                    }
+                    case Globals.MAIN_ACTIVITY_DONATE: {
+                        openDonatePage();
+                        break;
+                    }
                     case Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new AboutFragment(), tag)
                                 .addToBackStack(tag).commit();
@@ -202,10 +217,6 @@ public class MainActivity extends AppCompatActivity {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new ContactsFragment(), tag)
                                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                                 .addToBackStack(tag).commit();
-                        break;
-                    }
-                    case Globals.MAIN_ACTIVITY_DONATE: {
-                        openDonatePage();
                         break;
                     }
                     case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT: {
@@ -242,6 +253,14 @@ public class MainActivity extends AppCompatActivity {
                         }
                         case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT: {
                             ft.replace(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
+                            break;
+                        }
+                        case Globals.MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT: {
+                            ft.replace(R.id.frameLayoutMain, new ComplainsBookFragment(), tag).addToBackStack(tag).commit();
+                            break;
+                        }
+                        case Globals.MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT: {
+                            ft.replace(R.id.frameLayoutMain, new VideoListFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
                         case Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT: {
@@ -337,22 +356,23 @@ public class MainActivity extends AppCompatActivity {
     HashMap<Integer, String> getFragmentTags(){
         HashMap<Integer, String> result = new HashMap<>();
 
-        result.put(Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT,       getResources().getString(R.string.do_punish));
-        result.put(Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT, getResources().getString(R.string.punishment_requests));
-        result.put(Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT,        getResources().getString(R.string.about_header));
-        result.put(Globals.MAIN_ACTIVITY_PARTNERS_FRAGMENT,     getResources().getString(R.string.partners_header));
-        result.put(Globals.MAIN_ACTIVITY_NEWS_FRAGMENT,         getResources().getString(R.string.news_header));
-        result.put(Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT,     getResources().getString(R.string.contacts_header));
-        result.put(Globals.MAIN_ACTIVITY_DONATE,                "");
-        result.put(Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT,      getResources().getString(R.string.profile_header));
-        result.put(Globals.MAIN_ACTIVITY_EXIT,                  "");//exit - no tag
+        result.put(Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT,           getResources().getString(R.string.do_punish));
+        result.put(Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT,     getResources().getString(R.string.punishment_requests));
+        result.put(Globals.MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT,   getResources().getString(R.string.complains_book));
+        result.put(Globals.MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT,       getResources().getString(R.string.video_tutorial));
+        result.put(Globals.MAIN_ACTIVITY_DONATE,                    "");
+        result.put(Globals.MAIN_ACTIVITY_PARTNERS_FRAGMENT,         getResources().getString(R.string.partners_header));
+        result.put(Globals.MAIN_ACTIVITY_NEWS_FRAGMENT,             getResources().getString(R.string.news_header));
+        result.put(Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT,         getResources().getString(R.string.contacts_header));
+        result.put(Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT,          getResources().getString(R.string.profile_header));
+        result.put(Globals.MAIN_ACTIVITY_EXIT,                      "");//exit - no tag
 
         return result;
     }
 
     /*
-             *the task is to add the first list item with the user's name
-             */
+     *the task is to add the first list item with the user's name
+     */
     String[] makeDrawerList(){
         String[] menuItems = getResources().getStringArray(R.array.drawerMenuItems);
         ArrayList<String> tempList = new ArrayList<>(Arrays.asList(menuItems));

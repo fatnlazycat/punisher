@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:punisher="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/tools">
+    <item android:id="@+id/complainsListItem"
+        android:title=""
+        punisher:showAsAction="always|withText"
+        app:actionLayout="@layout/menu_complains_list"/>
+</menu>

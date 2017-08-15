@@ -7,5 +7,5 @@ import android.view.View;
  */
 
 public interface ApplicableToView {
-    void methodToApply(View v);
+    boolean methodToApply(View v);
 }

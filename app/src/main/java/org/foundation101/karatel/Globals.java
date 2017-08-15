@@ -42,13 +42,15 @@ public class Globals {
     //fragment tags for MainActivity
     public static final int MAIN_ACTIVITY_PUNISH_FRAGMENT = 1;
     public static final int MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT = 2;
-    public static final int MAIN_ACTIVITY_ABOUT_FRAGMENT = 3;
-    public static final int MAIN_ACTIVITY_PARTNERS_FRAGMENT = 4;
-    public static final int MAIN_ACTIVITY_NEWS_FRAGMENT = 5;
-    public static final int MAIN_ACTIVITY_CONTACTS_FRAGMENT = 6;
-    public static final int MAIN_ACTIVITY_DONATE = 7;
-    public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 8;
-    public static final int MAIN_ACTIVITY_EXIT = 9;
+    public static final int MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT = 3;
+    public static final int MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT = 4;
+    public static final int MAIN_ACTIVITY_DONATE = 5;
+    public static final int MAIN_ACTIVITY_ABOUT_FRAGMENT = 6;
+    public static final int MAIN_ACTIVITY_PARTNERS_FRAGMENT = 7;
+    public static final int MAIN_ACTIVITY_NEWS_FRAGMENT = 8;
+    public static final int MAIN_ACTIVITY_CONTACTS_FRAGMENT = 9;
+    public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 10;
+    public static final int MAIN_ACTIVITY_EXIT = 11;
 
     public static final String PUSH_TOKEN = "PUSH_TOKEN";
 
@@ -65,7 +67,7 @@ public class Globals {
     public static final String USER_AVATAR = "USER_AVATAR";
 
     //interaction with server api
-    public static final String SERVER_URL = "https://karatel-api.foundation101.org/api/v1/"; //-api -test
+    public static final String SERVER_URL = "https://karatel-test.foundation101.org/api/v1/"; //-api -test
     public static final int MAX_SERVER_REQUEST_SIZE = 100 * 1024 * 1024; //100 mb
     public static final String SERVER_SUCCESS = "success";
     public static final String SERVER_ERROR = "error";

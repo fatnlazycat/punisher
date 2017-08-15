@@ -1,12 +1,12 @@
 package org.foundation101.karatel;
 
-import android.app.Application;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.multidex.MultiDexApplication;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.util.TypedValue;
@@ -29,11 +29,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-//import org.acra.*;
-//import org.acra.annotation.*;
-
-//@ReportsCrashes(formUri = "http://www.yourselectedbackend.com/reportpath")
-public class KaratelApplication extends Application {
+public class KaratelApplication extends MultiDexApplication {
     public static boolean MAIN_ACTIVITY_FROM_PUSH = false;
 
     private static Retrofit retrofit = null;
