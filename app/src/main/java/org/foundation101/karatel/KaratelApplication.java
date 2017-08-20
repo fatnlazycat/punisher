@@ -18,6 +18,8 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.splunk.mint.Mint;
 
+import org.foundation101.karatel.entity.PunisherUser;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

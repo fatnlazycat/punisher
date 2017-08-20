@@ -3,6 +3,7 @@ package org.foundation101.karatel.fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -13,6 +14,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.adapter.ComplainsBookAdapter;
 
 /**
@@ -21,6 +23,12 @@ import org.foundation101.karatel.adapter.ComplainsBookAdapter;
 
 public class ComplainsBookFragment extends Fragment {
     public ComplainsBookFragment() { /*Required empty public constructor*/ }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
 
     @Nullable
     @Override
@@ -41,14 +49,16 @@ public class ComplainsBookFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.complains_book_menu, menu);
-        final MenuItem signItem = menu.findItem(R.id.complainsListItem);
-        signItem.getActionView().setOnClickListener(new View.OnClickListener() {
+        Toolbar toolbar = ((MainActivity)getActivity()).toolbar;
+        toolbar.inflateMenu(R.menu.complains_book_menu);
+        //inflater.inflate(R.menu.complains_book_menu, menu);
+        final MenuItem draftsItem = menu.findItem(R.id.complainsListItem);
+        /*draftsItem.getActionView().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onOptionsItemSelected(signItem);
+                onOptionsItemSelected(draftsItem);
             }
-        });
+        });*/
+        super.onCreateOptionsMenu(menu, inflater);
     }
 }

@@ -42,7 +42,7 @@ import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.Request;
+import org.foundation101.karatel.entity.Request;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.ViolationActivity;
 import org.foundation101.karatel.adapter.ItemTouchHelperAdapter;
@@ -169,7 +169,7 @@ public class RequestListFragment extends Fragment {
         recycler = (RecyclerView)view.findViewById(R.id.recyclerViewRequests);
         recycler.setHasFixedSize(true);
         recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
-        requestListAdapter = new RequestListAdapter(getContext(), progressBar);
+        requestListAdapter = new RequestListAdapter(getContext());
 
         makeRequestListAdapterContent();
 

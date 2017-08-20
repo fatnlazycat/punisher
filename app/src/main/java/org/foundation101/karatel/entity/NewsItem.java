@@ -1,4 +1,4 @@
-package org.foundation101.karatel;
+package org.foundation101.karatel.entity;
 
 import android.graphics.drawable.Drawable;
 

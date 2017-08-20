@@ -1,7 +1,9 @@
-package org.foundation101.karatel;
+package org.foundation101.karatel.entity;
 
 import android.content.Context;
 import android.content.res.Resources;
+
+import org.foundation101.karatel.DBHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;

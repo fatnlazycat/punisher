@@ -32,7 +32,7 @@ import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.MultipartUtility;
-import org.foundation101.karatel.PunisherUser;
+import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.TipsActivity;

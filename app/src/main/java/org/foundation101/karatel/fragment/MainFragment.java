@@ -14,7 +14,7 @@ import android.widget.GridView;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.Violation;
+import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.activity.ViolationActivity;
 import org.foundation101.karatel.adapter.ViolationsAdapter;
 

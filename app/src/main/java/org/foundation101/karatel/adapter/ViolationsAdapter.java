@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.Violation;
+import org.foundation101.karatel.entity.Violation;
 
 import java.util.ArrayList;
 

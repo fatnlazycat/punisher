@@ -5,7 +5,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
 /**
- * Created by Dima on 11.08.2017.
+ * Created by Dima on 20.08.2017.
  */
 
 public class ComplainsBookAdapter extends BaseAdapter {

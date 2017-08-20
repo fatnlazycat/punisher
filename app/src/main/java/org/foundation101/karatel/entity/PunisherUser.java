@@ -1,4 +1,4 @@
-package org.foundation101.karatel;
+package org.foundation101.karatel.entity;
 
 /**
  * Created by Dima on 15.05.2016.

@@ -1,10 +1,11 @@
-package org.foundation101.karatel;
+package org.foundation101.karatel.entity;
 
 import android.content.Context;
 import android.util.Log;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
+import org.foundation101.karatel.KaratelApplication;
 import org.json.JSONException;
 import org.json.JSONObject;
 

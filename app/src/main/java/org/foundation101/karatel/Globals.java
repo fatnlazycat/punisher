@@ -3,7 +3,6 @@ package org.foundation101.karatel;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
-import android.text.Html;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -11,7 +10,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.text.ParseException;
+import org.foundation101.karatel.entity.PunisherUser;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;

@@ -19,7 +19,7 @@ import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.NewsListAdapter;
-import org.foundation101.karatel.NewsItem;
+import org.foundation101.karatel.entity.NewsItem;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

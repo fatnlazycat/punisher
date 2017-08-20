@@ -17,7 +17,7 @@ import android.widget.TextView;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.Violation;
+import org.foundation101.karatel.entity.Violation;
 import org.json.JSONException;
 import org.json.JSONObject;
 

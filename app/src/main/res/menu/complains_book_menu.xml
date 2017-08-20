@@ -3,7 +3,9 @@
     xmlns:punisher="http://schemas.android.com/apk/res-auto"
     xmlns:app="http://schemas.android.com/tools">
     <item android:id="@+id/complainsListItem"
-        android:title=""
-        punisher:showAsAction="always|withText"
-        app:actionLayout="@layout/menu_complains_list"/>
+        android:title="Hello"
+        android:icon="@drawable/ic_warning"
+        punisher:showAsAction="always"
+        punisher:actionLayout="@layout/menu_complains_list"
+        /><!--app:actionLayout="@layout/menu_complains_list"-->
 </menu>

@@ -18,6 +18,8 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String DATABASE = "violations_db";
     public static final String VIOLATIONS_TABLE = "violations_table";
     public static final String MEDIA_TABLE = "media_table";
+    public static final String COMPLAINS_TABLE = "complains_table";
+    public static final String COMPLAINS_MEDIA_TABLE = "complains_media_table";
 
     //column names
     public static final String _ID = "_id";

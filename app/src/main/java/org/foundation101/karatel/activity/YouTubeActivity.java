@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -68,6 +69,15 @@ public class YouTubeActivity extends YouTubeBaseActivity implements AppCompatCal
         if (youTubeView != null) youTubeView.initialize(youTubeKey, this);
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -92,7 +102,7 @@ public class YouTubeActivity extends YouTubeBaseActivity implements AppCompatCal
     // YouTubePlayer.OnInitializedListener methods
     @Override
     public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer player, boolean wasRestored) {
-        /*View youTubeAppButton = ViewUtils.findFirstAmongChildren((YouTubePlayerView) provider, new ApplicableToView() {
+        View youTubeAppButton = ViewUtils.findFirstAmongChildren((YouTubePlayerView) provider, new ApplicableToView() {
             @Override
             public boolean methodToApply(View v) {
                 CharSequence contentDescription = (v != null && v instanceof ImageView) ?
@@ -100,33 +110,23 @@ public class YouTubeActivity extends YouTubeBaseActivity implements AppCompatCal
                 return (contentDescription != null && contentDescription.equals(YOU_TUBE_APP_BUTTON_CONTENT_DESCRIPTION));
             }
         });
-        if (youTubeAppButton != null) youTubeAppButton.setVisibility(View.GONE);*/
+        if (youTubeAppButton != null) youTubeAppButton.setVisibility(View.GONE);
         player.setPlayerStateChangeListener(new YouTubePlayer.PlayerStateChangeListener() {
 
             @Override
-            public void onLoading() {
-
-            }
+            public void onLoading() { }
 
             @Override
-            public void onLoaded(String s) {
-
-            }
+            public void onLoaded(String s) { }
 
             @Override
-            public void onAdStarted() {
-
-            }
+            public void onAdStarted() { }
 
             @Override
-            public void onVideoStarted() {
-
-            }
+            public void onVideoStarted() {}
 
             @Override
-            public void onVideoEnded() {
-
-            }
+            public void onVideoEnded() { }
 
             @Override
             public void onError(YouTubePlayer.ErrorReason errorReason) {
