@@ -45,7 +45,7 @@ public class MapUtils {
                         List<Address> addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
                         if (addresses.size() > 0) {
                             StringBuilder sb = new StringBuilder("");
-                            for (int i=0; i < addresses.get(0).getMaxAddressLineIndex(); i++){
+                            for (int i=0; i <= addresses.get(0).getMaxAddressLineIndex(); i++){
                                 sb.append(addresses.get(0).getAddressLine(i) + " ");
                             }
                             result = sb.toString();
