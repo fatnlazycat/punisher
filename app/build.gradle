@@ -32,7 +32,8 @@ dependencies {
     }
 
     compile project(':MyCustomCamera')
-    compile 'com.github.glomadrian:MaterialAnimatedSwitch:1.1@aar'
+    //compile 'com.github.glomadrian:MaterialAnimatedSwitch:1.1@aar'
+    compile ('com.polyak:icon-switch:1.0.0') {transitive = false;} //added transitive = false because IconSwitch uses SDK25
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     compile 'com.android.support:appcompat-v7:23.4.0'
@@ -64,8 +65,11 @@ repositories {
     maven {
         url "https://mint.splunk.com/gradle/"
     }
-    maven {
+    /*maven {
         url "http://dl.bintray.com/glomadrian/maven"
+    }*/
+    maven {
+        url "https://jitpack.io"
     }
 }
 apply plugin: 'com.google.gms.google-services'

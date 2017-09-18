@@ -143,7 +143,7 @@ public class KaratelApplication extends MultiDexApplication {
         if (retrofit == null) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             HttpLoggingInterceptor.Level logLevel = BuildConfig.DEBUG ?
-                    HttpLoggingInterceptor.Level.BODY :
+                    HttpLoggingInterceptor.Level.HEADERS :
                     HttpLoggingInterceptor.Level.NONE;
             logging.setLevel(logLevel);
 
