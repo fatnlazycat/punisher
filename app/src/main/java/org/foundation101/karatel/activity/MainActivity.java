@@ -361,6 +361,7 @@ public class MainActivity extends AppCompatActivity {
         result.put(Globals.MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT,   getResources().getString(R.string.complains_book));
         result.put(Globals.MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT,       getResources().getString(R.string.video_tutorial));
         result.put(Globals.MAIN_ACTIVITY_DONATE,                    "");
+        result.put(Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT,            getResources().getString(R.string.about_header));
         result.put(Globals.MAIN_ACTIVITY_PARTNERS_FRAGMENT,         getResources().getString(R.string.partners_header));
         result.put(Globals.MAIN_ACTIVITY_NEWS_FRAGMENT,             getResources().getString(R.string.news_header));
         result.put(Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT,         getResources().getString(R.string.contacts_header));

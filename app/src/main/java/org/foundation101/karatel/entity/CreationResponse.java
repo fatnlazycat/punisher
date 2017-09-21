@@ -1,6 +1,4 @@
-package org.foundation101.karatel;
-
-import org.foundation101.karatel.entity.Request;
+package org.foundation101.karatel.entity;
 
 import java.io.Serializable;
 

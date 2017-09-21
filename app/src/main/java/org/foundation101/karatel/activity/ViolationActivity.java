@@ -66,7 +66,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.CameraManager;
-import org.foundation101.karatel.CreationResponse;
+import org.foundation101.karatel.entity.CreationResponse;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;

@@ -9,10 +9,14 @@ android {
         minSdkVersion 16
         targetSdkVersion 22
         multiDexEnabled true
-        versionCode 29
-        versionName "1.23" //don't forget to remove -test in api endpoint!!!
+        versionCode 30
+        versionName "1.24" //don't forget to remove -test in api endpoint!!!
     }
     buildTypes {
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
