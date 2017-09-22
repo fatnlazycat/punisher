@@ -3,7 +3,6 @@ package org.foundation101.karatel;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
-import android.text.Html;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -11,7 +10,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.text.ParseException;
+import org.foundation101.karatel.entity.PunisherUser;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -29,7 +29,7 @@ public class Globals {
     public static final String ITEM_ID = "PUNISHER_ITEM_ID";
     public static final String REQUEST_JSON = "PUNISHER_REQUEST_JSON";
     public static final String VIOLATION_ACTIVITY_MODE = "PUNISHER_VIOLATION_ACTIVITY_MODE";
-    public static final String VIOLATION = "com.example.dnk.punisher.Violation";
+    public static final String VIOLATION = "org.foundation101.karatel.entity.Violation";
     public static final String MEDIA_FILE = "PUNISHER_MEDIA_FILE";
     public static final String NEWS_ITEM = "PUNISHER_NEWS_ITEM";
     public static final String NEWS_TITLE = "PUNISHER_NEWS_TITLE";
@@ -42,13 +42,15 @@ public class Globals {
     //fragment tags for MainActivity
     public static final int MAIN_ACTIVITY_PUNISH_FRAGMENT = 1;
     public static final int MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT = 2;
-    public static final int MAIN_ACTIVITY_ABOUT_FRAGMENT = 3;
-    public static final int MAIN_ACTIVITY_PARTNERS_FRAGMENT = 4;
-    public static final int MAIN_ACTIVITY_NEWS_FRAGMENT = 5;
-    public static final int MAIN_ACTIVITY_CONTACTS_FRAGMENT = 6;
-    public static final int MAIN_ACTIVITY_DONATE = 7;
-    public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 8;
-    public static final int MAIN_ACTIVITY_EXIT = 9;
+    public static final int MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT = 3;
+    public static final int MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT = 4;
+    public static final int MAIN_ACTIVITY_DONATE = 5;
+    public static final int MAIN_ACTIVITY_ABOUT_FRAGMENT = 6;
+    public static final int MAIN_ACTIVITY_PARTNERS_FRAGMENT = 7;
+    public static final int MAIN_ACTIVITY_NEWS_FRAGMENT = 8;
+    public static final int MAIN_ACTIVITY_CONTACTS_FRAGMENT = 9;
+    public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 10;
+    public static final int MAIN_ACTIVITY_EXIT = 11;
 
     public static final String PUSH_TOKEN = "PUSH_TOKEN";
 

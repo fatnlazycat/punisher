@@ -3,7 +3,6 @@ package org.foundation101.karatel.adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.util.Log;
@@ -17,11 +16,10 @@ import android.widget.Toast;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.Request;
-import org.foundation101.karatel.Violation;
+import org.foundation101.karatel.entity.Request;
+import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.ViolationActivity;
-import org.foundation101.karatel.fragment.RequestListFragment;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,11 +39,6 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
     String[] violationStatuses;
     Context context;
     RecyclerView recycler;
-    View progressBar;
-
-    public void setProgressBar(View progressBar) {
-        this.progressBar = progressBar;
-    }
 
     public ArrayList<Request> getContent() {
         return content;
@@ -54,9 +47,8 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
         this.content = content;
     }
 
-    public RequestListAdapter(Context context, View progressBar) {
+    public RequestListAdapter(Context context) {
         this.context = context;
-        setProgressBar(progressBar);
         violationStatuses = context.getResources().getStringArray(R.array.violationStatuses);
         new StatusListFetcher().execute();
     }
@@ -76,7 +68,7 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
                 + dateString.substring(11, dateString.length());
         holder.textViewRequestTimeStamp.setText(Html.fromHtml(formattedDateString));
 
-        holder.textViewRequestType.setText(Violation.getViolationNameFromType(context, thisRequest.type));
+        holder.textViewRequestType.setText(Violation.getByType(context, thisRequest.type).getName());
 
         int statusIdOnServer = thisRequest.complain_status_id;
         if (Globals.statusesMap.containsKey(statusIdOnServer)) {
@@ -158,7 +150,7 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
         }
     }
 
-    class StatusListFetcher extends AsyncTask<Void, Void, String> {
+    private class StatusListFetcher extends AsyncTask<Void, Void, String> {
 
         @Override
         protected String doInBackground(Void... params) {

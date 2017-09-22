@@ -15,3 +15,28 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-dontobfuscate
+
+-dontwarn android.test.**
+-dontwarn okhttp3.**
+
+#Retrofit
+-dontnote retrofit2.Platform
+-dontwarn retrofit2.Platform$Java8
+-keepattributes Exceptions
+-keepattributes Signature
+-dontwarn okio.**
+
+#Picasso
+-dontwarn com.squareup.okhttp.**
+
+#Jackson
+-keepattributes *Annotation*,EnclosingMethod
+-keepnames class com.fasterxml.jackson.** { *; }
+-dontwarn com.fasterxml.jackson.databind.**
+-dontwarn org.codehaus.jackson.map.ext.*
+-keep class org.codehaus.** { *; }
+-keepclassmembers public final enum org.codehaus.jackson.annotate.JsonAutoDetect$Visibility {
+ public static final org.codehaus.jackson.annotate.JsonAutoDetect$Visibility *; }
+
+ -keep class org.foundation101.karatel.entity.** { public protected private *; }

@@ -2,8 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.foundation101.karatel">
 
-    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
-    <uses-feature android:name="android.hardware.camera.any"/>
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
+    <uses-feature android:name="android.hardware.camera.any" />
 
     <permission
         android:name="org.foundation101.karatel.permission.C2D_MESSAGE"
@@ -185,6 +187,13 @@
             android:name="eu.aejis.mycustomcamera.CameraActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait"/>
+        <activity
+            android:name=".activity.YouTubeActivity"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.ComplainActivity"
+            android:label="@string/title_activity_complain" />
     </application>
 
 </manifest>

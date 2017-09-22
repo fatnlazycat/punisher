@@ -1,13 +1,9 @@
 package org.foundation101.karatel.adapter;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
-import android.location.Address;
 import android.location.Geocoder;
-import android.location.Location;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -34,18 +30,13 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.PunishButtonValidator;
-import org.foundation101.karatel.ViolationRequisite;
+import org.foundation101.karatel.entity.ViolationRequisite;
 import org.foundation101.karatel.activity.ViolationActivity;
-import org.foundation101.karatel.fragment.ChangeAvatarFragment;
-import org.foundation101.karatel.fragment.OpenSettingsFragment;
-import org.foundation101.karatel.fragment.ProfileFragment;
 import org.foundation101.karatel.utils.MapUtils;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 /**
@@ -66,15 +57,15 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
 
     public static final float DEFAULT_ZOOM = 17;//zoom values are floats from 2 to 21
     //tags for save instance state
-    static final String MAP_CENTER = "MAP_CENTER";
-    static final String MAP_ZOOM = "MAP_ZOOM";
-    static final String MAP_HAS_MARKER = "MAP_HAS_MARKER";
+    private static final String MAP_CENTER = "MAP_CENTER";
+    private static final String MAP_ZOOM = "MAP_ZOOM";
+    private static final String MAP_HAS_MARKER = "MAP_HAS_MARKER";
 
     public ArrayList<ViewHolder> holders = new ArrayList<>();
 
-    LatLng savedLatLng;
-    float savedZoom;
-    boolean savedHasMarker;
+    private LatLng savedLatLng;
+    private float savedZoom;
+    private boolean savedHasMarker;
 
     public Context context;
     public ArrayList<ViolationRequisite> content;
@@ -83,18 +74,19 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
     public boolean hasMarker = false;
 
     public EditText addressEditText;
-    Geocoder geoCoder;
-    MapView mapView;
+    private Geocoder geoCoder;
+    private MapView mapView;
     public GoogleMap mMap;
-    PlaceLikelihoodBuffer likelyPlaces;
-    PendingResult<PlaceLikelihoodBuffer> placeLikelihoodResult;
+    private PlaceLikelihoodBuffer likelyPlaces;
+    private PendingResult<PlaceLikelihoodBuffer> placeLikelihoodResult;
     public ArrayAdapter<PlaceLikelihoodHolder> addressAdapter;
 
     public void setEditTrigger(boolean editTrigger) {
         this.editTrigger = editTrigger;
     }
 
-    public ArrayList<ViolationRequisite> makeContent(String violationType){
+    public static ArrayList<ViolationRequisite> makeContent(String violationType){
+        Context context = KaratelApplication.getInstance();
         ArrayList<ViolationRequisite> result = new ArrayList<>();
         String packageName = context.getPackageName();
         Resources res = context.getResources();
@@ -301,27 +293,6 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
 
     void setAddressText(String text){
         if (addressEditText != null) addressEditText.setText(text);
-    }
-
-    class MyTextWatcher implements TextWatcher{
-        /*int position;
-
-        MyTextWatcher(int position){
-            this.position = position;
-        }*/
-
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) { }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-            //addressForEditText = "";
-
-            //content.get(position).value = s.toString();
-        }
     }
 
     public class PlaceLikelihoodHolder{

@@ -9,9 +9,11 @@
     <color name="colorBackground">#ececed</color>
     <color name="greyBackground">#e8e9ea</color>
     <color name="borderlessButtonText">#3e434a</color>
+    <color name="violationName">#3e4349</color>
     <color name="darkGrey">#95989c</color>
     <color name="lightGrey">#c4cad0</color>
     <color name="green_button_disabled">#b5b7ba</color>
+    <color name="grey_violation_disabled">#d4d7da</color>
     <color name="grey_button">#86888a</color>
     <color name="dark">#272b30</color>
 

@@ -6,6 +6,12 @@
         </shape>
     </item>
 
+    <item android:state_activated="true">
+        <shape>
+            <solid android:color="@color/grey_violation_disabled" />
+        </shape>
+    </item>
+
     <item android:state_pressed="true">
         <shape>
             <solid android:color="@color/lightGrey" />

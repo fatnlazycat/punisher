@@ -66,16 +66,16 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.CameraManager;
-import org.foundation101.karatel.CreationResponse;
+import org.foundation101.karatel.entity.CreationResponse;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.Request;
-import org.foundation101.karatel.UpdateEntity;
-import org.foundation101.karatel.Violation;
-import org.foundation101.karatel.ViolationRequisite;
+import org.foundation101.karatel.entity.Request;
+import org.foundation101.karatel.entity.UpdateEntity;
+import org.foundation101.karatel.entity.Violation;
+import org.foundation101.karatel.entity.ViolationRequisite;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
 import org.foundation101.karatel.adapter.HistoryAdapter;
 import org.foundation101.karatel.adapter.RequestListAdapter;
@@ -83,6 +83,7 @@ import org.foundation101.karatel.adapter.RequisitesListAdapter;
 import org.foundation101.karatel.fragment.RequestListFragment;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
+import org.foundation101.karatel.utils.Formular;
 import org.foundation101.karatel.utils.MediaUtils;
 import org.foundation101.karatel.view.ExpandedGridView;
 import org.foundation101.karatel.view.MyScrollView;
@@ -113,7 +114,8 @@ import retrofit2.Retrofit;
 public class ViolationActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        LocationListener,
+        Formular {
 
     final int RQS_GooglePlayServices = 1000;
 
@@ -232,7 +234,7 @@ public class ViolationActivity extends AppCompatActivity implements
             idOnServer = 0;
             violation = (Violation) intent.getExtras().getSerializable(Globals.VIOLATION);
             status = 0; //status = draft
-            requisitesAdapter.content = requisitesAdapter.makeContent(violation.type);
+            requisitesAdapter.content = RequisitesListAdapter.makeContent(violation.type);
             if (violation.usesCamera) {//create mode means we have to capture video at start
                 CameraManager cameraManager = CameraManager.getInstance(this);
                 videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
@@ -244,7 +246,7 @@ public class ViolationActivity extends AppCompatActivity implements
             if (mode == MODE_EDIT) {
                 SQLiteDatabase db = dbHelper.getReadableDatabase();
                 //query to data table
-                String table = "violations_table";
+                String table = DBHelper.VIOLATIONS_TABLE;
                 String[] columns = null;
                 String where = "_id=?";
                 String[] selectionArgs = {idInDbString};
@@ -256,10 +258,9 @@ public class ViolationActivity extends AppCompatActivity implements
                 longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
                 time_stamp = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
                 status = cursor.getInt(cursor.getColumnIndex("status"));
-                violation.setType(cursor.getString(cursor.getColumnIndex("type")));
-                violation.setMediaTypes(Violation.getMediaTypesFromType(this, violation.getType()));
-                videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
-                requisitesAdapter.content = requisitesAdapter.makeContent(violation.type);
+                String type = cursor.getString(cursor.getColumnIndex("type"));
+                violation = Violation.getByType(this, type);
+                requisitesAdapter.content = RequisitesListAdapter.makeContent(violation.type);
                 for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                     requisitesAdapter.content.get(i).value =
                             cursor.getString(cursor.getColumnIndex(requisitesAdapter.content.get(i).dbTag));
@@ -275,8 +276,8 @@ public class ViolationActivity extends AppCompatActivity implements
                 longitude = request.address_lon;
                 time_stamp = request.created_at;
                 status = request.complain_status_id;
-                violation.setType(request.type);
-                requisitesAdapter.content = requisitesAdapter.makeContent(violation.type);
+                violation = Violation.getByType(this, request.type);
+                requisitesAdapter.content = RequisitesListAdapter.makeContent(violation.type);
                 for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                     try {
                         String fieldName = requisitesAdapter.content.get(i).dbTag.replace(violation.getType() + "_", "");
@@ -303,7 +304,7 @@ public class ViolationActivity extends AppCompatActivity implements
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
-        actionBar.setTitle(Violation.getViolationNameFromType(this, violation.getType()));
+        actionBar.setTitle(violation.getName());
 
         //setting views for appropriate mode
         if (mode > MODE_EDIT){
@@ -341,7 +342,7 @@ public class ViolationActivity extends AppCompatActivity implements
 
         makeRequisitesViews();
 
-        ((KaratelApplication)getApplication()).sendScreenName(violation.type);
+        KaratelApplication.getInstance().sendScreenName(violation.type);
     }
 
     void makeRequisitesViews(){
@@ -733,10 +734,12 @@ public class ViolationActivity extends AppCompatActivity implements
         //empty method to handle click events
     }
 
+    @Override
     public void validateSaveButton(){
         saveButton.setEnabled(!evidenceAdapter.isEmpty());
     }
 
+    @Override
     public void validatePunishButton(){
         punishButton.setEnabled(allDataEntered());
     }

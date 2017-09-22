@@ -15,4 +15,15 @@ public class ViewUtils {
             if (v instanceof ViewGroup) applyToAllChildren((ViewGroup)v, samInterface);
         }
     }
+
+    public static View findFirstAmongChildren(ViewGroup parent, ApplicableToView samInterface) {
+        View result = null;
+        for (int i = 0; i < parent.getChildCount(); i++){
+            View v = parent.getChildAt(i);
+            if (samInterface.methodToApply(v)) return v;
+            if (v instanceof ViewGroup) result = findFirstAmongChildren((ViewGroup)v, samInterface);
+            if (result != null) return result;
+        }
+        return null;
+    }
 }

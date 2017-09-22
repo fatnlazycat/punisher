@@ -21,6 +21,7 @@ import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.ShowMediaActivity;
 import org.foundation101.karatel.activity.ViolationActivity;
+import org.foundation101.karatel.utils.Formular;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,13 +43,14 @@ public class EvidenceAdapter extends BaseAdapter {
     }
 
     public EvidenceAdapter(Context context){
-        this.context = context;
+        if (context instanceof Formular) this.context = context;
+        else throw new ClassCastException("context should implement the Formular interface");
     }
 
     @Override
     public void notifyDataSetChanged() {
-        ((ViolationActivity)context).validatePunishButton();
-        ((ViolationActivity)context).validateSaveButton();
+        ((Formular)context).validatePunishButton();
+        ((Formular)context).validateSaveButton();
         super.notifyDataSetChanged();
     }
 

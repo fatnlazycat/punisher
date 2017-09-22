@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/text_box_vertical_padding"
+        android:paddingBottom="@dimen/text_box_vertical_padding"
+        android:paddingLeft="@dimen/text_box_horizontal_padding"
+        android:paddingRight="@dimen/text_box_horizontal_padding"
+        android:drawableLeft="@drawable/ic_warning"
+        android:drawablePadding="15dp"
+        android:textSize="12sp"
+        android:textColor="#262a2f"
+        android:lineSpacingExtra="4sp"
+        android:text="@string/complainsBookDisclaimer"/>
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/lvComplainTypes"/>
+
+</LinearLayout>

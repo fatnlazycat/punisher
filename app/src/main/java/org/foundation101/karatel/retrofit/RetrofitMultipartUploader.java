@@ -1,6 +1,6 @@
 package org.foundation101.karatel.retrofit;
 
-import org.foundation101.karatel.CreationResponse;
+import org.foundation101.karatel.entity.CreationResponse;
 
 import okhttp3.MultipartBody;
 import retrofit2.Call;

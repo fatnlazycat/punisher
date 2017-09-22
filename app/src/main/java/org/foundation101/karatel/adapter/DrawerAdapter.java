@@ -10,12 +10,15 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 
 /**
@@ -23,7 +26,6 @@ import org.foundation101.karatel.R;
  */
 public class DrawerAdapter extends BaseAdapter {
     public static String[] content;
-    private Context context;
 
     @Override
     public int getCount() {
@@ -46,7 +48,6 @@ public class DrawerAdapter extends BaseAdapter {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         if (convertView==null){
             convertView=inflater.inflate(R.layout.item_drawer, parent, false);
-            context = parent.getContext();
         }
 
         //set menu item text
@@ -55,13 +56,14 @@ public class DrawerAdapter extends BaseAdapter {
 
         switch (position) {
             case 0:
+            case 9:
                 setDivider(menuItemText);
                 break;
             case 2:
-                setDivider(menuItemText);
+            case 3:
+                disableItem(menuItemText);
                 break;
-            case 6:
-                //setDivider(menuItemText);
+            case 4:
                 setDonateItem(menuItemText);
                 break;
         }
@@ -93,7 +95,16 @@ public class DrawerAdapter extends BaseAdapter {
         view.setPadding(0, 0, 0, dpToPx(12));
     }
 
+    private void disableItem(TextView view) {
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) view.getLayoutParams();
+        params.height = 0;
+        view.setLayoutParams(params);
+        view.setText("");
+    }
+
     private void setDonateItem(TextView view) {
+        Context context = KaratelApplication.getInstance();
+
         //background part
         View llItemDrawer = (View) view.getParent();
         llItemDrawer.setBackgroundColor(ContextCompat.getColor(context, R.color.darkGreen));
@@ -113,7 +124,7 @@ public class DrawerAdapter extends BaseAdapter {
     }
 
     public int dpToPx(int dp){
-        return dpToPx(context, dp);
+        return dpToPx(KaratelApplication.getInstance(), dp);
     }
 
     public static int dpToPx(Context context, int dp){

@@ -10,10 +10,15 @@ android {
         minSdkVersion 16
         targetSdkVersion 22
         multiDexEnabled true
-        versionCode 28
-        versionName "1.22" //don't forget to remove -test in api endpoint!!!
+
+        versionCode 30
+        versionName "1.24" //don't forget to remove -test in api endpoint!!!
     }
     buildTypes {
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -23,19 +28,34 @@ android {
         exclude 'META-INF/ASL2.0'
         exclude 'META-INF/LICENSE'
     }
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile('com.fasterxml:jackson-module-json-org:0.9.1') {
-        exclude group: 'org.json', module: 'json'
-    }
-
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     compile project(':MyCustomCamera')
     //compile 'com.github.glomadrian:MaterialAnimatedSwitch:1.1@aar'
     compile ('com.polyak:icon-switch:1.0.0') {transitive = false;} //added transitive = false because IconSwitch uses SDK25
-
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    compile files('libs/YouTubeAndroidPlayerApi.jar')
+    compile('com.fasterxml:jackson-module-json-org:0.9.1') {
+        exclude group: 'org.json', module: 'json'
+    }
+    compile('com.squareup.picasso:picasso:2.5.2') {
+        exclude group: 'com.google.android', module: 'android'
+    }
+    compile('com.squareup.retrofit2:retrofit:2.1.0') {
+        exclude group: 'com.google.android', module: 'android'
+    }
+    compile('com.squareup.retrofit2:converter-jackson:2.1.0') {
+        exclude group: 'com.google.android', module: 'android'
+    }
+    compile('com.squareup.okhttp3:logging-interceptor:3.8.0') {
+        exclude group: 'com.google.android', module: 'android'
+    }
+    //compile 'com.google.apis:google-api-services-youtube:v3-rev183-1.22.0'
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:support-v4:23.4.0'
     compile 'com.android.support:recyclerview-v7:23.4.0'
@@ -47,12 +67,7 @@ dependencies {
     compile 'com.google.android.gms:play-services-location:9.6.1'
     compile 'com.google.android.gms:play-services-analytics:9.6.1'
     compile 'com.facebook.android:facebook-android-sdk:4.13.2'
-    compile 'ch.acra:acra:4.9.0'
     compile 'com.splunk.mint:mint:5.0.0'
-    compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.squareup.retrofit2:retrofit:2.1.0'
-    compile 'com.squareup.retrofit2:converter-jackson:2.1.0'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.8.0'
     compile 'com.google.android.gms:play-services-appindexing:9.6.1'
     compile 'com.android.support:multidex:1.0.1'
     testCompile 'junit:junit:4.8.2'

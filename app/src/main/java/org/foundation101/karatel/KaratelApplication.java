@@ -1,6 +1,5 @@
 package org.foundation101.karatel;
 
-import android.app.Application;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.location.Location;
@@ -19,6 +18,8 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.splunk.mint.Mint;
 
+import org.foundation101.karatel.entity.PunisherUser;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -30,10 +31,6 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-//import org.acra.*;
-//import org.acra.annotation.*;
-
-//@ReportsCrashes(formUri = "http://www.yourselectedbackend.com/reportpath")
 public class KaratelApplication extends MultiDexApplication {
     public static boolean MAIN_ACTIVITY_FROM_PUSH = false;
 
