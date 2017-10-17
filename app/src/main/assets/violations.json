@@ -6,50 +6,317 @@
       "category": 2,
       "usesCamera": true,
       "active": true,
-      "mediaTypes": 1
-    }, {
+      "mediaTypes": 1,
+      "requisites": [
+        {
+          "dbTag": "Bribe_address",
+          "name": "АДРЕСА",
+          "description": "Якомога точніше: область, район, населений пункт, вулиця, будинок тощо",
+          "hint": "Вкажіть місце інциденту",
+          "necessary": true
+        }, {
+          "dbTag": "Bribe_all_name",
+          "name": "П.І.Б. ХАБАРНИКА",
+          "description": "Не обов’язково, але бажано заповнити",
+          "hint": "П.І.Б.",
+          "necessary": false
+        }, {
+          "dbTag": "Bribe_position",
+          "name": "ПОСАДА ХАБАРНИКА",
+          "description": "Не обов’язково, але бажано заповнити",
+          "hint": "Вкажіть посаду",
+          "necessary": false
+        }, {
+          "dbTag": "Bribe_name_of_authority",
+          "name": "НАЗВА ОРГАНУ ВЛАДИ",
+          "description": "Напис на вивісці",
+          "hint": "Вкажіть напис на вивісці",
+          "necessary": true
+        }, {
+          "dbTag": "Bribe_description",
+          "name": "ЩО СТАЛОСЬ?",
+          "description": "Коротко описати обставини, за яких стався інцидент",
+          "hint": "Детально вкажіть обставини",
+          "necessary": true
+        }
+      ]
+    },
+    {
       "name": "Хамство",
       "type": "Insult",
       "category": 2,
       "usesCamera": true,
       "active": true,
-      "mediaTypes": 1
-    }, {
+      "mediaTypes": 1,
+      "requisites": [
+        {
+          "dbTag": "Insult_address",
+          "name": "АДРЕСА",
+          "description": "Якомога точніше: область, район, населений пункт, вулиця, будинок тощо",
+          "hint": "Вкажіть місце інциденту",
+          "necessary": true
+        }, {
+          "dbTag": "Insult_all_name",
+          "name": "П.І.Б. ТОГО, ХТО ВАС ОБРАЗИВ",
+          "description": "Не обов’язково, але бажано заповнити",
+          "hint": "Вкажіть П.І.Б. образника",
+          "necessary": false
+        }, {
+          "dbTag": "Insult_position",
+          "name": "ПОСАДА ТОГО, ХТО ВАС ОБРАЗИВ",
+          "description": "Не обов’язково, але бажано заповнити",
+          "hint": "Вкажіть посаду",
+          "necessary": false
+        }, {
+          "dbTag": "Insult_name_of_authority",
+          "name": "НАЗВА ОРГАНУ ВЛАДИ АБО ПРИВАТНОГО ЗАКЛАДУ",
+          "description": "Напис на вивісці",
+          "hint": "Вкажіть напис на вивісці",
+          "necessary": true
+        }, {
+          "dbTag": "Insult_name_of_institution",
+          "name": "НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ",
+          "description": "Виключно для приватних закладів; подивитись в кутку споживача",
+          "hint": "Виключно для приватних закладів",
+          "necessary": false
+        }, {
+          "dbTag": "Insult_description",
+          "name": "ЩО СТАЛОСЬ?",
+          "description": "Коротко описати обставини, за яких стався інцидент",
+          "hint": "Детально вкажіть обставини",
+          "necessary": true
+        }
+      ]
+    },
+    {
       "name": "Продаж простроченого товару",
       "type": "SaleOfGood",
       "category": 2,
       "usesCamera": false,
       "active": true,
-      "mediaTypes": 0
-    }, {
+      "mediaTypes": 0,
+      "requisites": [
+        {
+          "dbTag": "SaleOfGood_address",
+          "name": "АДРЕСА",
+          "description": "Якомога точніше: область, район, населений пункт, вулиця, будинок тощо",
+          "hint": "Вкажіть місце інциденту",
+          "necessary": true
+        }, {
+          "dbTag": "SaleOfGood_name_of_institution",
+          "name": "НАЗВА ЗАКЛАДУ",
+          "description": "Напис на вивісці",
+          "hint": "Вкажіть напис на вивісці",
+          "necessary": true
+        }, {
+          "dbTag": "SaleOfGood_name_of_entity",
+          "name": "НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ",
+          "description": "Юридична особа або підприємець; подивитись в кутку споживача",
+          "hint": "Юридична особа або підприємець",
+          "necessary": true
+        }, {
+          "dbTag": "SaleOfGood_product_name",
+          "name": "НАЗВА ТОВАРУ",
+          "hint": "Вкажіть назву товару",
+          "necessary": true
+        }, {
+          "dbTag": "SaleOfGood_name_producer",
+          "name": "НАЗВА ВИРОБНИКА ТОВАРУ",
+          "description": "Юридична особа або підприємець",
+          "hint": "Юридична особа або підприємець",
+          "necessary": true
+        }
+      ]
+    },
+    {
       "name": "Куріння в закладах харчування",
       "type": "NoSmoking",
       "category": 2,
       "usesCamera": true,
       "active": true,
-      "mediaTypes": 0
-    }, {
+      "mediaTypes": 0,
+      "requisites": [
+        {
+          "dbTag": "NoSmoking_address",
+          "name": "АДРЕСА",
+          "description": "Якомога точніше: область, район, населений пункт, вулиця, будинок тощо",
+          "hint": "Вкажіть місце інциденту",
+          "necessary": true
+        }, {
+          "dbTag": "NoSmoking_name_of_institution",
+          "name": "НАЗВА ЗАКЛАДУ",
+          "description": "Напис на вивісці",
+          "hint": "Вкажіть напис на вивісці",
+          "necessary": true
+        }, {
+          "dbTag": "NoSmoking_name_of_entity",
+          "name": "НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ",
+          "description": "Юридична особа або підприємець; подивитись в кутку споживача",
+          "hint": "Юридична особа або підприємець",
+          "necessary": true
+        }, {
+          "dbTag": "NoSmoking_description",
+          "name": "ОПИС ПОРУШЕННЯ",
+          "description": "Якомога детальніше: в якому залі, що курили (сигарети, електронні сигарети, кальян тощо)",
+          "hint": "Детально вкажіть обставини",
+          "necessary": true
+        }
+      ]
+    },
+    {
       "name": "Яма на дорозі",
       "type": "PitRoad",
       "category": 2,
       "usesCamera": false,
       "active": true,
-      "mediaTypes": 0
-    }, {
+      "mediaTypes": 0,
+      "requisites": [
+        {
+          "dbTag": "PitRoad_address",
+          "name": "АДРЕСА",
+          "description": "Якомога точніше: область, район, населений пункт, вулиця, будинок тощо",
+          "hint": "Вкажіть місце інциденту",
+          "necessary": true
+        }, {
+          "dbTag": "PitRoad_the_closest_landmark",
+          "name": "НАЙБЛИЖЧИЙ ОРІЄНТИР",
+          "description": "Заклад, зупинка, будинок, кіоск тощо",
+          "hint": "Вкажіть найближчий орієнтир",
+          "necessary": true
+        }, {
+          "dbTag": "PitRoad_description",
+          "name": "ОПИС ЯМИ",
+          "description": "Якомога детальніше: розмір, де знаходиться, чим саме заважає тощо",
+          "hint": "Детально вкажіть характеристики",
+          "necessary": true
+        }
+      ]
+    },
+    {
       "name": "Порушення благоустрою",
       "type": "Damage",
       "category": 2,
       "usesCamera": false,
       "active": true,
-      "mediaTypes": 0
-    }, {
+      "mediaTypes": 0,
+      "requisites": [
+        {
+          "dbTag": "Damage_address",
+          "name": "АДРЕСА",
+          "description": "Якомога точніше: область, район, населений пункт, вулиця, будинок тощо",
+          "hint": "Вкажіть місце інциденту",
+          "necessary": true
+        }, {
+          "dbTag": "Damage_the_closest_landmark",
+          "name": "НАЙБЛИЖЧИЙ ОРІЄНТИР",
+          "description": "Заклад, зупинка, будинок, кіоск тощо",
+          "hint": "Вкажіть найближчий орієнтир",
+          "necessary": true
+        }, {
+          "dbTag": "Damage_description",
+          "name": "ОПИС ПОРУШЕННЯ",
+          "description": "Якомога детальніше: сміття на вулиці, відсутність урни біля кіоску тощо",
+          "hint": "Детально вкажіть обставини",
+          "necessary": true
+        }
+      ]
+    },
+    {
       "name": "Порушення правил паркування",
       "type": "WrongParking",
       "category": 2,
       "usesCamera": false,
       "active": false,
       "mediaTypes": 0,
-      "textInactive": "Між громадською організацією «ФУНДАЦІЯ.101» та Департаментом патрульної поліції Національної поліції України було проведено переговори, за результатами яких було прийнято рішення тимчасово призупинити роботу категорії «Порушення правил паркування» до моменту внесення змін в Кодекс України про адміністративні правопорушення, які дозволять ефективно притягати до відповідальності порушників правил дорожнього руху."
+      "textInactive": "Між громадською організацією «ФУНДАЦІЯ.101» та Департаментом патрульної поліції Національної поліції України було проведено переговори, за результатами яких було прийнято рішення тимчасово призупинити роботу категорії «Порушення правил паркування» до моменту внесення змін в Кодекс України про адміністративні правопорушення, які дозволять ефективно притягати до відповідальності порушників правил дорожнього руху.",
+      "requisites": [
+        {
+          "dbTag": "WrongParking_address",
+          "name": "АДРЕСА",
+          "description": "Якомога точніше: область, район, населений пункт, вулиця, будинок тощо",
+          "hint": "Вкажіть місце інциденту",
+          "necessary": true
+        }, {
+          "dbTag": "WrongParking_vehicle_number",
+          "name": "НОМЕР АВТОМОБІЛЯ",
+          "hint": "Номер автомобіля",
+          "necessary": true
+        }, {
+          "dbTag": "WrongParking_description",
+          "name": "ОПИС ПОРУШЕННЯ",
+          "description": "Якомога точніше: паркування на газоні, тротуарі, пішохідному переході тощо",
+          "hint": "Наприклад: Паркування на газоні",
+          "necessary": true
+        }
+      ]
+    },
+    {
+      "name": "Транспорт Житомира",
+      "type": "Transport_Zhytomyr",
+      "category": 1,
+      "id": 1,
+      "usesCamera": false,
+      "active": true,
+      "mediaTypes": 0,
+      "requisites": [
+        {
+          "dbTag": "Transport_Zhytomyr_description",
+          "name": "Що сталось?",
+          "hint": "Оберіть один з варіантів",
+          "necessary": true,
+          "possibleValues": [
+            "Не дали квиток",
+            "Водій порушує ПДР, говорить по телефону",
+            "Водій хамить або курить",
+            "Несправний транспортний засіб або брудний салон",
+            "Грає гучна музика",
+            "Порушення графіку маршруту",
+            "Порушення схеми руху",
+            "Порушуються права пільговика",
+            "Інше"
+          ]
+        }, {
+          "dbTag": "Transport_Zhytomyr_route_number",
+          "name": "Номер маршруту",
+          "hint": "Вкажіть номер маршруту",
+          "necessary": true
+        }, {
+          "dbTag": "Transport_Zhytomyr_vehicle_number",
+          "name": "Державний номер транспортного засобу або його бортовий номер",
+          "description": "Бортовий номер (дві, три або чотири цифри) можна знайти біля кабіни водія або ззовні транспортного засобу",
+          "hint": "Вкажіть номер",
+          "necessary": true
+        }
+      ]
+    },
+    {
+      "name": "Київпастранс",
+      "type": "Transport_Kyiv",
+      "category": 1,
+      "id": 2,
+      "usesCamera": false,
+      "active": true,
+      "mediaTypes": 0,
+      "requisites": [
+        {
+          "dbTag": "Transport_Kyiv_description",
+          "name": "Що сталось?",
+          "description": "Коротко описати обставини, за яких стався інцидент. Зазначте також дату та час інциденту",
+          "hint": "Опишить, що сталось",
+          "necessary": true
+        }, {
+          "dbTag": "Transport_Kyiv_route_number",
+          "name": "Номер маршруту",
+          "hint": "Вкажіть номер маршруту",
+          "necessary": true
+        }, {
+          "dbTag": "Transport_Kyiv_vehicle_number",
+          "name": "Державний номер транспортного засобу або його бортовий номер",
+          "description": "Бортовий номер (дві, три або чотири цифри) можна знайти біля кабіни водія або ззовні транспортного засобу",
+          "hint": "Вкажіть номер",
+          "necessary": true
+        }
+      ]
     }
   ]
 }

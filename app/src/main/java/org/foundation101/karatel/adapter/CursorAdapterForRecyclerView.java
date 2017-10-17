@@ -63,7 +63,7 @@ class CursorAdapterForRecyclerView extends CursorAdapter{
 
         TextView textViewRequestType=(TextView)view.findViewById(R.id.textViewRequestType);
         String violationType = cursor.getString(cursor.getColumnIndex("type"));
-        textViewRequestType.setText(Violation.getByType(context, violationType).getName());
+        textViewRequestType.setText(Violation.getByType(violationType).getName());
     }
 
     public void setProgressBar(View progressBar){
@@ -71,7 +71,7 @@ class CursorAdapterForRecyclerView extends CursorAdapter{
     }
 
     private void updateCursor(int status, Integer rowId){
-        DBHelper dbHelper = new DBHelper(context, DBHelper.DATABASE, 1);
+        DBHelper dbHelper = new DBHelper(context, DBHelper.DATABASE, DBHelper.DB_VERSION);
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         //query to data table

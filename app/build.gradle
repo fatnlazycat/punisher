@@ -64,6 +64,7 @@ dependencies {
     compile 'com.splunk.mint:mint:5.0.0'
     compile 'com.google.android.gms:play-services-appindexing:9.6.1'
     compile 'com.android.support:multidex:1.0.1'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.8.2'
 }
 repositories {

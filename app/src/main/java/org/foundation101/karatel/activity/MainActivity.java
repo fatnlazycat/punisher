@@ -50,6 +50,7 @@ import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.DrawerAdapter;
 import org.foundation101.karatel.fragment.AboutFragment;
+import org.foundation101.karatel.fragment.ComplainDraftsFragment;
 import org.foundation101.karatel.fragment.ComplainsBookFragment;
 import org.foundation101.karatel.fragment.ContactsFragment;
 import org.foundation101.karatel.fragment.MainFragment;
@@ -283,6 +284,10 @@ public class MainActivity extends AppCompatActivity {
                             ft.replace(R.id.frameLayoutMain, new ProfileFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
+                        case Globals.MAIN_ACTIVITY_COMPLAIN_DRAFTS: {
+                            ft.replace(R.id.frameLayoutMain, new ComplainDraftsFragment(), tag).addToBackStack(tag).commit();
+                            break;
+                        }
                     }
                 } else {
                     currentFragment = Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT;
@@ -367,6 +372,7 @@ public class MainActivity extends AppCompatActivity {
         result.put(Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT,         getResources().getString(R.string.contacts_header));
         result.put(Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT,          getResources().getString(R.string.profile_header));
         result.put(Globals.MAIN_ACTIVITY_EXIT,                      "");//exit - no tag
+        result.put(Globals.MAIN_ACTIVITY_COMPLAIN_DRAFTS,           getResources().getString(R.string.drafts));
 
         return result;
     }
@@ -398,10 +404,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void createRequest(View view) {
-        currentFragment = 1; //Покарати за порушення
+        currentFragment = Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT; //Покарати за порушення
         String tag = fragmentTags.get(currentFragment);
         toolbar.setTitle(tag);
         fManager.beginTransaction().replace(R.id.frameLayoutMain, new MainFragment(), tag).commit();
+    }
+
+    public void openComplainDrafts() {
+        currentFragment = Globals.MAIN_ACTIVITY_COMPLAIN_DRAFTS;
+        String tag = fragmentTags.get(currentFragment);
+        toolbar.setTitle(tag);
+        fManager.beginTransaction().replace(R.id.frameLayoutMain, new ComplainDraftsFragment(), tag)
+                .addToBackStack(tag).commit();
     }
 
     public void openDonatePage() {

@@ -1,11 +1,11 @@
 package org.foundation101.karatel.entity;
 
-import android.content.Context;
 import android.util.Log;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.foundation101.karatel.KaratelApplication;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -31,9 +32,21 @@ public class Violation implements Serializable{
     public String name;
     public String type;
     public String textInactive;
+    public int id;
     public int drawableId;
     public boolean usesCamera, active;
     public int mediaTypes, category;
+    ArrayList<ViolationRequisite> requisites;
+
+    public ArrayList<ViolationRequisite> getRequisites() {
+        return requisites;
+    }
+    public void setRequisites(ArrayList<ViolationRequisite> requisites) {
+        this.requisites = requisites;
+    }
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     public String getName() {
         return name;
@@ -79,27 +92,26 @@ public class Violation implements Serializable{
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
 
-    public static Violation getByType(Context context, String type){
+    public static Violation getByType(String type){
         ArrayList<Violation> list = getViolationsList();
         for (Violation v : list) {
-            if (v.getType().equals(type)) return v;
+            if (v.getType().equals(type)) return v.clearValues();
         }
         return new Violation();
+    }
+
+    public static ArrayList<Violation> getViolationsList(int categoryFilter) {
+        ArrayList<Violation> filteredList = new ArrayList<>(getViolationsList());
+        for (Violation v : violationsList) {
+            if (v.getCategory() != categoryFilter) filteredList.remove(v);
+        }
+        return filteredList;
     }
 
     public static ArrayList<Violation> getViolationsList() {
         if (violationsList == null) {
             try {
-                InputStream inputStream = KaratelApplication.getInstance().getAssets().open("violations.json");
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-                String line;
-                StringBuilder stringBuilder = new StringBuilder();
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line);
-                }
-                reader.close();
-
-                String jsonString = new JSONObject(stringBuilder.toString()).getJSONArray("violations").toString();
+                String jsonString = readViolationAssets();
                 ObjectMapper objectMapper = new ObjectMapper();
                 violationsList = objectMapper.readValue(jsonString, new TypeReference<List<Violation>>() {
                 });
@@ -115,5 +127,54 @@ public class Violation implements Serializable{
         }
 
         return violationsList;
+    }
+
+    public String[] getRequisitesString() {
+        String[] common;
+        ArrayList<String> resultingList = new ArrayList<>();
+
+        switch (getCategory()) {
+            case Violation.CATEGORY_BUSINESS: {
+                common = new String[]{"user_id", "company_id", "longitude", "latitude", "description"};
+                resultingList = new ArrayList<>(Arrays.asList(common));
+                break;
+            }
+            case Violation.CATEGORY_PUBLIC: {
+                common = new String[]{"user_id", "id_number", "complain_status_id", "longitude", "latitude",
+                        "create_in_the_device", "type"};
+
+                resultingList = new ArrayList<>(Arrays.asList(common));
+                ArrayList<ViolationRequisite> thisRequisites = getRequisites();
+                String type = getType();
+                for (ViolationRequisite violationRequisite : thisRequisites) {
+                    resultingList.add(violationRequisite.dbTag.replace(type + "_", ""));
+                }
+                break;
+            }
+        }
+
+        String[] result = resultingList.toArray(new String[0]);
+        return result;
+    }
+
+    private static String readViolationAssets() throws IOException, JSONException {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        InputStream inputStream = KaratelApplication.getInstance().getAssets().open("violations.json");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            stringBuilder.append(line);
+        }
+        reader.close();
+
+        return new JSONObject(stringBuilder.toString()).getJSONArray("violations").toString();
+    }
+
+    public Violation clearValues() {
+        for (ViolationRequisite requisite : requisites) {
+            requisite.value = null;
+        }
+        return this;
     }
 }

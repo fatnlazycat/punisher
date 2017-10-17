@@ -46,6 +46,11 @@
         <item>Damage</item>
     </string-array>
 
+    <string-array name="complainTypes">
+        <item>Transport_Zhytomyr</item>
+        <item>Transport_Kyiv</item>
+    </string-array>
+
     <!--<string-array name="violationUsesCamera">
         <item>true</item>
         <item>true</item>
@@ -101,7 +106,7 @@
         <item>Вийти</item>
     </string-array>
 
-    <string-array name="BribeRequisites">
+    <!--<string-array name="BribeRequisites">
         <item>Bribe_address</item>
         <item>АДРЕСА</item>
         <item>Якомога точніше: область, район, населений пункт, вулиця, будинок тощо</item>
@@ -287,7 +292,7 @@
         <item>Юридична особа або підприємець</item>
         <item>Юридична особа або підприємець</item>
         <item>true</item>
-    </string-array>
+    </string-array>-->
 
     <string-array name="change_avatar_dialog_items">
         <item>Завантажити з галереї</item>

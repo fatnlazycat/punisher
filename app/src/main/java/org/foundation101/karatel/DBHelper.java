@@ -2,19 +2,25 @@ package org.foundation101.karatel;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import org.foundation101.karatel.entity.Violation;
+import org.foundation101.karatel.entity.ViolationRequisite;
+
+import java.util.ArrayList;
+
 /**
  * Created by Dima on 08.05.2016.
  */
 public class DBHelper extends SQLiteOpenHelper {
-    Context context;
-    String dataTableStructure;
 
+    //look at this - maybe we don't need it?
+    Context context;
+
+    public static final int DB_VERSION = 2;
     public static final String DATABASE = "violations_db";
     public static final String VIOLATIONS_TABLE = "violations_table";
     public static final String MEDIA_TABLE = "media_table";
@@ -43,8 +49,8 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        StringBuilder sb = new StringBuilder();
-        Resources res = context.getResources();
+
+        /*Resources res = context.getResources();
         String[] violations = res.getStringArray(org.foundation101.karatel.R.array.violationTypes);
         for (String violation : violations){
             int arrayId = res.getIdentifier(violation + "Requisites", "array", context.getPackageName());
@@ -52,35 +58,71 @@ public class DBHelper extends SQLiteOpenHelper {
             for (int i = 0; i < requisites.length; i += DB_TAG_STEP){
                 sb.append(requisites[i] + " TEXT,");
             }
-        }
-        dataTableStructure = new String(sb).substring(0,sb.length()-1); //remove trailing ','
+        }*/
 
+        String dataTableStructure = getTableStructure(Violation.CATEGORY_PUBLIC);
         db.execSQL("CREATE TABLE "
                 + VIOLATIONS_TABLE
                 + " ("
-                + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + ID_SERVER + " INTEGER,"
-                + ID_NUMBER_SERVER + " TEXT,"
-                + USER_ID + " INTEGER,"
-                + TYPE + " TEXT,"
-                + STATUS + " INTEGER,"
-                + TIME_STAMP + " TEXT,"
-                + LONGITUDE + " REAL,"
-                + LATITUDE + " REAL,"
+                + _ID               + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + ID_SERVER         + " INTEGER,"
+                + ID_NUMBER_SERVER  + " TEXT,"
+                + USER_ID           + " INTEGER,"
+                + TYPE              + " TEXT,"
+                + STATUS            + " INTEGER,"
+                + TIME_STAMP        + " TEXT,"
+                + LONGITUDE         + " REAL,"
+                + LATITUDE          + " REAL,"
                 + dataTableStructure
                 + ");");
         db.execSQL("CREATE TABLE "
                 + MEDIA_TABLE
                 + " ("
-                + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + ID + " INTEGER,"
-                + FILE_NAME + " TEXT"
+                + _ID               + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + ID                + " INTEGER,"
+                + FILE_NAME         + " TEXT"
                 + ");");
+
+        createTablesForComplains(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        createTablesForComplains(db);
+    }
 
+    private void createTablesForComplains(SQLiteDatabase db) {
+        String dataTableStructure = getTableStructure(Violation.CATEGORY_BUSINESS);
+        db.execSQL("CREATE TABLE "
+                + COMPLAINS_TABLE
+                + " ("
+                + _ID           + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + USER_ID       + " INTEGER,"
+                + TYPE          + " TEXT,"
+                + TIME_STAMP    + " TEXT,"
+                + LONGITUDE     + " REAL,"
+                + LATITUDE      + " REAL,"
+                + dataTableStructure
+                + ");");
+        db.execSQL("CREATE TABLE "
+                + COMPLAINS_MEDIA_TABLE
+                + " ("
+                + _ID           + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + ID            + " INTEGER,"
+                + FILE_NAME     + " TEXT"
+                + ");");
+    }
+
+    private String getTableStructure(int category) {
+        StringBuilder sb = new StringBuilder();
+        ArrayList<Violation> violations = Violation.getViolationsList(category);
+        for (Violation v : violations) {
+            for (ViolationRequisite violationRequisite : v.getRequisites()) {
+                sb.append(violationRequisite.dbTag + " TEXT,");
+            }
+        }
+
+        return new String(sb).substring(0,sb.length()-1); //remove trailing ','
     }
 
     public static ContentValues getRowAsContentValues(Cursor c) {
@@ -114,10 +156,16 @@ public class DBHelper extends SQLiteOpenHelper {
         return result;
     }
 
-    public static void deleteRequest(SQLiteDatabase db, Integer id){
+    public static void deleteViolationRequest(SQLiteDatabase db, Integer id){
         String idString = id.toString();
         db.delete(DBHelper.VIOLATIONS_TABLE, "_id = ?", new String[]{idString});
         db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idString});
+    }
+
+    public static void deleteComplainRequest(SQLiteDatabase db, Integer id){
+        String idString = id.toString();
+        db.delete(DBHelper.COMPLAINS_TABLE, "_id = ?", new String[]{idString});
+        db.delete(DBHelper.COMPLAINS_MEDIA_TABLE, "id = ?", new String[]{idString});
     }
 }
 

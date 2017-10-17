@@ -14,24 +14,23 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="6dp"
         android:textAllCaps="true"
         android:textSize="12sp"
-        android:id="@+id/textViewComplainName"
+        android:id="@+id/textViewComplainType"
         android:layout_alignParentTop="true"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/textViewRequestTimeStamp"
+        android:id="@+id/textViewComplainTimeStamp"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/textViewComplainType"
+        android:id="@+id/textViewComplainName"
         android:textSize="16sp"
-        android:layout_below="@+id/textViewComplainName"
+        android:layout_below="@+id/textViewComplainType"
         android:layout_alignParentLeft="true" />
 </RelativeLayout>

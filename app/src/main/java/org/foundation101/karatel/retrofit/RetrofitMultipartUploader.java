@@ -1,5 +1,6 @@
 package org.foundation101.karatel.retrofit;
 
+import org.foundation101.karatel.entity.ComplainCreationResponse;
 import org.foundation101.karatel.entity.CreationResponse;
 
 import okhttp3.MultipartBody;
@@ -14,7 +15,12 @@ import retrofit2.http.Path;
  */
 public interface RetrofitMultipartUploader {
     @POST("{path}")
-    Call<CreationResponse> upload(@Header("Authorization") String sessionToken,
-                                  @Path("path") String api,
-                                  @Body MultipartBody filePart);
+    Call<CreationResponse> uploadComplain(@Header("Authorization") String sessionToken,
+                                          @Path("path") String api,
+                                          @Body MultipartBody filePart);
+
+    @POST("{path}")
+    Call<ComplainCreationResponse>  uploadGrievance(@Header("Authorization") String sessionToken,
+                                          @Path(value = "path", encoded = true) String api,
+                                          @Body MultipartBody filePart);
 }

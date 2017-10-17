@@ -19,13 +19,16 @@ import com.google.android.gms.analytics.Tracker;
 import com.splunk.mint.Mint;
 
 import org.foundation101.karatel.entity.PunisherUser;
+import org.foundation101.karatel.utils.RetrofitUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.List;
 
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -136,27 +139,12 @@ public class KaratelApplication extends MultiDexApplication {
     }
 
 
+    public static Retrofit getClient(int apiVersion) {
+        return RetrofitUtils.build(retrofit, apiVersion);
+    }
+
     public static Retrofit getClient() {
-        if (retrofit == null) {
-            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            HttpLoggingInterceptor.Level logLevel = BuildConfig.DEBUG ?
-                    HttpLoggingInterceptor.Level.BODY :
-                    HttpLoggingInterceptor.Level.NONE;
-            logging.setLevel(logLevel);
-
-            OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-
-            // add your other interceptors …
-            // add logging as last interceptor
-            httpClient.addInterceptor(logging);
-
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(Globals.SERVER_URL)
-                    .addConverterFactory(JacksonConverterFactory.create())
-                    .client(httpClient.build())
-                    .build();
-        }
-        return retrofit;
+        return getClient(1);
     }
 
     private void copyFile(File sourceFile, File destFile) throws IOException {

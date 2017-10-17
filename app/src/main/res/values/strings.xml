@@ -139,7 +139,9 @@
     <string name="complains_book">Книга скарг</string>
     <string name="video_tutorial">Відеонавчання</string>
     <string name="complainsBookDisclaimer">Направляючи скаргу через цей розділ, Ви надаєте згоду на передачу Ваших персональних даних. Звернення буде направлено одразу в організацію, а не через оператора системи «КАРАТЄЛЬ».</string>
-    <string name="title_activity_complain">ComplainActivity</string>
     <string name="sendComplain">Відправити скаргу</string>
     <string name="saveComplain">Зберегти скаргу</string>
+    <string name="What_happened">Що сталося</string>
+    <string name="Describe_what_happened">Опишіть, що сталося</string>
+    <string name="drafts">Чернетки</string>
 </resources>

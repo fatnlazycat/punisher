@@ -12,7 +12,7 @@ import android.widget.TextView;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.ComplainActivity;
-import org.foundation101.karatel.entity.Request;
+import org.foundation101.karatel.entity.ComplainRequest;
 import org.foundation101.karatel.entity.Violation;
 
 import java.util.ArrayList;
@@ -24,35 +24,40 @@ public class ComplainDraftsAdapter extends RecyclerView.Adapter<ComplainDraftsAd
     public static final String INPUT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ";
     public static final String OUTPUT_DATE_FORMAT = "dd.MM.yyyy, HH:mm";
 
-    public ArrayList<Request> content;
+    public ArrayList<ComplainRequest> content;
     private Context context;
     private RecyclerView recycler;
 
-    public ArrayList<Request> getContent() {
+    public ComplainDraftsAdapter(Context context) {
+        this.context = context;
+    }
+
+    public ArrayList<ComplainRequest> getContent() {
         return content;
     }
-    public void setContent(ArrayList<Request> content) {
+    public void setContent(ArrayList<ComplainRequest> content) {
         this.content = content;
+        notifyDataSetChanged();
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v =  LayoutInflater.from(context).inflate(R.layout.item_complains_draft, parent, false);
+        View v =  LayoutInflater.from(parent.getContext()).inflate(R.layout.item_complains_draft, parent, false);
         return new ViewHolder(v);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Request thisRequest = content.get(position);
+        ComplainRequest thisRequest = content.get(position);
 
         String dateString = Globals.translateDate(INPUT_DATE_FORMAT, OUTPUT_DATE_FORMAT, thisRequest.created_at);
         String formattedDateString = "<b>" + dateString.substring(0, 10) + "</b>"
                 + dateString.substring(11, dateString.length());
-        holder.textViewRequestTimeStamp.setText(Html.fromHtml(formattedDateString));
+        holder.textViewComplainTimeStamp.setText(Html.fromHtml(formattedDateString));
 
-        holder.tvComplainType.setText(Violation.getByType(context, thisRequest.type).getName());
+        holder.tvComplainType.setText(Violation.getByType(thisRequest.type).getName());
 
-        //holder.tvComplainName.setText(statusText);
+        holder.tvComplainName.setText(thisRequest.brief);
     }
 
     @Override
@@ -84,7 +89,7 @@ public class ComplainDraftsAdapter extends RecyclerView.Adapter<ComplainDraftsAd
     }
 
     public void openRequest(int requestPosition){
-        Request thisRequest = content.get(requestPosition);
+        ComplainRequest thisRequest = content.get(requestPosition);
         int id = thisRequest.id;
         Intent intent = new Intent(context, ComplainActivity.class)
                 .putExtra(Globals.VIOLATION_ACTIVITY_MODE, ComplainActivity.MODE_EDIT)
@@ -94,13 +99,13 @@ public class ComplainDraftsAdapter extends RecyclerView.Adapter<ComplainDraftsAd
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvComplainName, textViewRequestTimeStamp, tvComplainType;
+        TextView tvComplainType, tvComplainName, textViewComplainTimeStamp;
 
         public ViewHolder(View itemView) {
             super(itemView);
-            tvComplainName =(TextView)itemView.findViewById(R.id.textViewRequestStatus);
-            textViewRequestTimeStamp=(TextView)itemView.findViewById(R.id.textViewRequestTimeStamp);
-            tvComplainType =(TextView)itemView.findViewById(R.id.textViewRequestType);
+            tvComplainName              = (TextView)itemView.findViewById(R.id.textViewComplainName);
+            textViewComplainTimeStamp   = (TextView)itemView.findViewById(R.id.textViewComplainTimeStamp);
+            tvComplainType              = (TextView)itemView.findViewById(R.id.textViewComplainType);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

@@ -221,7 +221,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         };
         tabs.setOnTabChangedListener(tabChangeListener);
 
-        dbHelper = new DBHelper(this, DBHelper.DATABASE, 1);
+        dbHelper = new DBHelper(this, DBHelper.DATABASE, DBHelper.DB_VERSION);
         requisitesAdapter = new RequisitesListAdapter(this);
 
         Intent intent = this.getIntent();
@@ -230,7 +230,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             idOnServer = 0;
             violation = (Violation) intent.getExtras().getSerializable(Globals.VIOLATION);
             status = 0; //status = draft
-            requisitesAdapter.content = RequisitesListAdapter.makeContent(violation.type);
+            requisitesAdapter.content = violation.getRequisites();
             if (violation.usesCamera) {//create mode means we have to capture video at start
                 CameraManager cameraManager = CameraManager.getInstance(this);
                 cameraManager.startCamera(CameraManager.VIDEO_CAPTURE_INTENT);
@@ -246,22 +246,28 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 String where = "_id=?";
                 String[] selectionArgs = {idInDbString};
                 cursor = db.query(table, columns, where, selectionArgs, null, null, null);
-                cursor.moveToFirst();
-                idOnServer = cursor.getInt(cursor.getColumnIndex(DBHelper.ID_SERVER));
-                id_number_server = cursor.getString(cursor.getColumnIndex(DBHelper.ID_NUMBER_SERVER));
-                latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
-                longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
-                time_stamp = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
-                status = cursor.getInt(cursor.getColumnIndex("status"));
-                String type = cursor.getString(cursor.getColumnIndex("type"));
-                violation = Violation.getByType(this, type);
-                requisitesAdapter.content = RequisitesListAdapter.makeContent(violation.type);
-                for (int i = 0; i < requisitesAdapter.getCount(); i++) {
-                    requisitesAdapter.content.get(i).value =
-                            cursor.getString(cursor.getColumnIndex(requisitesAdapter.content.get(i).dbTag));
+                if (cursor.moveToFirst()) {
+                    idOnServer = cursor.getInt(cursor.getColumnIndex(DBHelper.ID_SERVER));
+                    id_number_server = cursor.getString(cursor.getColumnIndex(DBHelper.ID_NUMBER_SERVER));
+                    latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
+                    longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
+                    time_stamp = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
+                    status = cursor.getInt(cursor.getColumnIndex("status"));
+                    String type = cursor.getString(cursor.getColumnIndex("type"));
+                    violation = Violation.getByType(type);
+                    requisitesAdapter.content = violation.getRequisites();
+                    for (int i = 0; i < requisitesAdapter.getCount(); i++) {
+                        requisitesAdapter.content.get(i).value =
+                                cursor.getString(cursor.getColumnIndex(requisitesAdapter.content.get(i).dbTag));
+                    }
+                    cursor.close();
+                    db.close();
+                } else {
+                    cursor.close();
+                    db.close();
+                    finish();
+                    return;
                 }
-                cursor.close();
-                db.close();
             } else {//if neither create nor edit mode then it's loaded from server
                 request = (Request)intent.getExtras().getSerializable(Globals.REQUEST_JSON);
 
@@ -271,8 +277,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 longitude = request.address_lon;
                 time_stamp = request.created_at;
                 status = request.complain_status_id;
-                violation = Violation.getByType(this, request.type);
-                requisitesAdapter.content = RequisitesListAdapter.makeContent(violation.type);
+                violation = Violation.getByType(request.type);
+                requisitesAdapter.content = violation.getRequisites();
                 for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                     try {
                         String fieldName = requisitesAdapter.content.get(i).dbTag.replace(violation.getType() + "_", "");
@@ -365,7 +371,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
             holder.textViewRequisiteHeader.setText(thisRequisite.name);
 
-            if (thisRequisite.description.isEmpty()) {
+            if (thisRequisite.description == null || thisRequisite.description.isEmpty()) {
                 holder.textViewRequisiteDescription.setVisibility(View.GONE);
             } else {
                 holder.textViewRequisiteDescription.setVisibility(View.VISIBLE);
@@ -1058,8 +1064,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
                 //prepare the request parameters
                 ArrayList<String> requestParameters = new ArrayList<>();
-                String[] keysForRequestParameters = ViolationRequisite.getRequisites(ViolationActivity.this,
-                        violation.getType());
+                String[] keysForRequestParameters = violation.getRequisitesString();
                 for (String str : keysForRequestParameters){
                     requestParameters.add(str);
                     switch (str) {
@@ -1121,7 +1126,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     }
 
                     RetrofitMultipartUploader api = KaratelApplication.getClient().create(RetrofitMultipartUploader.class);
-                    Call<CreationResponse> call = api.upload(Globals.sessionToken, typeServerSuffix, requestBodyBuilder.build());
+                    Call<CreationResponse> call = api.uploadComplain(Globals.sessionToken, typeServerSuffix, requestBodyBuilder.build());
                     Response<CreationResponse> json = call.execute();
                     if (json.isSuccessful()) {
                         result = json.body();
@@ -1188,12 +1193,12 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             SQLiteDatabase db = dbHelper.getWritableDatabase();
 
             if (mode == calculateRefusedStatus()){
-                DBHelper.deleteRequest(db, new BigDecimal(rowID).intValue());
+                DBHelper.deleteViolationRequest(db, new BigDecimal(rowID).intValue());
             }
             switch (answer.status) {
                 case Globals.SERVER_SUCCESS: {
                     if (mode != calculateRefusedStatus()) {
-                        DBHelper.deleteRequest(db, id);
+                        DBHelper.deleteViolationRequest(db, id);
                     }
                     //Toast.makeText(context, R.string.requestSent, Toast.LENGTH_LONG).show();
                     finish();

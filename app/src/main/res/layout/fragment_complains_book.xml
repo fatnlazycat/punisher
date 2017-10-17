@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/greyBackground">
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -9,6 +10,7 @@
         android:paddingBottom="@dimen/text_box_vertical_padding"
         android:paddingLeft="@dimen/text_box_horizontal_padding"
         android:paddingRight="@dimen/text_box_horizontal_padding"
+
         android:drawableLeft="@drawable/ic_warning"
         android:drawablePadding="15dp"
         android:textSize="12sp"

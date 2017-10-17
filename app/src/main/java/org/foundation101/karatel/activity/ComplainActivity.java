@@ -2,18 +2,24 @@ package org.foundation101.karatel.activity;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
+import android.content.IntentSender;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.location.LocationManager;
 import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -27,17 +33,29 @@ import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.places.Places;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.CameraManager;
-import org.foundation101.karatel.entity.CreationResponse;
+import org.foundation101.karatel.entity.ComplainCreationResponse;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
@@ -51,6 +69,7 @@ import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.entity.ViolationRequisite;
 import org.foundation101.karatel.fragment.ComplainDraftsFragment;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
+import org.foundation101.karatel.utils.DescriptionFormatter;
 import org.foundation101.karatel.utils.Formular;
 import org.foundation101.karatel.utils.MediaUtils;
 import org.foundation101.karatel.view.ExpandedGridView;
@@ -72,9 +91,12 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class ComplainActivity extends AppCompatActivity implements Formular {
+public class ComplainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, LocationListener, Formular {
 
     final int RQS_GooglePlayServices = 1000;
+    final int REQUEST_CODE_SELECT_POSSIBLE_VALUE = 1001;
+    final double EMPTY_LOCATION_STUB = 0;
 
     public static final int MODE_CREATE = -1;
     public static final int MODE_EDIT = 0;
@@ -98,7 +120,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     }
 
     public ComplainRequest request = null;
-    Integer id, status, idOnServer;
+    Integer id, status, companyIdOnServer;
     String idInDbString, time_stamp;
     String id_number_server = "";
     Violation violation = new Violation();
@@ -136,20 +158,24 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         punishButton = (Button) findViewById(R.id.punishButton);
         saveButton = (Button) findViewById(R.id.saveButton);
 
+        if (checkGooglePlayServices()) { buildGoogleApiClient(); }
+        initOldAndroidLocation();
+
         ((KaratelApplication)getApplication()).restoreUserFromPreferences();
 
         //dimension of the thumbnail - the thumbnail should have the same size as MediaStore.Video.Thumbnails.MICRO_KIND
         thumbDimension = getResources().getDimensionPixelOffset(R.dimen.thumbnail_size);
 
-        dbHelper = new DBHelper(this, DBHelper.DATABASE, 1);
+        dbHelper = new DBHelper(this, DBHelper.DATABASE, DBHelper.DB_VERSION);
 
         Intent intent = this.getIntent();
         mode = intent.getIntExtra(Globals.VIOLATION_ACTIVITY_MODE, MODE_EDIT);
         if (mode == MODE_CREATE) {
-            idOnServer = 0;
             violation = (Violation) intent.getExtras().getSerializable(Globals.VIOLATION);
-            status = 0; //status = draft
-            requisites = RequisitesListAdapter.makeContent(violation.type);
+            //companyIdOnServer = violation.getId();
+            //status = 0; //status = draft
+            //requisites = RequisitesListAdapter.makeContent(violation.type);
+            requisites = violation.getRequisites();
             if (violation.usesCamera) {//create mode means we have to capture video at start
                 CameraManager cameraManager = CameraManager.getInstance(this);
                 cameraManager.startCamera(CameraManager.VIDEO_CAPTURE_INTENT);
@@ -157,6 +183,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
             id = intent.getIntExtra(Globals.ITEM_ID, 0);
             idInDbString = id.toString();
+            blockButtons = false;
             if (mode == MODE_EDIT) {
                 SQLiteDatabase db = dbHelper.getReadableDatabase();
                 //query to data table
@@ -166,15 +193,16 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                 String[] selectionArgs = {idInDbString};
                 cursor = db.query(table, columns, where, selectionArgs, null, null, null);
                 cursor.moveToFirst();
-                idOnServer = cursor.getInt(cursor.getColumnIndex(DBHelper.ID_SERVER));
-                id_number_server = cursor.getString(cursor.getColumnIndex(DBHelper.ID_NUMBER_SERVER));
+                //companyIdOnServer = cursor.getInt(cursor.getColumnIndex(DBHelper.ID_SERVER));
+                //id_number_server = cursor.getString(cursor.getColumnIndex(DBHelper.ID_NUMBER_SERVER));
                 latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
                 longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
                 time_stamp = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
-                status = cursor.getInt(cursor.getColumnIndex("status"));
+                //status = cursor.getInt(cursor.getColumnIndex("status"));
                 String type = cursor.getString(cursor.getColumnIndex("type"));
-                violation = Violation.getByType(this, type);
-                requisites = RequisitesListAdapter.makeContent(violation.type);
+                violation = Violation.getByType(type);
+                //requisites = RequisitesListAdapter.makeContent(violation.type);
+                requisites = violation.getRequisites();
                 for (ViolationRequisite oneRequisite : requisites) {
                     oneRequisite.value = cursor.getString(cursor.getColumnIndex(oneRequisite.dbTag));
                 }
@@ -195,6 +223,9 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
 
+        ImageView violationImage = (ImageView) findViewById(R.id.ivComplainLogo);
+        violationImage.setImageResource(violation.drawableId);
+
         if (violation.getMediaTypes() == Violation.VIDEO_ONLY)
             addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
 
@@ -211,7 +242,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     }
 
     void makeRequisitesViews(){
-        for (ViolationRequisite thisRequisite : requisites){
+        for (final ViolationRequisite thisRequisite : requisites){
             RequisitesListAdapter.ViewHolder holder = new RequisitesListAdapter.ViewHolder();
 
             View v = LayoutInflater.from(this).inflate(R.layout.item_violation_requisite, requisitesList, false);
@@ -222,7 +253,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
 
             holder.textViewRequisiteHeader.setText(thisRequisite.name);
 
-            if (thisRequisite.description.isEmpty()) {
+            if (thisRequisite.description == null || thisRequisite.description.isEmpty()) {
                 holder.textViewRequisiteDescription.setVisibility(View.GONE);
             } else {
                 holder.textViewRequisiteDescription.setVisibility(View.VISIBLE);
@@ -248,46 +279,63 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                 }
             });
 
+            if (thisRequisite.getPossibleValues() != null) {
+                holder.editTextRequisite.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow, 0);
+                holder.editTextRequisite.setInputType(0); //disables editing
+                holder.editTextRequisite.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(ComplainActivity.this, PossibleValuesActivity.class);
+                        intent.putExtra(Globals.POSSIBLE_VALUES, thisRequisite.getPossibleValues());
+                        intent.putExtra(Globals.POSSIBLE_VALUES_HEADER, thisRequisite.getName());
+                        intent.putExtra(Globals.REQUISITE_NUMBER_FOR_POSSIBLE_VALUES, requisites.indexOf(thisRequisite));
+                        startActivityForResult(intent, REQUEST_CODE_SELECT_POSSIBLE_VALUE);
+                    }
+                });
+            }
+
             requisiteViews.add(holder);
             requisitesList.addView(v);
         }
     }
 
     void makeEvidenceAdapterContent(){
-        SQLiteDatabase _db = dbHelper.getReadableDatabase();
-        //query to media table
-        String table = DBHelper.VIOLATIONS_TABLE + " INNER JOIN " + DBHelper.MEDIA_TABLE + " ON "
-                + DBHelper.VIOLATIONS_TABLE + "._id = " + DBHelper.MEDIA_TABLE + ".id";
-        String[] columns = new String[]{DBHelper.ID, DBHelper.FILE_NAME};
-        String where = "id=?";
-        String[] selectionArgs = {idInDbString};
-        Cursor _cursor = _db.query(table, columns, where, selectionArgs, null, null, null);
-        if (_cursor.moveToFirst()) {
-            do try {
-                String evidenceFileName = _cursor.getString(_cursor.getColumnIndex(DBHelper.FILE_NAME));
-                Bitmap thumbnail;
-                if (evidenceFileName.endsWith(CameraManager.JPG)) {
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inSampleSize = 4;
-                    int orientation = MediaUtils.getOrientation(evidenceFileName);
-                    thumbnail = MediaUtils.rotateBitmap(
-                            ThumbnailUtils.extractThumbnail(
-                                    BitmapFactory.decodeFile(evidenceFileName, options)
-                                    , thumbDimension, thumbDimension
-                            )
-                            , orientation
-                    );
-                } else { //it's video
-                    thumbnail = ThumbnailUtils.createVideoThumbnail(evidenceFileName, MediaStore.Video.Thumbnails.MICRO_KIND);
-                }
-                evidenceAdapter.content.add(evidenceFileName);
-                evidenceAdapter.mediaContent.add(thumbnail);
-            } catch (Exception e){//we read files so need to catch exceptions
-                Globals.showError(this, R.string.error, e);
-            } while (_cursor.moveToNext());
+        if (mode == MODE_EDIT) {
+            SQLiteDatabase _db = dbHelper.getReadableDatabase();
+            //query to media table
+            String table = DBHelper.COMPLAINS_TABLE + " INNER JOIN " + DBHelper.COMPLAINS_MEDIA_TABLE + " ON "
+                    + DBHelper.COMPLAINS_TABLE + "._id = " + DBHelper.COMPLAINS_MEDIA_TABLE + ".id";
+            String[] columns = new String[]{DBHelper.ID, DBHelper.FILE_NAME};
+            String where = "id=?";
+            String[] selectionArgs = {idInDbString};
+            Cursor _cursor = _db.query(table, columns, where, selectionArgs, null, null, null);
+            if (_cursor.moveToFirst()) {
+                do try {
+                    String evidenceFileName = _cursor.getString(_cursor.getColumnIndex(DBHelper.FILE_NAME));
+                    Bitmap thumbnail;
+                    if (evidenceFileName.endsWith(CameraManager.JPG)) {
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inSampleSize = 4;
+                        int orientation = MediaUtils.getOrientation(evidenceFileName);
+                        thumbnail = MediaUtils.rotateBitmap(
+                                ThumbnailUtils.extractThumbnail(
+                                        BitmapFactory.decodeFile(evidenceFileName, options)
+                                        , thumbDimension, thumbDimension
+                                )
+                                , orientation
+                        );
+                    } else { //it's video
+                        thumbnail = ThumbnailUtils.createVideoThumbnail(evidenceFileName, MediaStore.Video.Thumbnails.MICRO_KIND);
+                    }
+                    evidenceAdapter.content.add(evidenceFileName);
+                    evidenceAdapter.mediaContent.add(thumbnail);
+                } catch (Exception e) {//we read files so need to catch exceptions
+                    Globals.showError(this, R.string.error, e);
+                } while (_cursor.moveToNext());
+            }
+            _cursor.close();
+            _db.close();
         }
-        _cursor.close();
-        _db.close();
     }
 
     @Override
@@ -337,6 +385,21 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
             }
         }
 
+        if (requestCode == REQUEST_CHECK_SETTINGS){
+            if (googleApiClient != null && googleApiClient.isConnected()) {
+                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+            }
+        }
+
+        if (resultCode == RESULT_OK && requestCode == REQUEST_CODE_SELECT_POSSIBLE_VALUE && intent != null) {
+            String newValue = intent.getStringExtra(Globals.POSSIBLE_VALUES);
+            int targetViewNumber = intent.getIntExtra(Globals.REQUISITE_NUMBER_FOR_POSSIBLE_VALUES, 0);
+            if (requisitesList.getChildCount() >= targetViewNumber) {
+                TextView targetView = (TextView) requisitesList.getChildAt(targetViewNumber).findViewById(R.id.editTextRequisite);
+                if (targetView != null) targetView.setText(newValue);
+            }
+        }
+
         super.onActivityResult(requestCode, resultCode, intent);
     }
 
@@ -358,67 +421,86 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     }
 
     public void saveToBase(View view) throws Exception {
-        //db actions
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        ContentValues cv = new ContentValues();
-
-        cv.put("type", violation.type);
-        cv.put("status", status);
-        cv.put(DBHelper.ID_SERVER, idOnServer);
-        cv.put(DBHelper.ID_NUMBER_SERVER, id_number_server);
-        cv.put(DBHelper.USER_ID, Globals.user.id);
-        cv.put(DBHelper.LONGITUDE, longitude);
-        cv.put(DBHelper.LATITUDE, latitude);
-
-        for (int i = 0; i < requisites.size(); i++) {
-            ViolationRequisite thisRequisite = requisites.get(i);
-            cv.put(thisRequisite.dbTag, (requisiteViews.get(i).editTextRequisite.getText().toString()));
-        }
-        switch (mode) {
-            case MODE_CREATE: {
-                time_stamp = new SimpleDateFormat(RequestListAdapter.INPUT_DATE_FORMAT, Locale.US)
-                        .format(new Date());
-                cv.put(DBHelper.TIME_STAMP, time_stamp);
-                rowID = db.insertOrThrow(DBHelper.COMPLAINS_TABLE, null, cv);
-                id = new BigDecimal(rowID).intValue();
-                idInDbString = rowID.toString();
-                mode = MODE_EDIT; //once created the record we switch to edit mode
-                break;
-            }
-            case MODE_EDIT :{
-                cv.put(DBHelper._ID, id);
-                cv.put(DBHelper.TIME_STAMP, time_stamp);
-                rowID = db.replace(DBHelper.COMPLAINS_TABLE, null, cv);
-                break;
-            }
-        }
-        cv.clear();
-
-        /*actions with the media table: if in edit mode - we delete all previously written records
-         *& fill the table again, because the user could add or delete something
+                /*first check if location is available - show error dialog if not
+        this is made to prevent saving request with zero LatLng -> leads to crash.
          */
-        if (mode == MODE_EDIT) {//this condition works only in edit mode - delete all records previously added to db
-            db.delete(DBHelper.COMPLAINS_MEDIA_TABLE, "id = ?", new String[]{idInDbString});
-        }
-        for (int i = 0; i < evidenceAdapter.content.size(); i++) {
-            cv.put(DBHelper.ID, rowID);
-            cv.put(DBHelper.FILE_NAME, evidenceAdapter.content.get(i));
-            db.insert(DBHelper.COMPLAINS_MEDIA_TABLE, null, cv);
-            cv.clear();
-        }
-        db.close();
+        if (checkLocationIfRequired()) {
+            //db actions
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            ContentValues cv = new ContentValues();
 
-        //delete the evidence files removed by the user from filesystem
-        try {
-            for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
-                new File(fileToDelete).delete();
+            cv.put("type", violation.type);
+            //cv.put("status", status);
+            //cv.put(DBHelper.ID_SERVER,  violation.getId());
+            cv.put(DBHelper.USER_ID,    Globals.user.id);
+            cv.put(DBHelper.LONGITUDE,  longitude == null ? EMPTY_LOCATION_STUB : longitude);
+            cv.put(DBHelper.LATITUDE,   latitude  == null ? EMPTY_LOCATION_STUB : latitude);
+
+            for (int i = 0; i < requisites.size(); i++) {
+                ViolationRequisite thisRequisite = requisites.get(i);
+                cv.put(thisRequisite.dbTag, (requisiteViews.get(i).editTextRequisite.getText().toString()));
             }
-        } catch (Exception e) {
-            Globals.showError(this, R.string.cannot_write_file, e);
-        }
+            switch (mode) {
+                case MODE_CREATE: {
+                    time_stamp = new SimpleDateFormat(RequestListAdapter.INPUT_DATE_FORMAT, Locale.US)
+                            .format(new Date());
+                    cv.put(DBHelper.TIME_STAMP, time_stamp);
+                    rowID = db.insertOrThrow(DBHelper.COMPLAINS_TABLE, null, cv);
+                    id = new BigDecimal(rowID).intValue();
+                    idInDbString = rowID.toString();
+                    mode = MODE_EDIT; //once created the record we switch to edit mode
+                    break;
+                }
+                case MODE_EDIT :{
+                    cv.put(DBHelper._ID, id);
+                    cv.put(DBHelper.TIME_STAMP, time_stamp);
+                    rowID = db.replace(DBHelper.COMPLAINS_TABLE, null, cv);
+                    break;
+                }
+            }
+            cv.clear();
 
-        //show toast only if the method is called by Save button
-        if (view != null ) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
+            /*actions with the media table: if in edit mode - we delete all previously written records
+             *& fill the table again, because the user could add or delete something
+             */
+            if (mode == MODE_EDIT) {//this condition works only in edit mode - delete all records previously added to db
+                db.delete(DBHelper.COMPLAINS_MEDIA_TABLE, "id = ?", new String[]{idInDbString});
+            }
+            for (int i = 0; i < evidenceAdapter.content.size(); i++) {
+                cv.put(DBHelper.ID, rowID);
+                cv.put(DBHelper.FILE_NAME, evidenceAdapter.content.get(i));
+                db.insert(DBHelper.COMPLAINS_MEDIA_TABLE, null, cv);
+                cv.clear();
+            }
+            db.close();
+
+            //delete the evidence files removed by the user from filesystem
+            try {
+                for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
+                    new File(fileToDelete).delete();
+                }
+            } catch (Exception e) {
+                Globals.showError(this, R.string.cannot_write_file, e);
+            }
+
+            //show toast only if the method is called by Save button
+            if (view != null ) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, R.string.cannot_define_location, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    boolean checkLocationIfRequired() {
+        return evidenceAdapter.isEmpty() || (checkLocation() && !blockButtons);
+    }
+
+    boolean checkLocation(){
+        if (latitude == null){
+            /*AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            AlertDialog dialog = builder.setTitle(R.string.cannot_define_location).setNegativeButton(R.string.ok, null).create();
+            dialog.show();*/
+            return false;
+        } else return true;
     }
 
     public void photoVideoPopupMenu(View view) {
@@ -455,16 +537,20 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     }
 
     public void punish(View view) {
-        try {
-            if (!evidenceAdapter.sizeCheck()) {
-                Toast.makeText(this, R.string.request_too_big, Toast.LENGTH_LONG).show();
-                return;
+        if (!evidenceAdapter.isEmpty() && blockButtons) {
+            Toast.makeText(this, R.string.cannot_define_location, Toast.LENGTH_LONG).show();
+        } else {
+            try {
+                if (!evidenceAdapter.sizeCheck()) {
+                    Toast.makeText(this, R.string.request_too_big, Toast.LENGTH_LONG).show();
+                    return;
+                }
+                //ComplainDraftsFragment.punishPerformed = true;
+                saveToBase(null); //we pass null to point that it's called from punish()
+                new ComplainSender(this).execute(violation);
+            } catch (Exception e) {
+                Globals.showError(this, R.string.error, e);
             }
-            ComplainDraftsFragment.punishPerformed = true;
-            saveToBase(null); //we pass null to point that it's called from punish()
-            new ComplainActivity.ViolationSender(this).execute(violation);
-        } catch (Exception e) {
-            Globals.showError(this, R.string.error, e);
         }
     }
 
@@ -474,7 +560,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
 
     @Override
     public void validateSaveButton(){
-        saveButton.setEnabled(!evidenceAdapter.isEmpty());
+        //saveButton.setEnabled(!evidenceAdapter.isEmpty());
     }
 
     @Override
@@ -483,10 +569,11 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     }
 
     public boolean allDataEntered(){
-        boolean result = !evidenceAdapter.isEmpty();
+        //boolean result = !evidenceAdapter.isEmpty();
+        boolean result = true;
 
         int i=0;
-        while (i < requisites.size() && result){
+        while (i < requisiteViews.size() && result){
             Editable text = requisiteViews.get(i).editTextRequisite.getText();
             if (requisites.get(i).necessary) result = (text != null) && (!text.toString().isEmpty());
             i++;
@@ -494,6 +581,183 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
 
         return result;
     }
+
+    void initOldAndroidLocation(){
+        locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            locationListener = new MyOldAndroidLocationListener();
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        }
+    }
+
+    private class MyOldAndroidLocationListener implements android.location.LocationListener{
+        @Override
+        public void onLocationChanged(Location location) {
+            if (latitude == null || latitude == 0) {//use this only if no result from FusedLocationAPI
+
+                if (((KaratelApplication)getApplicationContext()).locationIsMock(location)){
+                    if (!mockLocationDialogShown) {
+                        mockLocationDialogShown = true;
+                        AlertDialog.Builder builder = new AlertDialog.Builder(ComplainActivity.this);
+                        AlertDialog dialog = builder
+                                .setTitle(R.string.turn_off_mock_locations)
+                                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
+                                        if (intent.resolveActivity(getPackageManager()) != null) {
+                                            startActivity(intent);
+                                        }
+                                    }
+                                })
+                                .setNegativeButton(R.string.cancel, null).create();
+                        dialog.show();
+                    }
+                } else if (mode == MODE_CREATE) {
+                    Double latToCheck = latitude != null ? latitude : 0;
+                    Double lonToCheck = longitude != null ? longitude : 0;
+                    Double absLat = Math.abs(latToCheck - location.getLatitude());
+                    Double absLon = Math.abs(lonToCheck - location.getLongitude());
+                    if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
+                        latitude = location.getLatitude();
+                        longitude = location.getLongitude();
+                        blockButtons = false;
+                    }
+                }
+            }
+            locationManager.removeUpdates(locationListener);
+        }
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {}
+        @Override
+        public void onProviderEnabled(String provider) {}
+        @Override
+        public void onProviderDisabled(String provider) {}
+    }
+
+    private boolean checkGooglePlayServices(){
+        GoogleApiAvailability gaa = GoogleApiAvailability.getInstance();
+        int resultCode = gaa.isGooglePlayServicesAvailable(getApplicationContext());
+        if (resultCode == ConnectionResult.SUCCESS){
+            return true;
+        }else{
+            if (gaa.isUserResolvableError(resultCode)) {
+                gaa.getErrorDialog(this, resultCode, RQS_GooglePlayServices).show();
+            } else {
+                Toast.makeText(getApplicationContext(), "This device is not supported.", Toast.LENGTH_LONG).show();
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Creating google api client object
+     * */
+    protected synchronized void buildGoogleApiClient() {
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                //.addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
+                .addApi(LocationServices.API).build();
+        googleApiClient.connect();
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        if (mode == MODE_CREATE) {
+            locationRequest = LocationRequest.create()
+                    .setNumUpdates(3)
+                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                    .setInterval(1);
+            PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
+
+            result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+                @Override
+                public void onResult(LocationSettingsResult result) {
+                    final Status status = result.getStatus();
+                    switch (status.getStatusCode()) {
+                        case LocationSettingsStatusCodes.SUCCESS:
+                            // All location settings are satisfied. The client can initialize location requests here.
+                            if (googleApiClient != null && googleApiClient.isConnected()) {
+                                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient,
+                                        locationRequest, ComplainActivity.this);
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            // Location settings are not satisfied. But could be fixed by showing the user a dialog.
+                            try {
+                                // Show the dialog by calling startResolutionForResult(),
+                                // and check the result in onActivityResult().
+                                status.startResolutionForResult(ComplainActivity.this, REQUEST_CHECK_SETTINGS);
+                            } catch (IntentSender.SendIntentException e) {
+                                // Ignore the error.
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            // Location settings are not satisfied. However, we have no way to fix the
+                            // settings so we won't show the dialog.
+                            Toast.makeText(ComplainActivity.this,  "location settings not available", Toast.LENGTH_LONG).show();
+                            ComplainActivity.this.finish();
+                            break;
+                    }
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult result) {
+        Log.e("Punisher", "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
+    }
+
+    @Override
+    public void onLocationChanged(final Location location) {
+        if (mode == MODE_CREATE && !((KaratelApplication)getApplicationContext()).locationIsMock(location)){
+            Double latToCheck = latitude!=null ? latitude : 0;
+            Double lonToCheck = longitude!=null ? longitude : 0;
+            Double absLat = Math.abs(latToCheck - location.getLatitude());
+            Double absLon = Math.abs(lonToCheck - location.getLongitude());
+            if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
+                PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
+
+                result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+                    @Override
+                    public void onResult(LocationSettingsResult result) {
+                        if (result.getStatus().getStatusCode() == LocationSettingsStatusCodes.SUCCESS) {
+                            latitude = location.getLatitude();
+                            longitude = location.getLongitude();
+                            blockButtons = false;
+                        } else {
+                            latitude = null; //this will block the buttons
+                            blockButtons = true;
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    PendingResult<LocationSettingsResult> getPendingLocationSettings(){
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+        PendingResult<LocationSettingsResult> result =
+                LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
+        return result;
+    }
+
+    @Override //Activity method
+    protected void onStop() {
+        if (googleApiClient != null && googleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+            googleApiClient.disconnect();
+        }
+        super.onStop();
+    }
+
 
     @Override
     protected void onDestroy() {
@@ -512,10 +776,10 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         super.onDestroy();
     }
 
-    private class ViolationSender extends AsyncTask<Violation, Void, CreationResponse> {
+    private class ComplainSender extends AsyncTask<Violation, Void, ComplainCreationResponse> {
         Context context;
 
-        ViolationSender(Context context){
+        ComplainSender(Context context){
             this.context = context;
         }
 
@@ -528,11 +792,11 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         }
 
         @Override
-        protected CreationResponse doInBackground(Violation... params) {
+        protected ComplainCreationResponse doInBackground(Violation... params) {
             if (!HttpHelper.internetConnected(context)) return null;
 
             Violation violation = params[0];
-            CreationResponse result;
+            ComplainCreationResponse result;
 
             SQLiteDatabase db = dbHelper.getReadableDatabase();
             //query to data table
@@ -543,58 +807,53 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
             String[] selectionArgs = {idInDbString};
             cursor = db.query(table, columns, where, selectionArgs, null, null, null);
             cursor.moveToFirst();
-            Double latitude = cursor.getDouble(cursor.getColumnIndex(DBHelper.LATITUDE));
+            Double latitude  = cursor.getDouble(cursor.getColumnIndex(DBHelper.LATITUDE));
             Double longitude = cursor.getDouble(cursor.getColumnIndex(DBHelper.LONGITUDE));
             Map<String, String> dbRowData = new HashMap<>();
             for (ViolationRequisite requisite : requisites) {
-                String columnName = requisite.dbTag;
-                String columnValue = cursor.getString(cursor.getColumnIndex(columnName));
+                String columnName = requisite.name;
+                String columnValue = cursor.getString(cursor.getColumnIndex(requisite.dbTag));
                 dbRowData.put(columnName, columnValue == null ? "" : columnValue);
             }
             cursor.close();
             db.close();
 
             try {
-                //get resources
-                Resources res = context.getResources();
-                int resId = res.getIdentifier(violation.getType() + "_server", "string", context.getPackageName());
-                String typeServerSuffix = res.getString(resId);
-                //also need to remove trailing 's' from type server suffix
-                String typeServerSuffixNoS = typeServerSuffix.substring(0, typeServerSuffix.length()-1);
-
-                String requestUrl = Globals.SERVER_URL + typeServerSuffix;
+                String typeServerSuffix = "companies/" + violation.getId() + "/grievances";
 
                 //prepare the request parameters
                 ArrayList<String> requestParameters = new ArrayList<>();
-                String[] keysForRequestParameters = ViolationRequisite.getRequisites(ComplainActivity.this,
-                        violation.getType());
+                String[] keysForRequestParameters = violation.getRequisitesString();
                 for (String str : keysForRequestParameters){
                     requestParameters.add(str);
                     switch (str) {
                         case "user_id" : {
                             requestParameters.add(Globals.user.id.toString()); break;
                         }
-                        case "id_number" : {
-                            requestParameters.add(idInDbString); break;
-                        }
-                        case "type" : {
-                            requestParameters.add(violation.getType()); break;
-                        }
-                        case "complain_status_id" : {
-                            requestParameters.add(Integer.valueOf(mode).toString()); break;
+                        case "company_id" : {
+                            requestParameters.add("" + violation.getId()); break;
                         }
                         case "longitude" : {
-                            requestParameters.add(longitude.toString()); break;
+                            if (longitude == EMPTY_LOCATION_STUB) {
+                                //remove the word "longitude"
+                                requestParameters.remove(requestParameters.size() - 1);
+                            } else {
+                                requestParameters.add(longitude.toString());
+                            }
+                            break;
                         }
                         case "latitude" : {
-                            requestParameters.add(latitude.toString()); break;
+                            if (latitude == EMPTY_LOCATION_STUB) {
+                                //remove the word "latitude"
+                                requestParameters.remove(requestParameters.size() - 1);
+                            } else {
+                                requestParameters.add(latitude.toString());
+                            }
+                            break;
                         }
-                        case "create_in_the_device" : {
-                            requestParameters.add(time_stamp); break;
-                        }
-                        default : {
-                            String adaptedKey = violation.getType() + "_" + str;
-                            requestParameters.add(dbRowData.get(adaptedKey));
+                        case "description" : {
+                            requestParameters.add(DescriptionFormatter.format(dbRowData));
+                            break;
                         }
                     }
                 }
@@ -604,8 +863,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                 MultipartBody.Builder requestBodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
                 int i = 0;
                 while (i < requestParametersArray.length) {
-                    requestBodyBuilder.addFormDataPart(typeServerSuffixNoS + "[" + requestParametersArray[i++] + "]",
-                            requestParametersArray[i++]);
+                    requestBodyBuilder.addFormDataPart("grievance[" + requestParametersArray[i++] + "]", requestParametersArray[i++]);
                 }
                 for (String mediaFileName : evidenceAdapter.content) {
                     String requestTag, mimeType;
@@ -616,19 +874,19 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                         requestTag = "videos";
                         mimeType = "video/mp4";
                     }
-                    requestBodyBuilder.addFormDataPart(typeServerSuffixNoS + "[" + requestTag + "][]",
-                            mediaFileName,
+                    requestBodyBuilder.addFormDataPart("grievance[" + requestTag + "][]", mediaFileName,
                             RequestBody.create(MediaType.parse(mimeType), new File(mediaFileName)));
                 }
 
-                RetrofitMultipartUploader api = KaratelApplication.getClient().create(RetrofitMultipartUploader.class);
-                Call<CreationResponse> call = api.upload(Globals.sessionToken, typeServerSuffix, requestBodyBuilder.build());
-                Response<CreationResponse> json = call.execute();
+                RetrofitMultipartUploader api = KaratelApplication.getClient(2).create(RetrofitMultipartUploader.class);
+                Call<ComplainCreationResponse> call = api.uploadGrievance(Globals.sessionToken,
+                        typeServerSuffix, requestBodyBuilder.build());
+                Response<ComplainCreationResponse> json = call.execute();
                 if (json.isSuccessful()) {
                     result = json.body();
                 } else {
                     ResponseBody errorBody = json.errorBody();
-                    result = new ObjectMapper().readValue(errorBody.string(), CreationResponse.class);
+                    result = new ObjectMapper().readValue(errorBody.string(), ComplainCreationResponse.class);
                     errorBody.close();
                 }
             } catch (final IOException e){
@@ -644,31 +902,31 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         }
 
         @Override
-        protected void onPostExecute(CreationResponse answer) {
+        protected void onPostExecute(ComplainCreationResponse answer) {
             super.onPostExecute(answer);
 
             if (answer == null) {
                 try {
-                    answer = new ObjectMapper().readValue(HttpHelper.ERROR_JSON, CreationResponse.class);
-                    switch (answer.status) {
-                        case Globals.SERVER_SUCCESS: {
-                            SQLiteDatabase db = dbHelper.getWritableDatabase();
-                            DBHelper.deleteRequest(db, id);
-                            db.close();
-                            finish();
-                            break;
-                        }
-                        case Globals.SERVER_ERROR: {
-                            Toast.makeText(context, answer.error, Toast.LENGTH_LONG).show();
-                            break;
-                        }
-                    }
+                    answer = new ObjectMapper().readValue(HttpHelper.ERROR_JSON, ComplainCreationResponse.class);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
+            switch (answer.status) {
+                case Globals.SERVER_SUCCESS: {
+                    SQLiteDatabase db = dbHelper.getWritableDatabase();
+                    DBHelper.deleteComplainRequest(db, id);
+                    db.close();
+                    finish();
+                    break;
+                }
+                case Globals.SERVER_ERROR: {
+                    Toast.makeText(context, answer.error, Toast.LENGTH_LONG).show();
+                    break;
+                }
+            }
 
-            if (progressBar != null) progressBar.setVisibility(View.GONE);
+            if (progressBar  != null) progressBar.setVisibility(View.GONE);
             if (punishButton != null) punishButton.setEnabled(true);
         }
     }

@@ -88,10 +88,16 @@ public class RequestListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         punishPerformed = false;
         super.onCreate(savedInstanceState);
-        db = new DBHelper(getContext(), DBHelper.DATABASE, 1).getReadableDatabase();
+        db = new DBHelper(getContext(), DBHelper.DATABASE, DBHelper.DB_VERSION).getReadableDatabase();
         setHasOptionsMenu(true);
 
         ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
+    }
+
+    @Override
+    public void onDestroy() {
+        db.close();
+        super.onDestroy();
     }
 
     @Override
@@ -231,7 +237,7 @@ public class RequestListFragment extends Fragment {
     }
 
     void deleteDraftRequest(Integer position){
-        DBHelper.deleteRequest(db, position);
+        DBHelper.deleteViolationRequest(db, position);
     }
 
     void changeSortMenuVisibility(){
