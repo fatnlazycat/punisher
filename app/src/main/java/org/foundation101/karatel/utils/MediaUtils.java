@@ -8,10 +8,15 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.media.ExifInterface;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Display;
+
+import org.foundation101.karatel.CameraManager;
+import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.R;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -29,6 +34,9 @@ import javax.microedition.khronos.egl.EGLDisplay;
  */
 
 public class MediaUtils {
+    //dimension of the thumbnail - the thumbnail should have the same size as MediaStore.Video.Thumbnails.MICRO_KIND
+    public static final int THUMB_DIMENSION =
+            KaratelApplication.getInstance().getResources().getDimensionPixelOffset(R.dimen.thumbnail_size);
     /*
 a method from Android reference docs
 */
@@ -277,5 +285,23 @@ a method from Android reference docs
         }
     }
 
+    public static Bitmap getThumbnail(String fileName) throws IOException {
+        Bitmap thumbnail;
+        if (fileName.endsWith(CameraManager.JPG)) {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = 4;
+            int orientation = MediaUtils.getOrientation(fileName);
+            thumbnail = MediaUtils.rotateBitmap(
+                    ThumbnailUtils.extractThumbnail(
+                            BitmapFactory.decodeFile(fileName, options)
+                            , THUMB_DIMENSION, THUMB_DIMENSION
+                    )
+                    , orientation
+            );
+        } else { //it's video
+            thumbnail = ThumbnailUtils.createVideoThumbnail(fileName, MediaStore.Video.Thumbnails.MICRO_KIND);
+        }
+        return thumbnail;
+    }
 
 }

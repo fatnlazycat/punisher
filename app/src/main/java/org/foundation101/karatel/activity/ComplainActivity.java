@@ -69,6 +69,7 @@ import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.entity.ViolationRequisite;
 import org.foundation101.karatel.fragment.ComplainDraftsFragment;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
+import org.foundation101.karatel.utils.DBUtils;
 import org.foundation101.karatel.utils.DescriptionFormatter;
 import org.foundation101.karatel.utils.Formular;
 import org.foundation101.karatel.utils.MediaUtils;
@@ -108,7 +109,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     EvidenceAdapter evidenceAdapter = new EvidenceAdapter(this);
     DBHelper dbHelper;
     Cursor cursor;
-    int mode, thumbDimension;
+    int mode;
     Long rowID;
 
     final Double REFRESH_ACCURACY = 0.001;
@@ -119,12 +120,14 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         return mode;
     }
 
+    ArrayList<String> savedInstanceStateEvidenceFileNames = new ArrayList<>();
     public ComplainRequest request = null;
     Integer id, status, companyIdOnServer;
     String idInDbString, time_stamp;
     String id_number_server = "";
     Violation violation = new Violation();
     public Double latitude, longitude;
+    boolean saveInstanceStateCalled = false;
 
     public FrameLayout progressBar;
     Button punishButton, saveButton;
@@ -146,6 +149,28 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     }
 
     @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        //init requisite EditTexts after activity recreation otherwise they all contain the same value (value of the last one)
+        if (savedInstanceState != null) {
+            ArrayList<String> savedValues = savedInstanceState.getStringArrayList(Globals.REQUISITES_VALUES);
+            if (savedValues != null) {
+                int listSize = requisiteViews.size();
+                for (int i = 0; i < listSize; i++) {
+                    requisiteViews.get(i).editTextRequisite.setText(savedValues.get(i));
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        saveInstanceStateCalled = false;
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_complain);
@@ -163,13 +188,23 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
 
         ((KaratelApplication)getApplication()).restoreUserFromPreferences();
 
-        //dimension of the thumbnail - the thumbnail should have the same size as MediaStore.Video.Thumbnails.MICRO_KIND
-        thumbDimension = getResources().getDimensionPixelOffset(R.dimen.thumbnail_size);
-
         dbHelper = new DBHelper(this, DBHelper.DATABASE, DBHelper.DB_VERSION);
 
         Intent intent = this.getIntent();
         mode = intent.getIntExtra(Globals.VIOLATION_ACTIVITY_MODE, MODE_EDIT);
+
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey  (Globals.VIOLATION_ACTIVITY_MODE)) {
+                mode = savedInstanceState.getInt(Globals.VIOLATION_ACTIVITY_MODE);
+            }
+
+            //init evidences after activity recreation otherwise they will be lost
+            if (savedInstanceState.containsKey(Globals.EVIDENCES)) { //this will be true only in MODE_CREATE | MODE_EDIT
+                savedInstanceStateEvidenceFileNames       = savedInstanceState.getStringArrayList(Globals.EVIDENCES);
+                //evidenceAdapter.filesDeletedDuringSession = savedInstanceState.getStringArrayList(Globals.DELETED_EVIDENCES);
+            }
+        }
+
         if (mode == MODE_CREATE) {
             violation = (Violation) intent.getExtras().getSerializable(Globals.VIOLATION);
             //companyIdOnServer = violation.getId();
@@ -181,9 +216,14 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 cameraManager.startCamera(CameraManager.VIDEO_CAPTURE_INTENT);
             }
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
-            id = intent.getIntExtra(Globals.ITEM_ID, 0);
+            if (savedInstanceState != null && savedInstanceState.containsKey(Globals.ITEM_ID)) {
+                id = savedInstanceState.getInt(Globals.ITEM_ID);
+            } else {
+                id = intent.getIntExtra(Globals.ITEM_ID, 0);
+            }
             idInDbString = id.toString();
             blockButtons = false;
+
             if (mode == MODE_EDIT) {
                 SQLiteDatabase db = dbHelper.getReadableDatabase();
                 //query to data table
@@ -192,27 +232,33 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 String where = "_id=?";
                 String[] selectionArgs = {idInDbString};
                 cursor = db.query(table, columns, where, selectionArgs, null, null, null);
-                cursor.moveToFirst();
-                //companyIdOnServer = cursor.getInt(cursor.getColumnIndex(DBHelper.ID_SERVER));
-                //id_number_server = cursor.getString(cursor.getColumnIndex(DBHelper.ID_NUMBER_SERVER));
-                latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
-                longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
-                time_stamp = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
-                //status = cursor.getInt(cursor.getColumnIndex("status"));
-                String type = cursor.getString(cursor.getColumnIndex("type"));
-                violation = Violation.getByType(type);
-                //requisites = RequisitesListAdapter.makeContent(violation.type);
-                requisites = violation.getRequisites();
-                for (ViolationRequisite oneRequisite : requisites) {
-                    oneRequisite.value = cursor.getString(cursor.getColumnIndex(oneRequisite.dbTag));
+                if (cursor.moveToFirst()) {
+                    //companyIdOnServer = cursor.getInt(cursor.getColumnIndex(DBHelper.ID_SERVER));
+                    //id_number_server = cursor.getString(cursor.getColumnIndex(DBHelper.ID_NUMBER_SERVER));
+                    latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
+                    longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
+                    time_stamp = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
+                    //status = cursor.getInt(cursor.getColumnIndex("status"));
+                    String type = cursor.getString(cursor.getColumnIndex("type"));
+                    violation = Violation.getByType(type);
+                    //requisites = RequisitesListAdapter.makeContent(violation.type);
+                    requisites = violation.getRequisites();
+                    for (ViolationRequisite oneRequisite : requisites) {
+                        oneRequisite.value = cursor.getString(cursor.getColumnIndex(oneRequisite.dbTag));
+                    }
+                    cursor.close();
+                    db.close();
+                } else {
+                    cursor.close();
+                    db.close();
+                    finish();
+                    return;
                 }
-                cursor.close();
-                db.close();
             } else {/*if neither create nor edit mode then it's loaded from server*/}
         }
 
         ExpandedGridView evidenceGridView = (ExpandedGridView) findViewById(R.id.evidenceGridView);
-        makeEvidenceAdapterContent();
+        makeEvidenceAdapterContent(savedInstanceStateEvidenceFileNames);
         evidenceGridView.setAdapter(evidenceAdapter);
         evidenceGridView.setEmptyView(findViewById(R.id.emptyView));
         evidenceGridView.setFocusable(false);
@@ -299,8 +345,16 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         }
     }
 
-    void makeEvidenceAdapterContent(){
-        if (mode == MODE_EDIT) {
+    void makeEvidenceAdapterContent(ArrayList<String> fileNames){
+        if (!fileNames.isEmpty()) { //this can be true only in MODE_CREATE | MODE_EDIT
+            for (String evidenceFileName : fileNames) try {
+                Bitmap thumbnail = MediaUtils.getThumbnail(evidenceFileName);
+                evidenceAdapter.content.add(evidenceFileName);
+                evidenceAdapter.mediaContent.add(thumbnail);
+            } catch (IOException e) {
+                Globals.showError(this, R.string.error, e);
+            }
+        } else if (mode == MODE_EDIT) {
             SQLiteDatabase _db = dbHelper.getReadableDatabase();
             //query to media table
             String table = DBHelper.COMPLAINS_TABLE + " INNER JOIN " + DBHelper.COMPLAINS_MEDIA_TABLE + " ON "
@@ -312,21 +366,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
             if (_cursor.moveToFirst()) {
                 do try {
                     String evidenceFileName = _cursor.getString(_cursor.getColumnIndex(DBHelper.FILE_NAME));
-                    Bitmap thumbnail;
-                    if (evidenceFileName.endsWith(CameraManager.JPG)) {
-                        BitmapFactory.Options options = new BitmapFactory.Options();
-                        options.inSampleSize = 4;
-                        int orientation = MediaUtils.getOrientation(evidenceFileName);
-                        thumbnail = MediaUtils.rotateBitmap(
-                                ThumbnailUtils.extractThumbnail(
-                                        BitmapFactory.decodeFile(evidenceFileName, options)
-                                        , thumbDimension, thumbDimension
-                                )
-                                , orientation
-                        );
-                    } else { //it's video
-                        thumbnail = ThumbnailUtils.createVideoThumbnail(evidenceFileName, MediaStore.Video.Thumbnails.MICRO_KIND);
-                    }
+                    Bitmap thumbnail = MediaUtils.getThumbnail(evidenceFileName);
                     evidenceAdapter.content.add(evidenceFileName);
                     evidenceAdapter.mediaContent.add(thumbnail);
                 } catch (Exception e) {//we read files so need to catch exceptions
@@ -352,7 +392,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                     bmp = MediaUtils.rotateBitmap(
                             ThumbnailUtils.extractThumbnail(
                                     BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options)
-                                    , thumbDimension, thumbDimension
+                                    , MediaUtils.THUMB_DIMENSION, MediaUtils.THUMB_DIMENSION
                             )
                             , orientation
                     );
@@ -473,15 +513,6 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 cv.clear();
             }
             db.close();
-
-            //delete the evidence files removed by the user from filesystem
-            try {
-                for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
-                    new File(fileToDelete).delete();
-                }
-            } catch (Exception e) {
-                Globals.showError(this, R.string.cannot_write_file, e);
-            }
 
             //show toast only if the method is called by Save button
             if (view != null ) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
@@ -749,6 +780,35 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         return result;
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        //saving values entered into EditText requisites
+        ArrayList<String> valuesToSave = new ArrayList<>();
+        for (RequisitesListAdapter.ViewHolder holder : requisiteViews) {
+            valuesToSave.add(holder.editTextRequisite.getText().toString());
+        }
+        outState.putStringArrayList(Globals.REQUISITES_VALUES, valuesToSave);
+
+        //saving evidence filenames & data about deleted files
+        if (mode <= MODE_EDIT) {
+            ArrayList<String> filenamesToSave = new ArrayList<>(evidenceAdapter.content);
+            outState.putStringArrayList(Globals.EVIDENCES, filenamesToSave);
+
+            /*ArrayList<String> deletedFilenamesToSave = new ArrayList<>(evidenceAdapter.filesDeletedDuringSession);
+            outState.putStringArrayList(Globals.DELETED_EVIDENCES, deletedFilenamesToSave);*/
+        }
+
+        //saving mode & intent related data
+        //otherwise started with MODE_CREATE and saved to base (mode=MODE_EDIT) will be recreated as MODE_CREATE again
+        outState.putInt(Globals.VIOLATION_ACTIVITY_MODE, mode);
+        if (mode == MODE_EDIT) outState.putInt(Globals.ITEM_ID, id);
+
+        //this is needed in onDestroy to distinguish whether it was initiated by user or by system
+        saveInstanceStateCalled = true;
+
+        super.onSaveInstanceState(outState);
+    }
+
     @Override //Activity method
     protected void onStop() {
         if (googleApiClient != null && googleApiClient.isConnected()) {
@@ -761,19 +821,33 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
 
     @Override
     protected void onDestroy() {
+        if (!saveInstanceStateCalled) clearEvidences(); //just destroy without saving state, e.g. on back pressed
+
+        if (locationListener != null) {
+            locationManager.removeUpdates(locationListener);
+            //locationListener = null;
+        }
+
+        super.onDestroy();
+    }
+
+    void clearEvidences() {
+        DBUtils.clearEvidences(dbHelper);
+
+        /*boolean deletedSuccessfully = true;
+        //delete erased evidence files
+        for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
+            deletedSuccessfully = new File(fileToDelete).delete() && deletedSuccessfully;
+        }
+
         if (mode == MODE_CREATE){
-            boolean deletedSuccessfully = true;
             //delete the evidence files if the request was not saved
             for (String fileToDelete : evidenceAdapter.content) {
                 deletedSuccessfully = new File(fileToDelete).delete() && deletedSuccessfully;
             }
-            for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
-                deletedSuccessfully = new File(fileToDelete).delete() && deletedSuccessfully;
-            }
-            Log.e("Punisher", "files deleted successfully " + deletedSuccessfully);
         }
 
-        super.onDestroy();
+        Log.e("Punisher", "files deleted successfully " + deletedSuccessfully);*/
     }
 
     private class ComplainSender extends AsyncTask<Violation, Void, ComplainCreationResponse> {

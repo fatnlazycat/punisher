@@ -66,23 +66,24 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.CameraManager;
-import org.foundation101.karatel.entity.CreationResponse;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.entity.Request;
-import org.foundation101.karatel.entity.UpdateEntity;
-import org.foundation101.karatel.entity.Violation;
-import org.foundation101.karatel.entity.ViolationRequisite;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
 import org.foundation101.karatel.adapter.HistoryAdapter;
 import org.foundation101.karatel.adapter.RequestListAdapter;
 import org.foundation101.karatel.adapter.RequisitesListAdapter;
+import org.foundation101.karatel.entity.CreationResponse;
+import org.foundation101.karatel.entity.Request;
+import org.foundation101.karatel.entity.UpdateEntity;
+import org.foundation101.karatel.entity.Violation;
+import org.foundation101.karatel.entity.ViolationRequisite;
 import org.foundation101.karatel.fragment.RequestListFragment;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
+import org.foundation101.karatel.utils.DBUtils;
 import org.foundation101.karatel.utils.Formular;
 import org.foundation101.karatel.utils.MediaUtils;
 import org.foundation101.karatel.view.ExpandedGridView;
@@ -129,7 +130,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     ListView historyListView;
     DBHelper dbHelper;
     Cursor cursor;
-    int mode, thumbDimension;
+    int mode;
     Long rowID;
 
     FragmentManager fm;
@@ -142,6 +143,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         return mode;
     }
 
+    ArrayList<String> savedInstanceStateEvidenceFileNames = new ArrayList<>();
     public Request request = null;
     Integer id, status, idOnServer;
     String idInDbString, time_stamp;
@@ -149,6 +151,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     Violation violation = new Violation();
     public Double latitude, longitude;
     boolean statusTabFirstShow = true;
+    boolean saveInstanceStateCalled = false;
 
     public FrameLayout progressBar;
     TabHost tabs;
@@ -174,7 +177,25 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
+
         if (requisitesAdapter != null) requisitesAdapter.getMapDataFromBundle(savedInstanceState);
+
+        //init requisite EditTexts after activity recreation otherwise they all contain the same value (value of the last one)
+        if (savedInstanceState != null) {
+            ArrayList<String> savedValues = savedInstanceState.getStringArrayList(Globals.REQUISITES_VALUES);
+            if (savedValues != null) {
+                int listSize = requisitesAdapter.holders.size();
+                for (int i = 0; i < listSize; i++) {
+                    requisitesAdapter.holders.get(i).editTextRequisite.setText(savedValues.get(i));
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        saveInstanceStateCalled = false;
     }
 
     @Override
@@ -194,9 +215,6 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         initOldAndroidLocation();
 
         ((KaratelApplication)getApplication()).restoreUserFromPreferences();
-
-        //dimension of the thumbnail - the thumbnail should have the same size as MediaStore.Video.Thumbnails.MICRO_KIND
-        thumbDimension = getResources().getDimensionPixelOffset(R.dimen.thumbnail_size);
 
         //initializing tab view with only one tab - the second will be initialized later
         tabs=(TabHost)findViewById(android.R.id.tabhost);
@@ -226,6 +244,19 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
         Intent intent = this.getIntent();
         mode = intent.getIntExtra(Globals.VIOLATION_ACTIVITY_MODE, MODE_EDIT);
+
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey  (Globals.VIOLATION_ACTIVITY_MODE)) {
+                mode = savedInstanceState.getInt(Globals.VIOLATION_ACTIVITY_MODE);
+            }
+
+            //init evidences after activity recreation otherwise they will be lost
+            if (savedInstanceState.containsKey(Globals.EVIDENCES)) { //this will be true only in MODE_CREATE | MODE_EDIT
+                savedInstanceStateEvidenceFileNames       = savedInstanceState.getStringArrayList(Globals.EVIDENCES);
+                //evidenceAdapter.filesDeletedDuringSession = savedInstanceState.getStringArrayList(Globals.DELETED_EVIDENCES);
+            }
+        }
+
         if (mode == MODE_CREATE) {
             idOnServer = 0;
             violation = (Violation) intent.getExtras().getSerializable(Globals.VIOLATION);
@@ -236,8 +267,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 cameraManager.startCamera(CameraManager.VIDEO_CAPTURE_INTENT);
             }
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
-            id = intent.getIntExtra(Globals.ITEM_ID, 0);
+            if (savedInstanceState != null && savedInstanceState.containsKey(Globals.ITEM_ID)) {
+                id = savedInstanceState.getInt(Globals.ITEM_ID);
+            } else {
+                id = intent.getIntExtra(Globals.ITEM_ID, 0);
+            }
             idInDbString = id.toString();
+
             if (mode == MODE_EDIT) {
                 SQLiteDatabase db = dbHelper.getReadableDatabase();
                 //query to data table
@@ -295,7 +331,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
         ExpandedGridView evidenceGridView = (ExpandedGridView) findViewById(R.id.evidenceGridView);
         //evidenceGridView.setHorizontalSpacing(DrawerAdapter.dpToPx(getApplicationContext(), 10));
-        makeEvidenceAdapterContent(mode, request);
+        makeEvidenceAdapterContent(mode, savedInstanceStateEvidenceFileNames, request);
         evidenceGridView.setAdapter(evidenceAdapter);
         evidenceGridView.setEmptyView(findViewById(R.id.emptyView));
         evidenceGridView.setFocusable(false);
@@ -450,8 +486,16 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         return result;
     }
 
-    void makeEvidenceAdapterContent(int mode, Request request){
-        if (mode == MODE_EDIT) {
+    void makeEvidenceAdapterContent(int mode, ArrayList<String> fileNames, Request request){
+        if (!fileNames.isEmpty()) { //this can be true only in MODE_CREATE | MODE_EDIT
+            for (String evidenceFileName : fileNames) try {
+                Bitmap thumbnail = MediaUtils.getThumbnail(evidenceFileName);
+                evidenceAdapter.content.add(evidenceFileName);
+                evidenceAdapter.mediaContent.add(thumbnail);
+            } catch (IOException e) {
+                Globals.showError(this, R.string.error, e);
+            }
+        } else if (mode == MODE_EDIT) {
             SQLiteDatabase _db = dbHelper.getReadableDatabase();
             //query to media table
             String table = DBHelper.VIOLATIONS_TABLE + " INNER JOIN " + DBHelper.MEDIA_TABLE + " ON "
@@ -463,21 +507,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             if (_cursor.moveToFirst()) {
                 do try {
                     String evidenceFileName = _cursor.getString(_cursor.getColumnIndex(DBHelper.FILE_NAME));
-                    Bitmap thumbnail;
-                    if (evidenceFileName.endsWith(CameraManager.JPG)) {
-                        BitmapFactory.Options options = new BitmapFactory.Options();
-                        options.inSampleSize = 4;
-                        int orientation = MediaUtils.getOrientation(evidenceFileName);
-                        thumbnail = MediaUtils.rotateBitmap(
-                                ThumbnailUtils.extractThumbnail(
-                                        BitmapFactory.decodeFile(evidenceFileName, options)
-                                        , thumbDimension, thumbDimension
-                                )
-                                , orientation
-                        );
-                    } else { //it's video
-                        thumbnail = ThumbnailUtils.createVideoThumbnail(evidenceFileName, MediaStore.Video.Thumbnails.MICRO_KIND);
-                    }
+                    Bitmap thumbnail = MediaUtils.getThumbnail(evidenceFileName);
                     evidenceAdapter.content.add(evidenceFileName);
                     evidenceAdapter.mediaContent.add(thumbnail);
                 } catch (Exception e){//we read files so need to catch exceptions
@@ -521,7 +551,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     bmp = MediaUtils.rotateBitmap(
                             ThumbnailUtils.extractThumbnail(
                                     BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options)
-                                    , thumbDimension, thumbDimension
+                                    , MediaUtils.THUMB_DIMENSION, MediaUtils.THUMB_DIMENSION
                             )
                             , orientation
                     );
@@ -655,14 +685,14 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             }
             db.close();
 
-            //delete the evidence files removed by the user from filesystem
-            try {
+            //delete from the filesystem the evidence files that were removed by the user
+            /*try {
                 for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
                     new File(fileToDelete).delete();
                 }
             } catch (Exception e) {
                 Globals.showError(this, R.string.cannot_write_file, e);
-            }
+            }*/
 
             //show toast only if the method is called by Save button
             if (view != null ) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
@@ -967,7 +997,33 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        //saving map
         requisitesAdapter.putMapDataToBundle(outState);
+
+        //saving values entered into EditText requisites
+        ArrayList<String> valuesToSave = new ArrayList<>();
+        for (RequisitesListAdapter.ViewHolder holder : requisitesAdapter.holders) {
+            valuesToSave.add(holder.editTextRequisite.getText().toString());
+        }
+        outState.putStringArrayList(Globals.REQUISITES_VALUES, valuesToSave);
+
+        //saving evidence filenames & data about deleted files
+        if (mode <= MODE_EDIT) {
+            ArrayList<String> filenamesToSave = new ArrayList<>(evidenceAdapter.content);
+            outState.putStringArrayList(Globals.EVIDENCES, filenamesToSave);
+
+            /*ArrayList<String> deletedFilenamesToSave = new ArrayList<>(evidenceAdapter.filesDeletedDuringSession);
+            outState.putStringArrayList(Globals.DELETED_EVIDENCES, deletedFilenamesToSave);*/
+        }
+
+        //saving mode & intent related data
+        //otherwise started with MODE_CREATE and saved to base (mode=MODE_EDIT) will be recreated as MODE_CREATE again
+        outState.putInt(Globals.VIOLATION_ACTIVITY_MODE, mode);
+        if (mode == MODE_EDIT) outState.putInt(Globals.ITEM_ID, id);
+
+        //this is needed in onDestroy to distinguish whether it was initiated by user or by system
+        saveInstanceStateCalled = true;
+
         super.onSaveInstanceState(outState);
     }
 
@@ -982,26 +1038,35 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
     @Override
     protected void onDestroy() {
-        if (mode == MODE_CREATE){
-            boolean deletedSuccessfully = true;
-            //delete the evidence files if the request was not saved
-            for (String fileToDelete : evidenceAdapter.content) {
-                deletedSuccessfully = new File(fileToDelete).delete() && deletedSuccessfully;
-            }
-            for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
-                deletedSuccessfully = new File(fileToDelete).delete() && deletedSuccessfully;
-            }
-            Log.e("Punisher", "files deleted successfully " + deletedSuccessfully);
+        if (!saveInstanceStateCalled) clearEvidences(); //just destroy without saving state, e.g. on back pressed
 
-            if (locationListener != null) {
-                locationManager.removeUpdates(locationListener);
-                //locationListener = null;
-            }
+        if (locationListener != null) {
+            locationManager.removeUpdates(locationListener);
+            //locationListener = null;
         }
 
         requisitesAdapter.releaseMap();
 
         super.onDestroy();
+    }
+
+    void clearEvidences() {
+        DBUtils.clearEvidences(dbHelper);
+
+        /*boolean deletedSuccessfully = true;
+        //delete erased evidence files
+        for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
+            deletedSuccessfully = new File(fileToDelete).delete() && deletedSuccessfully;
+        }
+
+        if (mode == MODE_CREATE){
+            //delete the evidence files if the request was not saved
+            for (String fileToDelete : evidenceAdapter.content) {
+                deletedSuccessfully = new File(fileToDelete).delete() && deletedSuccessfully;
+            }
+        }
+
+        Log.e("Punisher", "files deleted successfully " + deletedSuccessfully);*/
     }
 
     void switchTabToHistory(){

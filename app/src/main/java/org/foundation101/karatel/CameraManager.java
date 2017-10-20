@@ -29,6 +29,12 @@ public class CameraManager {
     public static final String MP4 = ".mp4";
     public static final String MOV = ".mov";
 
+    public static final String FILENAME_PATTERN = "(" + FILE_NAME_PREFIX + ".+)"
+            + "(\\" + JPG
+            + "|\\" + PNG
+            + "|\\" + MP4
+            + "|\\" + MOV + ")";
+
     public static String lastCapturedFile;
     public static void setLastCapturedFile(String lastCapturedFile) {
         CameraManager.lastCapturedFile = lastCapturedFile;

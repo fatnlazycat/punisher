@@ -42,6 +42,11 @@ public class Globals {
     public static final String POSSIBLE_VALUES_HEADER = "PUNISHER_POSSIBLE_VALUES_HEADER";
     public static final String REQUISITE_NUMBER_FOR_POSSIBLE_VALUES = "PUNISHER_REQUISITE_NUMBER_FOR_POSSIBLE_VALUES";
 
+    //Bundle keys
+    public static final String REQUISITES_VALUES = "REQUISITES_VALUES";
+    public static final String EVIDENCES = "EVIDENCES";
+    public static final String DELETED_EVIDENCES = "DELETED_EVIDENCES";
+
     //fragment tags for MainActivity
     public static final int MAIN_ACTIVITY_PUNISH_FRAGMENT = 1;
     public static final int MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT = 2;
