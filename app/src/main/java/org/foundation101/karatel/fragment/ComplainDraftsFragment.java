@@ -26,7 +26,8 @@ import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.ComplainDraftsAdapter;
 import org.foundation101.karatel.adapter.ItemTouchHelperAdapter;
-import org.foundation101.karatel.entity.Request;
+import org.foundation101.karatel.entity.ComplainRequest;
+import org.foundation101.karatel.entity.Violation;
 
 import java.util.ArrayList;
 
@@ -35,7 +36,7 @@ public class ComplainDraftsFragment extends Fragment {
 
     View mainView;
     RecyclerView recycler;
-    ComplainDraftsAdapter complainDraftsAdapter = new ComplainDraftsAdapter();
+    ComplainDraftsAdapter complainDraftsAdapter;
     Snackbar snackbar;
 
     SQLiteDatabase db;
@@ -49,7 +50,7 @@ public class ComplainDraftsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        db = new DBHelper(getContext(), DBHelper.DATABASE, 1).getReadableDatabase();
+        db = new DBHelper(getContext(), DBHelper.DATABASE, DBHelper.DB_VERSION).getReadableDatabase();
         ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
     }
 
@@ -68,6 +69,8 @@ public class ComplainDraftsFragment extends Fragment {
         recycler.setHasFixedSize(true);
         recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
 
+        complainDraftsAdapter = new ComplainDraftsAdapter(getContext());
+
         makeComplainsBookAdapterContent();
 
         recycler.setAdapter(complainDraftsAdapter);
@@ -78,29 +81,38 @@ public class ComplainDraftsFragment extends Fragment {
 
     @Override
     public void onResume() {
-        if (punishPerformed) {
-            makeComplainsBookAdapterContent();
+        /*if (punishPerformed) {
+
             punishPerformed = false;
-        }
+        }*/
+        makeComplainsBookAdapterContent();
         super.onResume();
     }
 
     void makeComplainsBookAdapterContent(){
-        complainDraftsAdapter.setContent(getDraftRequests());
+        ArrayList<ComplainRequest> drafts = getDraftRequests();
+        if (drafts.isEmpty() && getActivity() != null) {
+            getActivity().onBackPressed();
+        } else {
+            complainDraftsAdapter.setContent(drafts);
+        }
     }
 
-    ArrayList<Request> getDraftRequests(){
-        ArrayList<Request> draftRequests = new ArrayList<>();
+    ArrayList<ComplainRequest> getDraftRequests(){
+        ArrayList<ComplainRequest> draftRequests = new ArrayList<>();
         String table = DBHelper.COMPLAINS_TABLE;
-        String[] columns = {DBHelper._ID, DBHelper.ID_SERVER, DBHelper.TYPE, DBHelper.STATUS,
-                DBHelper.TIME_STAMP};
+        String[] columns = null /*{DBHelper._ID, DBHelper.ID_SERVER, DBHelper.TYPE, DBHelper.STATUS,
+                DBHelper.TIME_STAMP}*/;
         String where = "user_id=?";
         String[] selectionArgs = {Integer.toString(Globals.user.id)};
         Cursor cursor = db.query(table, columns, where, selectionArgs, null, null, null);
         while (cursor.moveToNext()){
-            Request request = new Request();
+            ComplainRequest request = new ComplainRequest();
             request.type = cursor.getString(cursor.getColumnIndex(DBHelper.TYPE));
-            request.complain_status_id = cursor.getInt(cursor.getColumnIndex(DBHelper.STATUS));
+
+            String briefColumn = Violation.getByType(request.type).getRequisites().get(0).dbTag;
+            request.brief = cursor.getString(cursor.getColumnIndex(briefColumn));
+
             request.created_at = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
             request.id = cursor.getInt(cursor.getColumnIndex(DBHelper._ID));
             draftRequests.add(request);
@@ -109,14 +121,14 @@ public class ComplainDraftsFragment extends Fragment {
         return draftRequests;
     }
 
-    void undoDeleteRequest(Request request, int position){
+    void undoDeleteRequest(ComplainRequest request, int position){
         complainDraftsAdapter.getContent().add(position, request);
         complainDraftsAdapter.notifyItemInserted(position);
         recycler.scrollToPosition(position);
     }
 
     void deleteDraftRequest(Integer position){
-        DBHelper.deleteRequest(db, position);
+        DBHelper.deleteComplainRequest(db, position);
     }
 
     private class MyItemTouchHelperCallback extends ItemTouchHelper.Callback{
@@ -154,7 +166,7 @@ public class ComplainDraftsFragment extends Fragment {
         public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
             final int position = viewHolder.getAdapterPosition();
 
-            final Request requestToDelete = complainDraftsAdapter.getContent().get(position);
+            final ComplainRequest requestToDelete = complainDraftsAdapter.getContent().get(position);
             touchAdapter.onItemDismiss(position);
             snackbar = Snackbar.make(recycler, "Видалено", Snackbar.LENGTH_LONG)
                     .setAction("UNDO", new View.OnClickListener() {

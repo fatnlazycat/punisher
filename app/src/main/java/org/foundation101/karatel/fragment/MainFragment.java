@@ -43,7 +43,7 @@ public class MainFragment extends Fragment {
         //init  gridView with violations
         GridView violationsGridView = (GridView) v.findViewById(R.id.gridViewMain);
         ViolationsAdapter violationsAdapter = new ViolationsAdapter();
-        ViolationsAdapter.content = Violation.getViolationsList();
+        ViolationsAdapter.content = Violation.getViolationsList(Violation.CATEGORY_PUBLIC);
         violationsGridView.setAdapter(violationsAdapter);
         violationsGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -52,7 +52,7 @@ public class MainFragment extends Fragment {
                 if (violation.isActive()) {
                     Intent intent = new Intent(parent.getContext(), ViolationActivity.class)
                             .putExtra(Globals.VIOLATION_ACTIVITY_MODE, ViolationActivity.MODE_CREATE)
-                            .putExtra(Globals.VIOLATION, violation);
+                            .putExtra(Globals.VIOLATION, violation.clearValues());
                     startActivity(intent);
                 } else {
                     showDialog(violation);

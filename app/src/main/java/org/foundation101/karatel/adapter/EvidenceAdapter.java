@@ -86,7 +86,7 @@ public class EvidenceAdapter extends BaseAdapter {
                 imageButtonDeleteEvidence.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        filesDeletedDuringSession.add(content.get(position));
+                        //filesDeletedDuringSession.add(content.get(position));
                         content.remove(position);
                         mediaContent.remove(position);
                         EvidenceAdapter.this.notifyDataSetChanged();

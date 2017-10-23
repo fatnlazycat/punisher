@@ -5,6 +5,7 @@ import android.content.res.Resources;
 
 import org.foundation101.karatel.DBHelper;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,11 +15,61 @@ import java.util.Map;
 /**
  * Created by Dima on 08.05.2016.
  */
-public class ViolationRequisite {
+public class ViolationRequisite implements Serializable {
     public String dbTag, name, description, hint, value;
     public boolean necessary;
+    public String[] possibleValues;
 
-    public static String[] getRequisites(Context context, String type){
+    public String[] getPossibleValues() {
+        return possibleValues;
+    }
+    public void setPossibleValues(String[] possibleValues) {
+        this.possibleValues = possibleValues;
+    }
+
+    public String getDbTag() {
+        return dbTag;
+    }
+    public void setDbTag(String dbTag) {
+        this.dbTag = dbTag;
+    }
+
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getHint() {
+        return hint;
+    }
+    public void setHint(String hint) {
+        this.hint = hint;
+    }
+
+    public String getValue() {
+        return value;
+    }
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public boolean isNecessary() {
+        return necessary;
+    }
+    public void setNecessary(boolean necessary) {
+        this.necessary = necessary;
+    }
+
+    /*public static String[] getRequisites(Context context, String type){
         String[] common = new String[] {"user_id", "id_number", "complain_status_id", "longitude", "latitude",
                 "create_in_the_device", "type"};
         ArrayList<String> resultingList = new ArrayList<>(Arrays.asList(common));
@@ -34,5 +85,5 @@ public class ViolationRequisite {
         }
         String[] result = resultingList.toArray(new String[0]);
         return result;
-    }
+    }*/
 }

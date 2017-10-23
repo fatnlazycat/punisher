@@ -193,7 +193,16 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".activity.ComplainActivity"
-            android:label="@string/title_activity_complain" />
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"/>
+        <activity
+            android:name=".activity.PossibleValuesActivity"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"/>
+        <activity
+            android:name=".activity.CustomTextActivity"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

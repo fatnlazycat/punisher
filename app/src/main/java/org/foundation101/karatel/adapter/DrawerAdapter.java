@@ -59,10 +59,10 @@ public class DrawerAdapter extends BaseAdapter {
             case 9:
                 setDivider(menuItemText);
                 break;
-            case 2:
-            case 3:
-                disableItem(menuItemText);
-                break;
+                /*case 2:*/
+                case 3:
+                    disableItem(menuItemText);
+                    break;
             case 4:
                 setDonateItem(menuItemText);
                 break;
@@ -133,7 +133,7 @@ public class DrawerAdapter extends BaseAdapter {
     }
 
     public static int getNumberOfRequests(Context context){
-        SQLiteDatabase db = new DBHelper(context, DBHelper.DATABASE, 1).getReadableDatabase();
+        SQLiteDatabase db = new DBHelper(context, DBHelper.DATABASE, DBHelper.DB_VERSION).getReadableDatabase();
         String table = DBHelper.VIOLATIONS_TABLE;
         String[] columns = {DBHelper._ID, DBHelper.TYPE};
         String where = "user_id=?";

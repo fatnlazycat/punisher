@@ -38,6 +38,14 @@ public class Globals {
     public static final String REGISTRATION_COMPLETE = "PUNISHER_REGISTARTION_COMPLETE";
     public static final String GCM_ERROR_BROADCAST_RECEIVER_TAG = "PUNISHER_GCM_ERROR_BROADCAST_RECEIVER_TAG";
     public static final String MAIN_ACTIVITY_SAVED_INSTANCE_STATE = "PUNISHER_MAIN_ACTIVITY_SAVED_INSTANCE_STATE";
+    public static final String POSSIBLE_VALUES = "PUNISHER_POSSIBLE_VALUES";
+    public static final String POSSIBLE_VALUES_HEADER = "PUNISHER_POSSIBLE_VALUES_HEADER";
+    public static final String REQUISITE_NUMBER_FOR_POSSIBLE_VALUES = "PUNISHER_REQUISITE_NUMBER_FOR_POSSIBLE_VALUES";
+
+    //Bundle keys
+    public static final String REQUISITES_VALUES = "REQUISITES_VALUES";
+    public static final String EVIDENCES = "EVIDENCES";
+    public static final String DELETED_EVIDENCES = "DELETED_EVIDENCES";
 
     //fragment tags for MainActivity
     public static final int MAIN_ACTIVITY_PUNISH_FRAGMENT = 1;
@@ -51,6 +59,8 @@ public class Globals {
     public static final int MAIN_ACTIVITY_CONTACTS_FRAGMENT = 9;
     public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 10;
     public static final int MAIN_ACTIVITY_EXIT = 11;
+    //now go fragments that won't be called from the drawer
+    public static final int MAIN_ACTIVITY_COMPLAIN_DRAFTS = 100;
 
     public static final String PUSH_TOKEN = "PUSH_TOKEN";
 
@@ -67,7 +77,7 @@ public class Globals {
     public static final String USER_AVATAR = "USER_AVATAR";
 
     //interaction with server api
-    public static final String SERVER_URL = "https://karatel-api.foundation101.org/api/v1/"; //-api -test
+    public static final String SERVER_URL = "https://karatel-test.foundation101.org/api/v1/"; //-api -test
     public static final int MAX_SERVER_REQUEST_SIZE = 100 * 1024 * 1024; //100 mb
     public static final String SERVER_SUCCESS = "success";
     public static final String SERVER_ERROR = "error";

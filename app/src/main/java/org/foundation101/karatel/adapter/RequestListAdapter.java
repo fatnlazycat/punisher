@@ -68,7 +68,7 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
                 + dateString.substring(11, dateString.length());
         holder.textViewRequestTimeStamp.setText(Html.fromHtml(formattedDateString));
 
-        holder.textViewRequestType.setText(Violation.getByType(context, thisRequest.type).getName());
+        holder.textViewRequestType.setText(Violation.getByType(thisRequest.type).getName());
 
         int statusIdOnServer = thisRequest.complain_status_id;
         if (Globals.statusesMap.containsKey(statusIdOnServer)) {
