@@ -138,6 +138,9 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     android.location.LocationListener locationListener;
     static final int REQUEST_CHECK_SETTINGS = 2000;
 
+    //variable for customCamera
+    boolean videoOnly = false;
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -213,7 +216,8 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
             requisites = violation.getRequisites();
             if (violation.usesCamera) {//create mode means we have to capture video at start
                 CameraManager cameraManager = CameraManager.getInstance(this);
-                cameraManager.startCamera(CameraManager.VIDEO_CAPTURE_INTENT);
+                videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;                        //
+                cameraManager.startCustomCamera(CameraManager.VIDEO_CAPTURE_INTENT, true, videoOnly); //cameraManager.startCamera(CameraManager.VIDEO_CAPTURE_INTENT);
             }
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
             if (savedInstanceState != null && savedInstanceState.containsKey(Globals.ITEM_ID)) {
@@ -272,15 +276,14 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         ImageView violationImage = (ImageView) findViewById(R.id.ivComplainLogo);
         violationImage.setImageResource(violation.drawableId);
 
-        if (violation.getMediaTypes() == Violation.VIDEO_ONLY)
-            addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
+        if (videoOnly) addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
 
-        llAddEvidence.setOnClickListener(new View.OnClickListener() {
+        /*llAddEvidence.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 photoVideoPopupMenu(v);
             }
-        });
+        });*/
 
         makeRequisitesViews();
 
@@ -381,9 +384,10 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (resultCode == RESULT_OK &&
-                (requestCode == CameraManager.IMAGE_CAPTURE_INTENT || requestCode == CameraManager.VIDEO_CAPTURE_INTENT)) {
+                (requestCode == CameraManager.GENERIC_CAMERA_CAPTURE_INTENT)) { //(requestCode == CameraManager.IMAGE_CAPTURE_INTENT || requestCode == CameraManager.VIDEO_CAPTURE_INTENT)) {
             try {
                 Bitmap bmp;
+                CameraManager.setLastCapturedFile(intent.getStringExtra(eu.aejis.mycustomcamera.IntentExtras.MEDIA_FILE)); //new line
                 if (CameraManager.lastCapturedFile.endsWith(CameraManager.JPG)) {
                     int orientation = MediaUtils.getOrientation(CameraManager.lastCapturedFile);
 
@@ -532,6 +536,14 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
             dialog.show();*/
             return false;
         } else return true;
+    }
+
+    //new method in customCamera - don't forget to set onClick to it in activity_complain.xml
+    public void launchCamera(View view) {
+        int actionFlag = (violation.getMediaTypes() == Violation.VIDEO_ONLY) ?
+                CameraManager.VIDEO_CAPTURE_INTENT :
+                0; //0 means photoOrVideo not defined - user switches this in the camera
+        CameraManager.getInstance(this).startCustomCamera(actionFlag, false, videoOnly);
     }
 
     public void photoVideoPopupMenu(View view) {
