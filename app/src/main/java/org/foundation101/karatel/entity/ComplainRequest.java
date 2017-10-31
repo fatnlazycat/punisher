@@ -9,7 +9,7 @@ import java.io.Serializable;
 public class ComplainRequest implements Serializable {
     public String type, brief;
     public int id, company_id, user_id;
-    public String address, description, position, created_at, updated_at;
+    public String address, description, position, creation_date, created_at, updated_at;
     public double latitude, longitude, address_lat, address_lon;
     public MediaEntity[] images, videos;
 }

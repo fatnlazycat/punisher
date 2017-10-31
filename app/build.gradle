@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion '25.0.2'
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         applicationId "org.foundation101.karatel"
@@ -87,5 +87,6 @@ repositories {
     maven {
         url "https://jitpack.io"
     }
+    google()
 }
 apply plugin: 'com.google.gms.google-services'

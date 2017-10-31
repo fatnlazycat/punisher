@@ -941,6 +941,10 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                             requestParameters.add(DescriptionFormatter.format(dbRowData));
                             break;
                         }
+                        case "creation_date" : {
+                            requestParameters.add(time_stamp);
+                            break;
+                        }
                     }
                 }
                 String[] requestParametersArray = requestParameters.toArray(new String[0]);

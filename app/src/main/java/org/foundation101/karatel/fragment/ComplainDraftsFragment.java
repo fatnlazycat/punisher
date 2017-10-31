@@ -113,7 +113,7 @@ public class ComplainDraftsFragment extends Fragment {
             String briefColumn = Violation.getByType(request.type).getRequisites().get(0).dbTag;
             request.brief = cursor.getString(cursor.getColumnIndex(briefColumn));
 
-            request.created_at = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
+            request.creation_date = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
             request.id = cursor.getInt(cursor.getColumnIndex(DBHelper._ID));
             draftRequests.add(request);
         }
