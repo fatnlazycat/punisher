@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.net.http.SslError;
 import android.os.AsyncTask;
 import android.os.Message;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.util.Log;
@@ -56,7 +57,7 @@ public class HistoryAdapter extends BaseAdapter {
     public UpdateEntity[] content = new UpdateEntity[0];
     Context context;
     String[] violationStatuses;
-    private static final String googleDocsUrl = "http://docs.google.com/viewer?url=";
+    private static final String googleDocsUrl = "https://drive.google.com/viewerng/viewer?embedded=true&url=";//"http://docs.google.com/viewer?url=";
     public static final String PDF = ".pdf";
     public static final String STATUS_CLOSED = "Закрито";
 
@@ -92,25 +93,25 @@ public class HistoryAdapter extends BaseAdapter {
             convertView = inflater.inflate(R.layout.item_history, parent, false);
 
             holder = new ViewHolder();
-            holder.imageViewStatus = (ImageView) convertView.findViewById(R.id.imageViewStatus);
-            holder.textViewRequestStatus = (TextView) convertView.findViewById(R.id.textViewRequestStatus);
-            holder.textViewRequestTimeStamp = (TextView) convertView.findViewById(R.id.textViewRequestTimeStamp);
-            holder.textViewDetailsAction = (TextView) convertView.findViewById(R.id.textViewDetailsAction);
-            holder.collapsableLayout = (RelativeLayout) convertView.findViewById(R.id.collapsableLayout);
+            holder.imageViewStatus          = (ImageView)       convertView.findViewById(R.id.imageViewStatus);
+            holder.textViewRequestStatus    = (TextView)        convertView.findViewById(R.id.textViewRequestStatus);
+            holder.textViewRequestTimeStamp = (TextView)        convertView.findViewById(R.id.textViewRequestTimeStamp);
+            holder.textViewDetailsAction    = (TextView)        convertView.findViewById(R.id.textViewDetailsAction);
+            holder.collapsableLayout        = (RelativeLayout)  convertView.findViewById(R.id.collapsableLayout);
 
            //collapsed views
-            holder.headerOperatorComment = (TextView) convertView.findViewById(R.id.headerOperatorComment);
-            holder.operatorComment = (TextView) convertView.findViewById(R.id.operatorComment);
-            holder.headerAnswer = (TextView)  convertView.findViewById(R.id.headerAnswer);
-            holder.answerLayout = (RelativeLayout) convertView.findViewById(R.id.answerLayout);
-            holder.imageAnswer = (WebView) convertView.findViewById(R.id.imageAnswer);
-            holder.ic_zoom = (ImageView) convertView.findViewById(R.id.ic_zoom);
-            holder.headerAnswerBy = (TextView)  convertView.findViewById(R.id.headerAnswerBy);
-            holder.textAnswerBy = (TextView) convertView.findViewById(R.id.textAnswerBy);
-            holder.rateLayout = (LinearLayout) convertView.findViewById(R.id.rateLayout);
-            holder.textRate = (TextView) convertView.findViewById(R.id.textRate);
-            holder.buttonLike = (ImageButton) convertView.findViewById(R.id.buttonLike);
-            holder.buttonDislike = (ImageButton) convertView.findViewById(R.id.buttonDislike);
+            holder.headerOperatorComment    = (TextView)        convertView.findViewById(R.id.headerOperatorComment);
+            holder.operatorComment          = (TextView)        convertView.findViewById(R.id.operatorComment);
+            holder.headerAnswer             = (TextView)        convertView.findViewById(R.id.headerAnswer);
+            holder.answerLayout             = (RelativeLayout)  convertView.findViewById(R.id.answerLayout);
+            holder.imageAnswer              = (WebView)         convertView.findViewById(R.id.imageAnswer);
+            holder.ic_zoom                  = (TextView)        convertView.findViewById(R.id.ic_zoom);
+            holder.headerAnswerBy           = (TextView)        convertView.findViewById(R.id.headerAnswerBy);
+            holder.textAnswerBy             = (TextView)        convertView.findViewById(R.id.textAnswerBy);
+            holder.rateLayout               = (LinearLayout)    convertView.findViewById(R.id.rateLayout);
+            holder.textRate                 = (TextView)        convertView.findViewById(R.id.textRate);
+            holder.buttonLike               = (ImageButton)     convertView.findViewById(R.id.buttonLike);
+            holder.buttonDislike            = (ImageButton)     convertView.findViewById(R.id.buttonDislike);
 
             convertView.setTag(holder);
         } else {
@@ -148,81 +149,31 @@ public class HistoryAdapter extends BaseAdapter {
             }
 
             if (thisUpdate.documents != null && thisUpdate.documents.length > 0) {
-                holder.headerAnswer.setVisibility(View.VISIBLE );
-                holder.answerLayout.setVisibility(View.VISIBLE );
-                holder.imageAnswer.getSettings().setLoadWithOverviewMode(true);
-                holder.imageAnswer.getSettings().setUseWideViewPort(true);
-                holder.imageAnswer.getSettings().setJavaScriptEnabled(true); //for the pdf viewer
                 final String docUrl = getDocUrl(thisUpdate.documents[0]);
-                holder.imageAnswer.loadUrl(docUrl);
-                holder.imageAnswer.setWebViewClient(new WebViewClient(){
-                    @Override
-                    public void onPageFinished(WebView view, String url) {
-                        //view.pageDown(true);
-                        Log.d("", "onPageFinished");
-                    }
+                if (holder.answerLayout.getVisibility() == View.GONE
+                        || !docUrl.equals(holder.imageAnswer.getUrl())) {
+                    holder.headerAnswer.setVisibility(View.VISIBLE);
+                    holder.answerLayout.setVisibility(View.VISIBLE);
+                    holder.imageAnswer.getSettings().setLoadWithOverviewMode(true);
+                    holder.imageAnswer.getSettings().setUseWideViewPort(true);
+                    holder.imageAnswer.getSettings().setJavaScriptEnabled(true); //for the pdf viewer
 
-                    @Override
-                    public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                        super.onPageStarted(view, url, favicon);
-                    }
+                    holder.imageAnswer.setWebViewClient(new WebViewClient() {
+                        @Override
+                        public void onPageFinished(WebView view, String url) {
+                            super.onPageFinished(view, url);
+                            Log.d("", "onPageFinished");
+                            holder.ic_zoom.setText("");
+                        }
 
-                    @Override
-                    public void onLoadResource(WebView view, String url) {
-                        super.onLoadResource(view, url);
-                    }
-
-                    @Override
-                    public void onPageCommitVisible(WebView view, String url) {
-                        super.onPageCommitVisible(view, url);
-                    }
-
-                    @Override
-                    public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                        super.onReceivedError(view, request, error);
-                    }
-
-                    @Override
-                    public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-                        super.onReceivedHttpError(view, request, errorResponse);
-                    }
-
-                    @Override
-                    public void onFormResubmission(WebView view, Message dontResend, Message resend) {
-                        super.onFormResubmission(view, dontResend, resend);
-                    }
-
-                    @Override
-                    public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-                        super.onReceivedSslError(view, handler, error);
-                    }
-
-                    @Override
-                    public void onReceivedClientCertRequest(WebView view, ClientCertRequest request) {
-                        super.onReceivedClientCertRequest(view, request);
-                    }
-
-                    @Override
-                    public void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm) {
-                        super.onReceivedHttpAuthRequest(view, handler, host, realm);
-                    }
-
-                    @Override
-                    public void onUnhandledInputEvent(WebView view, InputEvent event) {
-                        super.onUnhandledInputEvent(view, event);
-                    }
-
-                    @Override
-                    public void onScaleChanged(WebView view, float oldScale, float newScale) {
-                        super.onScaleChanged(view, oldScale, newScale);
-                    }
-
-                    @Override
-                    public void onReceivedLoginRequest(WebView view, String realm, String account, String args) {
-                        super.onReceivedLoginRequest(view, realm, account, args);
-                    }
-                });
-                int progress = holder.imageAnswer.getProgress();
+                        @Override
+                        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                            super.onPageStarted(view, url, favicon);
+                            holder.ic_zoom.setText(R.string.pressHereToSeeAnswer);
+                        }
+                    });
+                    holder.imageAnswer.loadUrl(docUrl);
+                    int progress = holder.imageAnswer.getProgress();
                 /*if (progress >= 100) {
                     //use the param "view", and call getContentHeight in scrollTo
                     float scale = holder.imageAnswer.getScale();
@@ -230,24 +181,25 @@ public class HistoryAdapter extends BaseAdapter {
                     int yScroll = Math.round(height * scale / 20);
                     holder.imageAnswer.scrollTo(0, 500);
                 }*/
-                holder.ic_zoom.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        PopupMenu popup = new PopupMenu(context, v);
-                        int counter = 0;
-                        for (UpdateEntity.DocUrl d : thisUpdate.documents) {
-                            String label = Uri.parse(d.url).getLastPathSegment();
-                            popup.getMenu().add(Menu.NONE, counter++, Menu.NONE, label);
-                        }
-                        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                            @Override
-                            public boolean onMenuItemClick(MenuItem item) {
-                                return docsPopup(thisUpdate.documents, item.getItemId());
+                    holder.ic_zoom.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            PopupMenu popup = new PopupMenu(context, v);
+                            int counter = 0;
+                            for (UpdateEntity.DocUrl d : thisUpdate.documents) {
+                                String label = Uri.parse(d.url).getLastPathSegment();
+                                popup.getMenu().add(Menu.NONE, counter++, Menu.NONE, label);
                             }
-                        });
-                        popup.show();
-                    }
-                });
+                            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                                @Override
+                                public boolean onMenuItemClick(MenuItem item) {
+                                    return docsPopup(thisUpdate.documents, item.getItemId());
+                                }
+                            });
+                            popup.show();
+                        }
+                    });
+                }
 
                 if (statusText.equals(STATUS_CLOSED)) {
                     holder.rateLayout.setVisibility(View.VISIBLE);
@@ -294,18 +246,18 @@ public class HistoryAdapter extends BaseAdapter {
         return convertView;
     }
 
-    void changeCollapseStatus(UpdateEntity update){
+    private void changeCollapseStatus(UpdateEntity update){
         update.setCollapsed(!update.isCollapsed());
         notifyDataSetChanged();
     }
 
-    String getDocUrl(UpdateEntity.DocUrl arg){
+    private String getDocUrl(UpdateEntity.DocUrl arg){
         String suffix = arg.url.endsWith(PDF) ? googleDocsUrl : "";
         final String result = suffix + Globals.SERVER_URL.replace("/api/v1/", "") + arg.url;
         return result;
     }
 
-    public boolean docsPopup(UpdateEntity.DocUrl[] documents, int position){
+    private boolean docsPopup(UpdateEntity.DocUrl[] documents, int position){
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse(getDocUrl(documents[position])));
         if (intent.resolveActivity(context.getPackageManager()) != null) {
@@ -317,7 +269,8 @@ public class HistoryAdapter extends BaseAdapter {
     }
 
     public static class ViewHolder{
-        ImageView imageViewStatus, ic_zoom;
+        ImageView imageViewStatus;
+        TextView ic_zoom;
         WebView imageAnswer;
         ImageButton buttonLike, buttonDislike;
         TextView textViewRequestStatus, textViewRequestTimeStamp, headerOperatorComment, operatorComment,
