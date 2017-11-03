@@ -251,8 +251,37 @@
       ]
     },
     {
+      "name": "Київпастранс",
+      "type": "KyivPasTrans",
+      "category": 1,
+      "id": 2,
+      "usesCamera": false,
+      "active": true,
+      "mediaTypes": 0,
+      "requisites": [
+        {
+          "dbTag": "KyivPasTrans_description",
+          "name": "Що сталось?",
+          "description": "Коротко описати обставини, за яких стався інцидент. Зазначте також дату та час інциденту",
+          "hint": "Опишить, що сталось",
+          "necessary": true
+        }, {
+          "dbTag": "KyivPasTrans_route_number",
+          "name": "Номер маршруту",
+          "hint": "Вкажіть номер маршруту",
+          "necessary": true
+        }, {
+          "dbTag": "KyivPasTrans_vehicle_number",
+          "name": "Державний номер транспортного засобу або його бортовий номер",
+          "description": "Бортовий номер (дві, три або чотири цифри) можна знайти біля кабіни водія або ззовні транспортного засобу",
+          "hint": "Вкажіть номер",
+          "necessary": true
+        }
+      ]
+    },
+    {
       "name": "Транспорт Житомира",
-      "type": "Transport_Zhytomyr",
+      "type": "TransportZhytomyra",
       "category": 1,
       "id": 1,
       "usesCamera": false,
@@ -260,7 +289,7 @@
       "mediaTypes": 0,
       "requisites": [
         {
-          "dbTag": "Transport_Zhytomyr_description",
+          "dbTag": "TransportZhytomyra_description",
           "name": "Що сталось?",
           "hint": "Оберіть один з варіантів",
           "necessary": true,
@@ -276,41 +305,12 @@
             "Інше"
           ]
         }, {
-          "dbTag": "Transport_Zhytomyr_route_number",
+          "dbTag": "TransportZhytomyra_route_number",
           "name": "Номер маршруту",
           "hint": "Вкажіть номер маршруту",
           "necessary": true
         }, {
-          "dbTag": "Transport_Zhytomyr_vehicle_number",
-          "name": "Державний номер транспортного засобу або його бортовий номер",
-          "description": "Бортовий номер (дві, три або чотири цифри) можна знайти біля кабіни водія або ззовні транспортного засобу",
-          "hint": "Вкажіть номер",
-          "necessary": true
-        }
-      ]
-    },
-    {
-      "name": "Київпастранс",
-      "type": "Transport_Kyiv",
-      "category": 1,
-      "id": 2,
-      "usesCamera": false,
-      "active": true,
-      "mediaTypes": 0,
-      "requisites": [
-        {
-          "dbTag": "Transport_Kyiv_description",
-          "name": "Що сталось?",
-          "description": "Коротко описати обставини, за яких стався інцидент. Зазначте також дату та час інциденту",
-          "hint": "Опишить, що сталось",
-          "necessary": true
-        }, {
-          "dbTag": "Transport_Kyiv_route_number",
-          "name": "Номер маршруту",
-          "hint": "Вкажіть номер маршруту",
-          "necessary": true
-        }, {
-          "dbTag": "Transport_Kyiv_vehicle_number",
+          "dbTag": "TransportZhytomyra_vehicle_number",
           "name": "Державний номер транспортного засобу або його бортовий номер",
           "description": "Бортовий номер (дві, три або чотири цифри) можна знайти біля кабіни водія або ззовні транспортного засобу",
           "hint": "Вкажіть номер",

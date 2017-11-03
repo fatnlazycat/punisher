@@ -35,7 +35,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public class KaratelApplication extends MultiDexApplication {
-    public static boolean MAIN_ACTIVITY_FROM_PUSH = false;
+    //public static boolean MAIN_ACTIVITY_FROM_PUSH = false;
 
     private static Retrofit retrofit = null;
 

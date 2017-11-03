@@ -47,6 +47,7 @@ import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.DrawerAdapter;
 import org.foundation101.karatel.fragment.AboutFragment;
@@ -238,8 +239,9 @@ public class MainActivity extends AppCompatActivity {
         if (!loggedIn()){ //this happens when we tap push notification icon after logging out - we are not signed in so close the app
             finish();
         } else {
-            if (KaratelApplication.MAIN_ACTIVITY_FROM_PUSH) {
-                KaratelApplication.MAIN_ACTIVITY_FROM_PUSH = false;
+            if (KaratelPreferences.startedFromPush()/*KaratelApplication.MAIN_ACTIVITY_FROM_PUSH*/) {
+                KaratelPreferences.setStartedFromPush(false);
+                //KaratelApplication.MAIN_ACTIVITY_FROM_PUSH = false;
                 currentFragment = Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT;
                 tag = fragmentTags.get(currentFragment);
                 ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();

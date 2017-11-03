@@ -31,12 +31,17 @@ import org.foundation101.karatel.entity.Violation;
  */
 
 public class ComplainsBookFragment extends Fragment {
+    static final String TAG = "Skargy";
+
     public ComplainsBookFragment() { /*Required empty public constructor*/ }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        //Google Analytics part
+        KaratelApplication.getInstance().sendScreenName(TAG);
     }
 
     @Nullable

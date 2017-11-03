@@ -47,8 +47,8 @@
     </string-array>
 
     <string-array name="complainTypes">
-        <item>Transport_Zhytomyr</item>
-        <item>Transport_Kyiv</item>
+        <item>TransportZhytomyra</item>
+        <item>KyivPasTrans</item>
     </string-array>
 
     <!--<string-array name="violationUsesCamera">

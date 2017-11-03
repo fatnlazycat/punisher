@@ -32,7 +32,7 @@ import org.foundation101.karatel.entity.Violation;
 import java.util.ArrayList;
 
 public class ComplainDraftsFragment extends Fragment {
-    static final String TAG = "Complain Drafts";
+    static final String TAG = "Drafts";
 
     View mainView;
     RecyclerView recycler;
@@ -51,7 +51,9 @@ public class ComplainDraftsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         db = new DBHelper(getContext(), DBHelper.DATABASE, DBHelper.DB_VERSION).getReadableDatabase();
-        ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
+
+        //Google Analytics part
+        KaratelApplication.getInstance().sendScreenName(TAG);
     }
 
     @Override

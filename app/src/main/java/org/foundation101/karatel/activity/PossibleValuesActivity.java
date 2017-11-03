@@ -19,6 +19,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.ComplainsBookAdapter;
 import org.foundation101.karatel.entity.Violation;
@@ -45,6 +46,9 @@ public class PossibleValuesActivity extends AppCompatActivity {
 
         final Intent intent = getIntent();
         if (intent != null) {
+            String analyticsTag = intent.getStringExtra(Globals.VIOLATION_TYPE) + "-choice";
+            KaratelApplication.getInstance().sendScreenName(analyticsTag);
+
             final String title = intent.getStringExtra(Globals.POSSIBLE_VALUES_HEADER);
             toolbar.setTitle(title);
 

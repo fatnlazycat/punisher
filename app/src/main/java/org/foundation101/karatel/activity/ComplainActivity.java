@@ -287,7 +287,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
 
         makeRequisitesViews();
 
-        //KaratelApplication.getInstance().sendScreenName(violation.type);
+        KaratelApplication.getInstance().sendScreenName(violation.type);
     }
 
     void makeRequisitesViews(){
@@ -337,6 +337,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                         Intent intent = new Intent(ComplainActivity.this, PossibleValuesActivity.class);
                         intent.putExtra(Globals.POSSIBLE_VALUES, thisRequisite.getPossibleValues());
                         intent.putExtra(Globals.POSSIBLE_VALUES_HEADER, thisRequisite.getName());
+                        intent.putExtra(Globals.VIOLATION_TYPE, violation.getType());
                         intent.putExtra(Globals.REQUISITE_NUMBER_FOR_POSSIBLE_VALUES, requisites.indexOf(thisRequisite));
                         startActivityForResult(intent, REQUEST_CODE_SELECT_POSSIBLE_VALUE);
                     }
