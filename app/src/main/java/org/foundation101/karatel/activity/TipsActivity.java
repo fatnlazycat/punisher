@@ -27,6 +27,7 @@ import com.facebook.login.LoginResult;
 import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.HttpHelper;
@@ -43,28 +44,10 @@ public class TipsActivity extends Activity {
     static final String TAG = "LoginActivity";
     EditText editTextLoginEmail, editTextLoginPassword;
     FrameLayout progressBar;
-    SharedPreferences preferences, globalPreferences;
+    SharedPreferences preferences;
 
     // facebook part
     private CallbackManager fbCallbackManager;
-
-    /*private final BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            ((KaratelApplication)getApplication()).showOneButtonDialogFromService(
-                    "Помилка отримання токена",
-                    "Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.",
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            finishAffinity();
-                        }
-                    }
-            );
-        }
-    };*/
-    public static final String BROADCAST_RECEIVER_TAG = "myBroadcastReceiver_TipsActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,8 +66,7 @@ public class TipsActivity extends Activity {
         editTextLoginEmail = (EditText)findViewById(R.id.editTextLoginEmail);
         editTextLoginPassword = (EditText)findViewById(R.id.editTextLoginPassword);
 
-        globalPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if (globalPreferences.contains(Globals.SESSION_TOKEN)){
+        if (KaratelPreferences.loggedIn()){
             startActivity(new Intent(this, MainActivity.class));
         }
 
@@ -93,25 +75,12 @@ public class TipsActivity extends Activity {
             editTextLoginEmail.setText(preferences.getString(Globals.LAST_LOGIN_EMAIL, ""));
             editTextLoginPassword.requestFocus();
         }
-
-        /*LocalBroadcastManager.getInstance(getApplicationContext())
-                .registerReceiver(myBroadcastReceiver, new IntentFilter(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG));
-        Log.d(TAG, "broadcast receiver registered");*/
-
-        //LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG));
     }
-
-    /*@Override
-    protected void onDestroy() {
-        LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(myBroadcastReceiver);
-        super.onDestroy();
-    }*/
 
     public void login(View view) {
         String email = editTextLoginEmail.getText().toString();
         String passw = editTextLoginPassword.getText().toString();
-        String gcmToken = globalPreferences.contains(Globals.PUSH_TOKEN) ?
-                globalPreferences.getString(Globals.PUSH_TOKEN, "") : "";
+        String gcmToken = KaratelPreferences.pushToken();
         String request = new HttpHelper("session").makeRequestString(new String[] {
                 "email", email,
                 "password", passw,
@@ -156,8 +125,7 @@ public class TipsActivity extends Activity {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
                     final AccessToken accessToken = loginResult.getAccessToken();
-                    String gcmToken = globalPreferences.contains(Globals.PUSH_TOKEN) ?
-                            globalPreferences.getString(Globals.PUSH_TOKEN, "") : "";
+                    String gcmToken = KaratelPreferences.pushToken();
                     String uid = accessToken.getUserId();
                     String request = new HttpHelper("session").makeRequestString(new String[]{
                             "uid", uid,
@@ -240,14 +208,14 @@ public class TipsActivity extends Activity {
                             userJSON.getString("phone_number"));
                     Globals.user.id = userJSON.getInt("id");
 
-                    globalPreferences.edit()
-                            .putString(Globals.SESSION_TOKEN, dataJSON.getString("token"))
-                            .putString(Globals.USER_EMAIL, userJSON.getString("email"))
-                            .putString(Globals.USER_SURNAME, userJSON.getString("surname"))
-                            .putString(Globals.USER_NAME, userJSON.getString("firstname"))
-                            .putString(Globals.USER_SECOND_NAME, userJSON.getString("secondname"))
-                            .putString(Globals.USER_PHONE, userJSON.getString("phone_number"))
-                            .putInt(Globals.USER_ID, userJSON.getInt("id")).apply();
+                    KaratelPreferences.saveUser(
+                            dataJSON.getString("token"),
+                            userJSON.getString("email"),
+                            userJSON.getString("surname"),
+                            userJSON.getString("firstname"),
+                            userJSON.getString("secondname"),
+                            userJSON.getString("phone_number"),
+                            userJSON.getInt("id"));
 
                     String avatarUrl = userJSON.getJSONObject("avatar").getString("url");
                     if (avatarUrl != null && !avatarUrl.equals("null")) {
@@ -309,8 +277,7 @@ public class TipsActivity extends Activity {
                     }
                 });
             }
-            PreferenceManager.getDefaultSharedPreferences(context).edit()
-                    .putString(Globals.USER_AVATAR, Globals.user.avatarFileName).apply();
+            KaratelPreferences.setUserAvatar(Globals.user.avatarFileName);
             return null;
         }
 

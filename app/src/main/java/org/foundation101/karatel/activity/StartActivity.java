@@ -18,6 +18,7 @@ import com.google.android.gms.common.GoogleApiAvailability;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.service.RegistrationIntentService;
 
@@ -125,7 +126,7 @@ public class StartActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        KaratelApplication.getInstance().restoreUserFromPreferences(); //we need sessionToken to logout
+                        KaratelPreferences.restoreUser(); //we need sessionToken to logout
                         new MainActivity.SignOutSender(StartActivity.this).execute();
                         finish();
                     }

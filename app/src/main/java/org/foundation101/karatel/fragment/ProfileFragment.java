@@ -31,6 +31,7 @@ import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.MultipartUtility;
 import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.R;
@@ -310,12 +311,8 @@ public class ProfileFragment extends Fragment {
                         Globals.user.secondName = secondName;
                         Globals.user.phone = phone;
 
-                        PreferenceManager.getDefaultSharedPreferences(activity).edit()
-                                .putString(Globals.USER_SURNAME, surname)
-                                .putString(Globals.USER_NAME, name)
-                                .putString(Globals.USER_SECOND_NAME, secondName)
-                                .putString(Globals.USER_PHONE, phone)
-                                .putString(Globals.USER_AVATAR, Globals.user.avatarFileName).apply();
+                        KaratelPreferences.saveUserWithAvatar
+                                (surname, name, secondName, phone, Globals.user.avatarFileName);
                         break;
                     }
                     case Globals.SERVER_ERROR : {
@@ -384,12 +381,12 @@ public class ProfileFragment extends Fragment {
                             dataJSON.getString("phone_number"));
                     Globals.user.id = dataJSON.getInt("id");
 
-                    PreferenceManager.getDefaultSharedPreferences(activity).edit()
-                            .putString(Globals.USER_EMAIL, dataJSON.getString("email"))
-                            .putString(Globals.USER_SURNAME, dataJSON.getString("surname"))
-                            .putString(Globals.USER_NAME, dataJSON.getString("firstname"))
-                            .putString(Globals.USER_SECOND_NAME, dataJSON.getString("secondname"))
-                            .putString(Globals.USER_PHONE, dataJSON.getString("phone_number")).apply();
+                    KaratelPreferences.saveUserWithEmail(
+                            dataJSON.getString("email"),
+                            dataJSON.getString("surname"),
+                            dataJSON.getString("firstname"),
+                            dataJSON.getString("secondname"),
+                            dataJSON.getString("phone_number"));
 
                     String avatarUrl = dataJSON.getJSONObject("avatar").getString("url");
                     if (avatarUrl != null && !avatarUrl.equals("null")) {

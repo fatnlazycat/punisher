@@ -78,7 +78,6 @@ public class MyGcmListenerService extends GcmListenerService {
         if (loggedIn()){
             activityClass = MainActivity.class;
             KaratelPreferences.setStartedFromPush(true);
-            //KaratelApplication.MAIN_ACTIVITY_FROM_PUSH = true;
         } else {
             activityClass = TipsActivity.class;
         }
@@ -118,8 +117,7 @@ public class MyGcmListenerService extends GcmListenerService {
     }
 
     boolean loggedIn(){
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        return preferences.contains(Globals.SESSION_TOKEN);
+        return KaratelPreferences.loggedIn();
     }
 }
 

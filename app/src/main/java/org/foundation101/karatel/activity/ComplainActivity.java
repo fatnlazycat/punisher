@@ -55,6 +55,7 @@ import com.google.android.gms.location.places.Places;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.CameraManager;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.entity.ComplainCreationResponse;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
@@ -189,7 +190,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         if (checkGooglePlayServices()) { buildGoogleApiClient(); }
         initOldAndroidLocation();
 
-        ((KaratelApplication)getApplication()).restoreUserFromPreferences();
+        KaratelPreferences.restoreUser();
 
         dbHelper = new DBHelper(this, DBHelper.DATABASE, DBHelper.DB_VERSION);
 

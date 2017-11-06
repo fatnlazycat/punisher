@@ -70,6 +70,7 @@ import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
 import org.foundation101.karatel.adapter.HistoryAdapter;
@@ -218,7 +219,7 @@ public class ViolationActivity extends AppCompatActivity implements
         if (checkGooglePlayServices()) { buildGoogleApiClient(); }
         initOldAndroidLocation();
 
-        ((KaratelApplication)getApplication()).restoreUserFromPreferences();
+        KaratelPreferences.restoreUser();
 
         //initializing tab view with only one tab - the second will be initialized later
         tabs=(TabHost)findViewById(android.R.id.tabhost);

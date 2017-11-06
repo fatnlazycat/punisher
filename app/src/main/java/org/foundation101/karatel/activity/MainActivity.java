@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
 
         progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
 
-        ((KaratelApplication)getApplication()).restoreUserFromPreferences();
+        KaratelPreferences.restoreUser();
 
         toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -239,9 +239,8 @@ public class MainActivity extends AppCompatActivity {
         if (!loggedIn()){ //this happens when we tap push notification icon after logging out - we are not signed in so close the app
             finish();
         } else {
-            if (KaratelPreferences.startedFromPush()/*KaratelApplication.MAIN_ACTIVITY_FROM_PUSH*/) {
+            if (KaratelPreferences.startedFromPush()) {
                 KaratelPreferences.setStartedFromPush(false);
-                //KaratelApplication.MAIN_ACTIVITY_FROM_PUSH = false;
                 currentFragment = Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT;
                 tag = fragmentTags.get(currentFragment);
                 ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
@@ -394,9 +393,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     boolean loggedIn(){
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        return preferences.contains(Globals.SESSION_TOKEN);
-        //Globals.sessionToken != null;
+        return KaratelPreferences.loggedIn();
     }
 
     public void startTutorial(View view) {
@@ -602,8 +599,6 @@ public class MainActivity extends AppCompatActivity {
         Activity activity;
         View progressBar;
 
-        SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(KaratelApplication.getInstance());
-
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -618,8 +613,7 @@ public class MainActivity extends AppCompatActivity {
             String result;
             try {
                 if (HttpHelper.internetConnected(KaratelApplication.getInstance())){
-                    String gcmToken = globalPreferences.contains(Globals.PUSH_TOKEN) ?
-                        globalPreferences.getString(Globals.PUSH_TOKEN, "") : "";
+                    String gcmToken = KaratelPreferences.pushToken();
 
 
                     RetrofitSignOutSender api = KaratelApplication.getClient().create(RetrofitSignOutSender.class);
@@ -676,10 +670,10 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
                 }
                 return;
             }
-            boolean appClosed = globalPreferences.getBoolean(Globals.APP_CLOSED, false);
-            globalPreferences.edit().clear().apply();
+            boolean appClosed = KaratelPreferences.appClosed();
+            KaratelPreferences.clearAll();
             if (appClosed){
-                globalPreferences.edit().putBoolean(Globals.APP_CLOSED, true).apply();
+                KaratelPreferences.setAppClosed();
             }
 
             //Google Analytics part

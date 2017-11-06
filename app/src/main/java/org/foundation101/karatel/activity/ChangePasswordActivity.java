@@ -28,6 +28,7 @@ import android.widget.Toast;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -97,9 +98,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
         super.onResume();
 
         //see comments in Globals.APP_CLOSED
-        SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if (globalPreferences.contains(Globals.APP_CLOSED)){
-            globalPreferences.edit().remove(Globals.APP_CLOSED).apply();
+        if (KaratelPreferences.appClosed()){
             finishAffinity();
         }
     }

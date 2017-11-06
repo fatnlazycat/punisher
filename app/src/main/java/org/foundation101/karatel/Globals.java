@@ -90,9 +90,6 @@ public class Globals {
     public static String sessionToken;
     public static PunisherUser user;
 
-    //preferences
-    public static final String SENT_TOKEN_TO_SERVER = "SENT_TOKEN_TO_SERVER";
-
     //map of complain statuses: key-indexes on server, value-index in array in apk resources
     public static HashMap<Integer, Integer> statusesMap = new HashMap<>();
 

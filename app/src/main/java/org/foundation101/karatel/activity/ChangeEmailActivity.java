@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.HttpHelper;
 import org.json.JSONException;
@@ -159,8 +160,8 @@ public class ChangeEmailActivity extends AppCompatActivity {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals(Globals.SERVER_SUCCESS)){
                     Globals.user.email = email;
-                    PreferenceManager.getDefaultSharedPreferences(ChangeEmailActivity.this).edit()
-                            .putString(Globals.USER_EMAIL, email).apply();
+                    KaratelPreferences.setUserEmail(email);
+
                     AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ChangeEmailActivity.this);
                     AlertDialog dialog = dialogBuilder.setTitle(R.string.email_changed)
                             .setMessage(R.string.check_email_to_approve)
