@@ -67,7 +67,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         protected String doInBackground(String... params) {
             String request = new HttpHelper("user").makeRequestString(new String[]{"email", params[0]});
             try {
-                if (HttpHelper.internetConnected(ForgotPasswordActivity.this)) {
+                if (HttpHelper.internetConnected(/*ForgotPasswordActivity.this*/)) {
                     return HttpHelper.proceedRequest("password", request, false);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){

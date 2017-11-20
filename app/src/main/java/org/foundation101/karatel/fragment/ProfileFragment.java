@@ -165,7 +165,7 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (HttpHelper.internetConnected(getActivity())) {
+        if (HttpHelper.internetConnected(/*getActivity()*/)) {
             new ProfileFetcher(getActivity()).execute(Globals.user.id);
         }
         fillTextFields();
@@ -189,7 +189,11 @@ public class ProfileFragment extends Fragment {
                 }
             }
             if (requestCode == CameraManager.IMAGE_CAPTURE_INTENT && resultCode == Activity.RESULT_OK) {
-                CameraManager.setLastCapturedFile(data.getStringExtra(eu.aejis.mycustomcamera.IntentExtras.MEDIA_FILE));
+                //no need to call CameraManager.setLastCapturedFile because with built in camera intent
+                //we call cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mediaFileUri); (see CameraManager.startCamera())
+                // and the result is in the path provided
+                //the below line will be needed if we switch to CustomCamera
+                //CameraManager.setLastCapturedFile(data.getStringExtra(eu.aejis.mycustomcamera.IntentExtras.MEDIA_FILE));
                 Bitmap bigImage = BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options);
 
                 int orientation = MediaUtils.getOrientation(CameraManager.lastCapturedFile);
@@ -253,7 +257,7 @@ public class ProfileFragment extends Fragment {
         @Override
         protected String doInBackground(Void... params) {
             StringBuilder response = new StringBuilder();
-            if (HttpHelper.internetConnected(getActivity())) {
+            if (HttpHelper.internetConnected(/*getActivity()*/)) {
                 int tries = 0;
                 final int MAX_TRIES = 2;
                 while (tries++ < MAX_TRIES) try {

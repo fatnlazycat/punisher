@@ -138,7 +138,7 @@ public class ChangeEmailActivity extends AppCompatActivity {
             email = params[0];
             String request = new HttpHelper("user").makeRequestString(new String[] {"email", email});
             try {
-                if (HttpHelper.internetConnected(ChangeEmailActivity.this)) {
+                if (HttpHelper.internetConnected(/*ChangeEmailActivity.this*/)) {
                     return HttpHelper.proceedRequest("email", request, true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){

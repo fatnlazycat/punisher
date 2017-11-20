@@ -92,7 +92,7 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
 
         @Override
         protected Void doInBackground(String... params) {
-            if (HttpHelper.internetConnected(getActivity())) {
+            if (HttpHelper.internetConnected(/*getActivity()*/)) {
                 try {
                     Document doc = Jsoup.connect(params[0]).get();
                     Elements news = doc.select("item");

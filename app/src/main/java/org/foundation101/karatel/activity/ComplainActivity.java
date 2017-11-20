@@ -521,7 +521,10 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
             db.close();
 
             //show toast only if the method is called by Save button
-            if (view != null ) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
+            if (view != null ) {
+                Toast.makeText(this, R.string.complainSaved, Toast.LENGTH_SHORT).show();
+                finish();
+            }
         } else {
             Toast.makeText(this, R.string.cannot_define_location, Toast.LENGTH_LONG).show();
         }
@@ -842,6 +845,8 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
             //locationListener = null;
         }
 
+        if (violation != null) violation.clearValues();
+
         super.onDestroy();
     }
 
@@ -881,7 +886,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
 
         @Override
         protected ComplainCreationResponse doInBackground(Violation... params) {
-            if (!HttpHelper.internetConnected(context)) return null;
+            if (!HttpHelper.internetConnected(/*context*/)) return null;
 
             Violation violation = params[0];
             ComplainCreationResponse result;

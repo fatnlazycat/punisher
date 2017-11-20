@@ -349,7 +349,7 @@ public class RequestListFragment extends Fragment {
         @Override
         protected String doInBackground(Void... params) {
             try {
-                if (HttpHelper.internetConnected(getActivity())) {
+                if (HttpHelper.internetConnected(/*getActivity()*/)) {
                     return HttpHelper.proceedRequest("complains", "GET", "", true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){

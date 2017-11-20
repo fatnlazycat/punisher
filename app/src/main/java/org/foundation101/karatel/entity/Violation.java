@@ -172,6 +172,7 @@ public class Violation implements Serializable{
     }
 
     public Violation clearValues() {
+        if (requisites == null) return this;
         for (ViolationRequisite requisite : requisites) {
             requisite.value = null;
         }

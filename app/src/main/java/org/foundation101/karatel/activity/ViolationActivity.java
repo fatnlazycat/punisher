@@ -1098,7 +1098,7 @@ public class ViolationActivity extends AppCompatActivity implements
 
         @Override
         protected CreationResponse doInBackground(Violation... params) {
-            if (!HttpHelper.internetConnected(context)) return null;
+            if (!HttpHelper.internetConnected(/*context*/)) return null;
 
             Violation violation = params[0];
             CreationResponse result;
@@ -1365,7 +1365,7 @@ public class ViolationActivity extends AppCompatActivity implements
         @Override
         protected String doInBackground(Integer... params) {
             String result;
-            if (HttpHelper.internetConnected(ViolationActivity.this)) {
+            if (HttpHelper.internetConnected(/*ViolationActivity.this*/)) {
                 try {
                     result = HttpHelper.proceedRequest("complains/" + params[0], "GET", "", true);
                 } catch (final IOException e) {

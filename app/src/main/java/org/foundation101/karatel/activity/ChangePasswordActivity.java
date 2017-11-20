@@ -194,7 +194,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
             String request = new HttpHelper("user").makeRequestString(new String[]
                     {"password", oldPass, "new_user_password", newPass});
             try {
-                if (HttpHelper.internetConnected(ChangePasswordActivity.this)) {
+                if (HttpHelper.internetConnected(/*ChangePasswordActivity.this*/)) {
                     return HttpHelper.proceedRequest("change_password", request, true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e) {

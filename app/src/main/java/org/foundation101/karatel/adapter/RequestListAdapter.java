@@ -111,7 +111,7 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
     public void openRequest(int requestPosition){
         Request thisRequest = content.get(requestPosition);
         int status = thisRequest.complain_status_id;
-        if (status <= ViolationActivity.MODE_EDIT || HttpHelper.internetConnected(context)) {
+        if (status <= ViolationActivity.MODE_EDIT || HttpHelper.internetConnected(/*context*/)) {
             int id = thisRequest.id;
             Intent intent = new Intent(context, ViolationActivity.class)
                     .putExtra(Globals.VIOLATION_ACTIVITY_MODE, status)

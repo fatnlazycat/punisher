@@ -93,8 +93,8 @@ public class ComplainDraftsFragment extends Fragment {
 
     void makeComplainsBookAdapterContent(){
         ArrayList<ComplainRequest> drafts = getDraftRequests();
-        if (drafts.isEmpty() && getActivity() != null) {
-            getActivity().onBackPressed();
+        if (drafts.isEmpty()) {
+            returnToComplainsBook();
         } else {
             complainDraftsAdapter.setContent(drafts);
         }
@@ -131,6 +131,12 @@ public class ComplainDraftsFragment extends Fragment {
 
     void deleteDraftRequest(Integer position){
         DBHelper.deleteComplainRequest(db, position);
+    }
+
+    void returnToComplainsBook() {
+        if (getActivity() != null) {
+            getActivity().onBackPressed();
+        }
     }
 
     private class MyItemTouchHelperCallback extends ItemTouchHelper.Callback{
@@ -186,6 +192,7 @@ public class ComplainDraftsFragment extends Fragment {
                                     || event == DISMISS_EVENT_SWIPE
                                     || event == DISMISS_EVENT_CONSECUTIVE) {
                                 deleteDraftRequest(requestToDelete.id);
+                                if (complainDraftsAdapter.getContent().isEmpty()) returnToComplainsBook();
                             }
                         }
                     });

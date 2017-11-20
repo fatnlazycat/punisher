@@ -83,7 +83,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         if (textViewSignUpErrorMessage.getVisibility() == View.VISIBLE)
             textViewSignUpErrorMessage.setVisibility(View.GONE);
         newUser = new PunisherUser(email, password, surname, name, secondName, phone);
-        if (HttpHelper.internetConnected(this)) {
+        if (HttpHelper.internetConnected(/*this*/)) {
             new SignUpSender(this).execute(newUser);
         } else {
             Toast.makeText(this, R.string.no_internet_connection, Toast.LENGTH_LONG).show();

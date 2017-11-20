@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.content.Intent;
@@ -248,7 +249,55 @@ public class MainActivity extends AppCompatActivity {
                 if (savedInstanceState != null) {
                     currentFragment = savedInstanceState.getInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, 0);
                     tag = fragmentTags.get(currentFragment);
-                    switch (currentFragment) {
+
+                    Fragment fragmentInstance = fManager.findFragmentByTag(tag);
+                    if (fragmentInstance == null) {
+                        switch (currentFragment) {
+                            case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
+                                fragmentInstance = new MainFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT: {
+                                fragmentInstance = new RequestListFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT: {
+                                fragmentInstance = new ComplainsBookFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT: {
+                                fragmentInstance = new VideoListFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT: {
+                                fragmentInstance = new AboutFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_PARTNERS_FRAGMENT: {
+                                fragmentInstance = new PartnersFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT: {
+                                fragmentInstance = new NewsFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT: {
+                                fragmentInstance = new ContactsFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT: {
+                                fragmentInstance = new ProfileFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_COMPLAIN_DRAFTS: {
+                                fragmentInstance = new ComplainDraftsFragment();
+                                break;
+                            }
+                        }
+                    }
+                    ft.replace(R.id.frameLayoutMain, fragmentInstance, tag).addToBackStack(tag).commit();
+
+                    /*switch (currentFragment) {
                         case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
                             ft.replace(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
                             break;
@@ -289,7 +338,7 @@ public class MainActivity extends AppCompatActivity {
                             ft.replace(R.id.frameLayoutMain, new ComplainDraftsFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
-                    }
+                    }*/
                 } else {
                     currentFragment = Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT;
                     tag = fragmentTags.get(currentFragment);
@@ -442,7 +491,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void bindFacebook(View view) {
-        if (HttpHelper.internetConnected(this)) {
+        if (HttpHelper.internetConnected(/*this*/)) {
             AccessToken fbToken = AccessToken.getCurrentAccessToken();
             boolean loggedIn = fbToken != null;
             if (loggedIn) {
@@ -555,7 +604,7 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(String... params) {
             String result;
             try {
-                if (HttpHelper.internetConnected(MainActivity.this)) {
+                if (HttpHelper.internetConnected(/*MainActivity.this*/)) {
                     result = HttpHelper.proceedRequest("socials", params[0], true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
@@ -603,7 +652,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPreExecute() {
             super.onPreExecute();
             if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
-            if (HttpHelper.internetConnected(KaratelApplication.getInstance())) {
+            if (HttpHelper.internetConnected()) {
                 Toast.makeText(KaratelApplication.getInstance(), R.string.loggingOut, Toast.LENGTH_LONG).show();
             }
         }
@@ -612,7 +661,7 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(Void... params) {
             String result;
             try {
-                if (HttpHelper.internetConnected(KaratelApplication.getInstance())){
+                if (HttpHelper.internetConnected()){
                     String gcmToken = KaratelPreferences.pushToken();
 
 

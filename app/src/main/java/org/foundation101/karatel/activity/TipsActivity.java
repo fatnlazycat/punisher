@@ -117,7 +117,7 @@ public class TipsActivity extends Activity {
     }
 
     public void facebookLogin(View view) {
-        if (HttpHelper.internetConnected(this)) {
+        if (HttpHelper.internetConnected(/*this*/)) {
             List<String> permissionNeeds = Arrays.asList("user_photos", "email", "user_birthday", "user_friends");
             //fbCallbackManager = CallbackManager.Factory.create();
             LoginManager.getInstance().logInWithReadPermissions(this, permissionNeeds);
@@ -170,7 +170,7 @@ public class TipsActivity extends Activity {
 
         @Override
         protected String doInBackground(String... params) {
-            if (HttpHelper.internetConnected(context)) {
+            if (HttpHelper.internetConnected(/*context*/)) {
                 String api = viaFacebook ? "signin?provider=facebook" : "signin";
                 try {
                     return HttpHelper.proceedRequest(api, params[0], false);

@@ -111,6 +111,7 @@
     <string name="estimateGivenAnswer">Оцініть надану відповідь</string>
     <string name="cannot_define_location">Неможливо виконати дію, оскільки ваше місцезнаходження не знайдено</string>
     <string name="requestSaved">Заявка збережена</string>
+    <string name="complainSaved">Скарга збережена</string>
     <string name="show_details">Показати подробиці</string>
     <string name="hide_details">Сховати подробиці</string>
     <string name="chooseEmailClient">Яка поштова скринька?</string>

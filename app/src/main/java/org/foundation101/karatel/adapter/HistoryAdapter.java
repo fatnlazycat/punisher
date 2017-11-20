@@ -311,7 +311,7 @@ public class HistoryAdapter extends BaseAdapter {
 
         @Override
         protected String doInBackground(Void... params) {
-            if (HttpHelper.internetConnected(context)) {
+            if (HttpHelper.internetConnected(/*context*/)) {
                 String request = new HttpHelper("complain").makeRequestString(new String[]{"rating", rate.toString()});
                 try {
                     return HttpHelper.proceedRequest("complains/" + requestId, "PUT", request, true);
