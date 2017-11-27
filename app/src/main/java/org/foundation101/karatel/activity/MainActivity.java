@@ -295,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     }
-                    ft.replace(R.id.frameLayoutMain, fragmentInstance, tag).addToBackStack(tag).commit();
+                    ft.replace(R.id.frameLayoutMain, fragmentInstance, tag)/*.addToBackStack(tag)*/.commit();
 
                     /*switch (currentFragment) {
                         case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
@@ -398,6 +398,11 @@ public class MainActivity extends AppCompatActivity {
     public void onSaveInstanceState(Bundle outState) {
         outState.putInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, currentFragment);
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
 
     @Override

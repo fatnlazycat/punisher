@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -16,6 +17,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +30,7 @@ import org.foundation101.karatel.adapter.ComplainDraftsAdapter;
 import org.foundation101.karatel.adapter.ItemTouchHelperAdapter;
 import org.foundation101.karatel.entity.ComplainRequest;
 import org.foundation101.karatel.entity.Violation;
+import org.foundation101.karatel.utils.DBUtils;
 
 import java.util.ArrayList;
 
@@ -83,10 +86,6 @@ public class ComplainDraftsFragment extends Fragment {
 
     @Override
     public void onResume() {
-        /*if (punishPerformed) {
-
-            punishPerformed = false;
-        }*/
         makeComplainsBookAdapterContent();
         super.onResume();
     }
@@ -134,9 +133,24 @@ public class ComplainDraftsFragment extends Fragment {
     }
 
     void returnToComplainsBook() {
-        if (getActivity() != null) {
-            getActivity().onBackPressed();
-        }
+        Log.d(TAG, "isVisible = " + isVisible());
+        Log.d(TAG, "isResumed = " + isResumed());
+
+        //check if isResumed to avoid fragmentTransaction after activity's saveInstanceState
+        //and we need to delay because calling this before onViewCreated finishes causes IllegalStateException: FragmentManager is already executing transactions
+        if (isResumed()) new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (getActivity() != null) {
+                    getActivity().onBackPressed();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
     }
 
     private class MyItemTouchHelperCallback extends ItemTouchHelper.Callback{
@@ -192,7 +206,7 @@ public class ComplainDraftsFragment extends Fragment {
                                     || event == DISMISS_EVENT_SWIPE
                                     || event == DISMISS_EVENT_CONSECUTIVE) {
                                 deleteDraftRequest(requestToDelete.id);
-                                if (complainDraftsAdapter.getContent().isEmpty()) returnToComplainsBook();
+                                if (DBUtils.getNumberOfComplains() == 0) returnToComplainsBook();
                             }
                         }
                     });

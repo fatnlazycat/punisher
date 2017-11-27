@@ -24,7 +24,7 @@ public class ComplainDraftsAdapter extends RecyclerView.Adapter<ComplainDraftsAd
     public static final String INPUT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ";
     public static final String OUTPUT_DATE_FORMAT = "dd.MM.yyyy, HH:mm";
 
-    public ArrayList<ComplainRequest> content;
+    public ArrayList<ComplainRequest> content = new ArrayList<>();
     private Context context;
     private RecyclerView recycler;
 

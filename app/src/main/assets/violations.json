@@ -34,7 +34,7 @@
           "necessary": true
         }, {
           "dbTag": "Bribe_description",
-          "name": "ЩО СТАЛОСЬ?",
+          "name": "ЩО СТАЛОСЯ?",
           "description": "Коротко описати обставини, за яких стався інцидент",
           "hint": "Детально вкажіть обставини",
           "necessary": true
@@ -81,7 +81,7 @@
           "necessary": false
         }, {
           "dbTag": "Insult_description",
-          "name": "ЩО СТАЛОСЬ?",
+          "name": "ЩО СТАЛОСЯ?",
           "description": "Коротко описати обставини, за яких стався інцидент",
           "hint": "Детально вкажіть обставини",
           "necessary": true
@@ -261,9 +261,9 @@
       "requisites": [
         {
           "dbTag": "KyivPasTrans_description",
-          "name": "Що сталось?",
+          "name": "Що сталося?",
           "description": "Коротко описати обставини, за яких стався інцидент. Зазначте також дату та час інциденту",
-          "hint": "Опишить, що сталось",
+          "hint": "Опишить, що сталося",
           "necessary": true
         }, {
           "dbTag": "KyivPasTrans_route_number",
@@ -290,7 +290,7 @@
       "requisites": [
         {
           "dbTag": "TransportZhytomyra_description",
-          "name": "Що сталось?",
+          "name": "Що сталося?",
           "hint": "Оберіть один з варіантів",
           "necessary": true,
           "possibleValues": [
