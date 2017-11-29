@@ -142,7 +142,7 @@ public class TipsActivity extends Activity {
 
                 @Override
                 public void onError(FacebookException e) {
-                    Globals.showError(TipsActivity.this, R.string.cannot_connect_server, e);
+                    Globals.showError(R.string.cannot_connect_server, e);
                 }
             });
         } else {
@@ -178,7 +178,7 @@ public class TipsActivity extends Activity {
                     TipsActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Globals.showError(TipsActivity.this, R.string.cannot_connect_server, e);
+                            Globals.showError(R.string.cannot_connect_server, e);
                         }
                     });
                     return "";
@@ -232,7 +232,7 @@ public class TipsActivity extends Activity {
                     Toast.makeText(TipsActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                 }
             } catch (JSONException e) {
-                Globals.showError(TipsActivity.this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
             progressBar.setVisibility(View.GONE);
             //Toast.makeText(TipsActivity.this, "end of LoginSender", Toast.LENGTH_SHORT).show();
@@ -273,7 +273,7 @@ public class TipsActivity extends Activity {
                 context.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(context, R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
             }

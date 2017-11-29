@@ -78,7 +78,7 @@ public class Globals {
     public static final String USER_AVATAR = "USER_AVATAR";
 
     //interaction with server api
-    public static final String SERVER_URL = "https://karatel-test.foundation101.org/api/v1/"; //-api -test
+    public static final String SERVER_URL = "https://karatel-api.foundation101.org/api/v1/"; //-api -test
     public static final int MAX_SERVER_REQUEST_SIZE = 100 * 1024 * 1024; //100 mb
     public static final String SERVER_SUCCESS = "success";
     public static final String SERVER_ERROR = "error";
@@ -153,16 +153,16 @@ public class Globals {
         return outDate;
     }
 
-    public static void showError(Context context, int errorMessageResId, Exception e){
-        if (context != null) Toast.makeText(context, errorMessageResId, Toast.LENGTH_LONG).show();
+    public static void showError(int errorMessageResId, Exception e){
+        Toast.makeText(KaratelApplication.getInstance(), errorMessageResId, Toast.LENGTH_LONG).show();
         if (e != null) {
             //String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
             Log.d("Punisher error", "", e);
         }
     }
 
-    public static void showError(Context context, String errorMessage, Exception e){
-        Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show();
+    public static void showError(String errorMessage, Exception e){
+        Toast.makeText(KaratelApplication.getInstance(), errorMessage, Toast.LENGTH_LONG).show();
         if (e != null) {
             //String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
             Log.d("Punisher error", "", e);

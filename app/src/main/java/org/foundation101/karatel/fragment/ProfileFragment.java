@@ -202,7 +202,7 @@ public class ProfileFragment extends Fragment {
                 boolean b = new File(CameraManager.lastCapturedFile).delete();
             }
         } catch (IOException | NullPointerException e) {
-            Globals.showError(getActivity(), R.string.error, e);
+            Globals.showError(R.string.error, e);
         }
     }
 
@@ -291,7 +291,7 @@ public class ProfileFragment extends Fragment {
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                                Globals.showError(R.string.cannot_connect_server, e);
                             }
                         });
                     }
@@ -336,7 +336,7 @@ public class ProfileFragment extends Fragment {
                     }
                 }
             } catch (JSONException eJSON){
-                Globals.showError(activity, R.string.error, eJSON);
+                Globals.showError(R.string.error, eJSON);
             }
         }
     }
@@ -362,7 +362,7 @@ public class ProfileFragment extends Fragment {
                 if (activity != null) activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
                 return "";
@@ -411,7 +411,7 @@ public class ProfileFragment extends Fragment {
                     Toast.makeText(activity, errorMessage, Toast.LENGTH_LONG).show();
                 }
             } catch (JSONException e) {
-                Globals.showError(activity, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
             progressBar.setVisibility(View.GONE);
         }

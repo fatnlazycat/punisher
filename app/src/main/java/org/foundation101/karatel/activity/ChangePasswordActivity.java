@@ -201,7 +201,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 ChangePasswordActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(ChangePasswordActivity.this, R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
                 return "";
@@ -248,7 +248,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
                     }
                 }
             } catch (JSONException e) {
-                Globals.showError(ChangePasswordActivity.this, R.string.cannot_connect_server, e);
+                Globals.showError(R.string.cannot_connect_server, e);
             }
         }
     }

@@ -145,7 +145,7 @@ public class ChangeEmailActivity extends AppCompatActivity {
                 ChangeEmailActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(ChangeEmailActivity.this, R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
                 return "";
@@ -187,7 +187,7 @@ public class ChangeEmailActivity extends AppCompatActivity {
                     Toast.makeText(ChangeEmailActivity.this, message, Toast.LENGTH_LONG).show();
                 }
             } catch (JSONException e) {
-                Globals.showError(ChangeEmailActivity.this, e.getMessage(), e);
+                Globals.showError(e.getMessage(), e);
             }
 
 

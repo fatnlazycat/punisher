@@ -178,7 +178,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                 SignUpActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(SignUpActivity.this, R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
                 return "";
@@ -223,7 +223,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                     textViewSignUpErrorMessage.setText(sb.toString());
                 }
             } catch (JSONException e) {
-                Globals.showError(SignUpActivity.this, R.string.error, e);
+                Globals.showError(R.string.error, e);
                 if (e.getMessage() != null) {
                     textViewSignUpErrorMessage.setVisibility(View.VISIBLE);
                     textViewSignUpErrorMessage.setText(e.getMessage());

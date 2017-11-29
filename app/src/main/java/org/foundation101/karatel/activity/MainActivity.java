@@ -526,12 +526,12 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onCancel() {
-                        Globals.showError(MainActivity.this, R.string.operation_cancelled, null);
+                        Globals.showError(R.string.operation_cancelled, null);
                     }
 
                     @Override
                     public void onError(FacebookException e) {
-                        Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
             }
@@ -559,7 +559,7 @@ public class MainActivity extends AppCompatActivity {
         } else try {
             avatarView.setBackground(Drawable.createFromPath(Globals.user.avatarFileName));
         } catch (Exception e){
-            Globals.showError(this, R.string.error, e);
+            Globals.showError(R.string.error, e);
         }
     }
 
@@ -616,7 +616,7 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
                 return "";
@@ -635,7 +635,7 @@ public class MainActivity extends AppCompatActivity {
                 } else message = json.getString("error");
                 Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
             } catch (JSONException e){
-                Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
+                Globals.showError(R.string.cannot_connect_server, e);
             }
         }
     }
@@ -694,14 +694,14 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(KaratelApplication.getInstance(), R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
 
                 /*MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });*/
                 return HttpHelper.ERROR_JSON;
@@ -720,7 +720,7 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
                         Toast.makeText(KaratelApplication.getInstance(), json.getString("error"), Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
-                    Globals.showError(KaratelApplication.getInstance(), R.string.error, e);
+                    Globals.showError(R.string.error, e);
                 }
                 return;
             }

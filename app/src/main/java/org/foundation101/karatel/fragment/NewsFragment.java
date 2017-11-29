@@ -64,7 +64,7 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
             docFetcher.execute(rssURL);
 
         } catch (Exception e){
-            Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+            Globals.showError(R.string.cannot_connect_server, e);
         }
         return v;
     }
@@ -115,7 +115,7 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                                Globals.showError(R.string.cannot_connect_server, e);
                             }
                         });
                     }

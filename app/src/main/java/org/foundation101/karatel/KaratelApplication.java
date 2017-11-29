@@ -35,6 +35,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public class KaratelApplication extends MultiDexApplication {
+    public static final String TAG = "KaratelApplication";
     private static Retrofit retrofit = null;
 
     private static KaratelApplication instance;
@@ -145,5 +146,13 @@ public class KaratelApplication extends MultiDexApplication {
         }
 
 
+    }
+
+    public static void longLastingOperation(long duration) {
+        for (long l = 0; l < duration; l++) {
+            double d = l / Math.PI;
+            if (Math.round(d) % 1000 == 0) Log.d(TAG, "longLastingOperation, d=" + d);
+        }
+        Log.d(TAG, "longLastingOperation ended");
     }
 }

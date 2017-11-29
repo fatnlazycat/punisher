@@ -11,8 +11,8 @@ android {
         targetSdkVersion 22
         multiDexEnabled true
 
-        versionCode 34
-        versionName "2.0" //don't forget to remove -test in api endpoint!!!
+        versionCode 35
+        versionName "2.0.1" //don't forget to remove -test in api endpoint!!!
     }
     buildTypes {
         debug {

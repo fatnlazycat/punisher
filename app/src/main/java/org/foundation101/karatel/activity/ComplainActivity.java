@@ -357,7 +357,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 evidenceAdapter.content.add(evidenceFileName);
                 evidenceAdapter.mediaContent.add(thumbnail);
             } catch (IOException e) {
-                Globals.showError(this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
         } else if (mode == MODE_EDIT) {
             SQLiteDatabase _db = dbHelper.getReadableDatabase();
@@ -375,7 +375,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                     evidenceAdapter.content.add(evidenceFileName);
                     evidenceAdapter.mediaContent.add(thumbnail);
                 } catch (Exception e) {//we read files so need to catch exceptions
-                    Globals.showError(this, R.string.error, e);
+                    Globals.showError(R.string.error, e);
                 } while (_cursor.moveToNext());
             }
             _cursor.close();
@@ -427,7 +427,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 evidenceAdapter.mediaContent.add(bmp);
                 evidenceAdapter.notifyDataSetChanged();
             } catch (Exception e) {
-                Globals.showError(this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
         }
 
@@ -597,7 +597,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 saveToBase(null); //we pass null to point that it's called from punish()
                 new ComplainSender(this).execute(violation);
             } catch (Exception e) {
-                Globals.showError(this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
         }
     }
@@ -990,7 +990,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 ComplainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(ComplainActivity.this, R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
                 return null;

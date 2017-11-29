@@ -356,7 +356,7 @@ public class RequestListFragment extends Fragment {
                 if (getActivity() != null) getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
                 return "";
@@ -399,7 +399,7 @@ public class RequestListFragment extends Fragment {
                     requestListAdapter.notifyDataSetChanged();
                 }
             } catch (JSONException | IOException e) {
-                Globals.showError(getContext(), R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
             Activity activity = getActivity();
             String requestFromPush = activity == null ?
@@ -427,7 +427,7 @@ public class RequestListFragment extends Fragment {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
                 return "";
@@ -463,7 +463,7 @@ public class RequestListFragment extends Fragment {
                         Date date2 = dateFormatter.parse(second.created_at);
                         return -(date1.compareTo(date2)); // "-" is for reverse sorting
                     } catch (ParseException e){
-                        Globals.showError(getActivity(), R.string.error, e);
+                        Globals.showError(R.string.error, e);
                         break;
                     }
                 }

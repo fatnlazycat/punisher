@@ -72,7 +72,7 @@ public class DBUtils {
                     Log.e("Punisher", "files deleted successfully " + deletedSuccessfully);
 
                 } catch (Exception e) {
-                    Globals.showError(KaratelApplication.getInstance(), R.string.error, e);
+                    Globals.showError(R.string.error, e);
                 }
 
                 db.close();

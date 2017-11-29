@@ -127,7 +127,7 @@ public class ViolationActivity extends AppCompatActivity implements
     public static final String TAG = "ViolationActivity";
 
     RequisitesListAdapter requisitesAdapter;
-    LinearLayout requisitesList, llAddEvidence;
+    LinearLayout requisitesList;
     RelativeLayout tabStatus;
     EvidenceAdapter evidenceAdapter = new EvidenceAdapter(this);
     HistoryAdapter historyAdapter;
@@ -326,7 +326,7 @@ public class ViolationActivity extends AppCompatActivity implements
                         String fieldName = requisitesAdapter.content.get(i).dbTag.replace(violation.getType() + "_", "");
                         requisitesAdapter.content.get(i).value = (String)Request.class.getField(fieldName).get(request);
                     } catch (Exception e) {
-                        Globals.showError(this, R.string.error, e);
+                        Globals.showError(R.string.error, e);
                     }
                 }
 
@@ -491,7 +491,7 @@ public class ViolationActivity extends AppCompatActivity implements
                 evidenceAdapter.content.add(evidenceFileName);
                 evidenceAdapter.mediaContent.add(thumbnail);
             } catch (IOException e) {
-                Globals.showError(this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
         } else if (mode == MODE_EDIT) {
             SQLiteDatabase _db = dbHelper.getReadableDatabase();
@@ -509,7 +509,7 @@ public class ViolationActivity extends AppCompatActivity implements
                     evidenceAdapter.content.add(evidenceFileName);
                     evidenceAdapter.mediaContent.add(thumbnail);
                 } catch (Exception e){//we read files so need to catch exceptions
-                    Globals.showError(this, R.string.error, e);
+                    Globals.showError(R.string.error, e);
                 } while (_cursor.moveToNext());
             }
             _cursor.close();
@@ -579,7 +579,7 @@ public class ViolationActivity extends AppCompatActivity implements
                 evidenceAdapter.mediaContent.add(bmp);
                 evidenceAdapter.notifyDataSetChanged();
             } catch (Exception e) {
-                Globals.showError(this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
         }
 
@@ -601,6 +601,7 @@ public class ViolationActivity extends AppCompatActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
+                //KaratelApplication.longLastingOperation(1000000);
                 onBackPressed();
                 return true;
         }
@@ -690,7 +691,7 @@ public class ViolationActivity extends AppCompatActivity implements
                     new File(fileToDelete).delete();
                 }
             } catch (Exception e) {
-                Globals.showError(this, R.string.cannot_write_file, e);
+                Globals.showError(R.string.cannot_write_file, e);
             }*/
 
             //show toast only if the method is called by Save button
@@ -762,7 +763,7 @@ public class ViolationActivity extends AppCompatActivity implements
                 saveToBase(null); //we pass null to point that it's called from punish()
                 new ViolationSender(this).execute(violation);
             } catch (Exception e) {
-                Globals.showError(this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
         }
     }
@@ -1241,7 +1242,7 @@ public class ViolationActivity extends AppCompatActivity implements
                 ViolationActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
                 return null;
@@ -1349,7 +1350,7 @@ public class ViolationActivity extends AppCompatActivity implements
             ViolationActivity.this.evidenceAdapter.notifyDataSetChanged();
             super.onPostExecute(e);
             if (e != null)
-                Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
+                Globals.showError(R.string.cannot_connect_server, e);
         }
     }
 
@@ -1372,7 +1373,7 @@ public class ViolationActivity extends AppCompatActivity implements
                     ViolationActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
+                            Globals.showError(R.string.cannot_connect_server, e);
                         }
                     });
                     return "";
@@ -1408,7 +1409,7 @@ public class ViolationActivity extends AppCompatActivity implements
                     switchTabToHistory();
                 }
             } catch (JSONException | IOException | NullPointerException e) {
-                Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
+                Globals.showError(R.string.cannot_connect_server, e);
             }
         }
     }

@@ -74,7 +74,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                 ForgotPasswordActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(ForgotPasswordActivity.this, R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
                 return "";
@@ -99,7 +99,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                     }
                 }
             } catch (JSONException e) {
-                Globals.showError(ForgotPasswordActivity.this, R.string.cannot_connect_server, e);
+                Globals.showError(R.string.cannot_connect_server, e);
             }
         }
     }

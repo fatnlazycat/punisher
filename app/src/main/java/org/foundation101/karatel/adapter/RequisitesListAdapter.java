@@ -205,7 +205,7 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
                             setAddressText(sb.toString());
                         }
                     } catch (IOException e) {
-                        Globals.showError(context, "can't find address", e);
+                        Globals.showError("can't find address", e);
                     }*/
                 }
             });

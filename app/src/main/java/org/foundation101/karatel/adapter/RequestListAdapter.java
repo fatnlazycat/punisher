@@ -160,7 +160,7 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
                 ((MainActivity)context).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Globals.showError(context, R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
                 return "";
