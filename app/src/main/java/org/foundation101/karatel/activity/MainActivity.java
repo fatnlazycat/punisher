@@ -732,7 +732,11 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
 
             //Google Analytics part
             KaratelApplication.getInstance().sendScreenName(TAG);
-            if (activity != null) activity.finishAffinity();
+            try { activity.finishAffinity(); } catch (NullPointerException ignored) {
+                /*two reasons for NPE:
+                * 1 - activity can be null
+                * 2 - activity.finishAffinity() can throw */
+            }
         }
     }
 }

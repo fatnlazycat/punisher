@@ -3,7 +3,7 @@ package org.foundation101.karatel.adapter;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -15,9 +15,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.BaseAdapter;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -33,6 +35,7 @@ import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.ViolationActivity;
 import org.foundation101.karatel.entity.UpdateEntity;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
+import org.foundation101.karatel.utils.DrawingUtils;
 import org.foundation101.karatel.utils.PDFUtils;
 import org.foundation101.karatel.utils.RetrofitUtils;
 import org.json.JSONException;
@@ -57,8 +60,10 @@ public class HistoryAdapter extends BaseAdapter {
     public HistoryAdapter(Context context){
         this.context = context;
         violationStatuses = context.getResources().getStringArray(R.array.violationStatuses);
+        fourSidesGradient = new DrawingUtils().fourSidesGradient();
     }
 
+    private Drawable fourSidesGradient;
     public UpdateEntity[] content = new UpdateEntity[0];
     Context context;
     private String[] violationStatuses;
@@ -108,8 +113,10 @@ public class HistoryAdapter extends BaseAdapter {
             holder.operatorComment          = (TextView)        convertView.findViewById(R.id.operatorComment);
             holder.headerAnswer             = (TextView)        convertView.findViewById(R.id.headerAnswer);
             holder.answerLayout             = (RelativeLayout)  convertView.findViewById(R.id.answerLayout);
-            holder.imageAnswer              = (WebView)         convertView.findViewById(R.id.imageAnswer);
-            holder.ic_zoom                  = (TextView)        convertView.findViewById(R.id.ic_zoom);
+            //holder.imageAnswer            = (WebView)         convertView.findViewById(R.id.imageAnswer);
+            holder.flWebView                = (FrameLayout)     convertView.findViewById(R.id.flWebView);
+            holder.ic_zoom                  =                   convertView.findViewById(R.id.ic_zoom);
+            holder.tvPressHere              = (TextView)        convertView.findViewById(R.id.tvPressHere);
             holder.headerAnswerBy           = (TextView)        convertView.findViewById(R.id.headerAnswerBy);
             holder.textAnswerBy             = (TextView)        convertView.findViewById(R.id.textAnswerBy);
             holder.rateLayout               = (LinearLayout)    convertView.findViewById(R.id.rateLayout);
@@ -121,6 +128,11 @@ public class HistoryAdapter extends BaseAdapter {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
+
+        //the gradient (two linear gradients inside a compose shader) doesn't work with hardware acceleration
+        holder.tvPressHere.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        holder.tvPressHere.setBackground(fourSidesGradient);
+
 
         String dateString = Globals.translateDate(RequestListAdapter.INPUT_DATE_FORMAT,
                 RequestListAdapter.OUTPUT_DATE_FORMAT, thisUpdate.created_at);
@@ -158,26 +170,38 @@ public class HistoryAdapter extends BaseAdapter {
                 String thisUrl = firstDocument.url;
 
                 if (holder.answerLayout.getVisibility() == View.GONE
+                        || (holder.imageAnswer == null)
                         || !(holder.imageAnswer.equals(webViews.get(thisUrl)))) {
                     holder.headerAnswer.setVisibility(View.VISIBLE);
                     holder.answerLayout.setVisibility(View.VISIBLE);
+
+                    WebView wv = new WebView(KaratelApplication.getInstance());
+                    holder.imageAnswer = wv;
+                    holder.flWebView.addView(wv);
+
                     holder.imageAnswer.getSettings().setLoadWithOverviewMode(true);
                     holder.imageAnswer.getSettings().setUseWideViewPort(true);
                     holder.imageAnswer.getSettings().setJavaScriptEnabled(true); //for the pdf viewer
-                    /*holder.imageAnswer.setWebViewClient(new WebViewClient() {
+                    holder.imageAnswer.setWebViewClient(new WebViewClient() {
                         @Override
                         public void onPageFinished(WebView view, String url) {
-                            super.onPageFinished(view, url);
                             Log.d("", "onPageFinished");
-                            holder.ic_zoom.setText("");
+                            Object condition = view.getTag(R.id.webViewTagTitleLoaded);
+                            if (condition != null && (Boolean)condition) {
+                                view.setTag(R.id.webViewTagTitleLoaded, false);
+                                super.onPageFinished(view, url);
+                            } else {
+                                view.loadUrl(url);
+                            }
                         }
-
+                    });
+                    holder.imageAnswer.setWebChromeClient(new WebChromeClient() {
                         @Override
-                        public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                            super.onPageStarted(view, url, favicon);
-                            holder.ic_zoom.setText(R.string.pressHereToSeeAnswer);
+                        public void onReceivedTitle(WebView view, String title) {
+                            view.setTag(R.id.webViewTagTitleLoaded, true);
+                            super.onReceivedTitle(view, title);
                         }
-                    });*/
+                    });
 
                     //using a map rewrites old non-actual webview with the new actual one so that only one webview for each url
                     webViews.put(thisUrl, holder.imageAnswer);
@@ -188,14 +212,6 @@ public class HistoryAdapter extends BaseAdapter {
                     } else {
                         String docUrl = getDocUrl(firstDocument);
                         holder.imageAnswer.loadUrl(docUrl);
-                        int progress = holder.imageAnswer.getProgress();
-                        /*if (progress >= 100) {
-                            //use the param "view", and call getContentHeight in scrollTo
-                            float scale = holder.imageAnswer.getScale();
-                            int height = holder.imageAnswer.getContentHeight();
-                            int yScroll = Math.round(height * scale / 20);
-                            holder.imageAnswer.scrollTo(0, 500);
-                        }*/
                     }
 
                     holder.ic_zoom.setOnClickListener(new View.OnClickListener() {
@@ -318,12 +334,13 @@ public class HistoryAdapter extends BaseAdapter {
     }
 
     public static class ViewHolder{
+        FrameLayout flWebView;
         ImageView imageViewStatus;
-        TextView ic_zoom;
+        View ic_zoom;
         WebView imageAnswer;
         ImageButton buttonLike, buttonDislike;
         TextView textViewRequestStatus, textViewRequestTimeStamp, headerOperatorComment, operatorComment,
-                headerAnswer, headerAnswerBy, textAnswerBy, textRate, textViewDetailsAction;
+                headerAnswer, headerAnswerBy, textAnswerBy, textRate, textViewDetailsAction, tvPressHere;
         LinearLayout rateLayout;
         RelativeLayout collapsableLayout, answerLayout;
     }
@@ -331,6 +348,7 @@ public class HistoryAdapter extends BaseAdapter {
     class LikeDislike extends AsyncTask<Void, Void, String> implements View.OnClickListener{
         int requestId;
         Integer rate;
+
         LikeDislike(int requestId, boolean like){
             this.requestId = requestId;
             rate = like ? 1 : -1;
@@ -344,8 +362,7 @@ public class HistoryAdapter extends BaseAdapter {
                     .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            new LikeDislike(requestId, (rate==1)) //reverse from int to boolean
-                                    .execute();
+                            execute();
                         }
                     }).create();
             dialog.show();
