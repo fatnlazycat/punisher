@@ -382,12 +382,7 @@ public class HistoryAdapter extends BaseAdapter {
                 try {
                     return HttpHelper.proceedRequest("complains/" + requestId, "PUT", request, true);
                 } catch (final IOException e) {
-                    ((ViolationActivity) context).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Globals.showError(R.string.cannot_connect_server, e);
-                        }
-                    });
+                    Globals.showError(R.string.cannot_connect_server, e);
                     return "";
                 }
             } else return HttpHelper.ERROR_JSON;

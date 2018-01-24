@@ -198,12 +198,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
                     return HttpHelper.proceedRequest("change_password", request, true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e) {
-                ChangePasswordActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
         }
@@ -243,7 +238,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
                         } else {
                             message = json.getString("errors");
                         }
-                        Toast.makeText(ChangePasswordActivity.this, message, Toast.LENGTH_LONG).show();
+                        Toast.makeText(KaratelApplication.getInstance(), message, Toast.LENGTH_LONG).show();
                         break;
                     }
                 }

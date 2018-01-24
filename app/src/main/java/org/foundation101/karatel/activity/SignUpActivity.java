@@ -175,12 +175,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
             try {
                 return HttpHelper.proceedRequest("users", request, false);
             } catch (final IOException e) {
-                SignUpActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
         }

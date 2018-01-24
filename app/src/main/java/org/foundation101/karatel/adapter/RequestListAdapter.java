@@ -157,12 +157,7 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
             try {
                 return HttpHelper.proceedRequest("complain_statuses", "GET", "", false);
             } catch (final IOException e) {
-                ((MainActivity)context).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
         }

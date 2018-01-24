@@ -1239,12 +1239,7 @@ public class ViolationActivity extends AppCompatActivity implements
                 }
 
             } catch (final IOException e){
-                ViolationActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return null;
             }
             return result;
@@ -1370,12 +1365,7 @@ public class ViolationActivity extends AppCompatActivity implements
                 try {
                     result = HttpHelper.proceedRequest("complains/" + params[0], "GET", "", true);
                 } catch (final IOException e) {
-                    ViolationActivity.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Globals.showError(R.string.cannot_connect_server, e);
-                        }
-                    });
+                    Globals.showError(R.string.cannot_connect_server, e);
                     return "";
                 }
             } else return HttpHelper.ERROR_JSON;

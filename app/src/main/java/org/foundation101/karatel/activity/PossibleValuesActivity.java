@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
@@ -25,6 +26,7 @@ import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.ComplainsBookAdapter;
 import org.foundation101.karatel.entity.Violation;
+import org.foundation101.karatel.utils.LayoutUtils;
 
 public class PossibleValuesActivity extends AppCompatActivity {
     private final String TAG_OTHERS = "Інше";
@@ -118,9 +120,10 @@ public class PossibleValuesActivity extends AppCompatActivity {
 
     private View footerForListView() {
         View footerView = new View(this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        footerView.setBackground(ContextCompat.getDrawable(this, R.drawable.grey_line));
+        AbsListView.LayoutParams lp = new AbsListView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, LayoutUtils.dpToPx(1));
+        footerView.setLayoutParams(lp);
+        footerView.setBackgroundColor(ContextCompat.getColor(this, R.color.green_button_disabled));
         return footerView;
     }
 }

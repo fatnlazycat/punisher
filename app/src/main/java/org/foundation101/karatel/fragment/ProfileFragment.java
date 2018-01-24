@@ -288,12 +288,7 @@ public class ProfileFragment extends Fragment {
                     return response.toString();
                 } catch (final IOException e) {
                     if (tries == MAX_TRIES) {
-                        activity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Globals.showError(R.string.cannot_connect_server, e);
-                            }
-                        });
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 }
             } else {
@@ -359,12 +354,7 @@ public class ProfileFragment extends Fragment {
             try {
                 return HttpHelper.proceedRequest("users/" + params[0], "GET", "", true);
             } catch (final IOException e){
-                if (activity != null) activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
         }

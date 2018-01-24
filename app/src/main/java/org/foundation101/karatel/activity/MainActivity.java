@@ -17,6 +17,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -598,10 +599,10 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    class FacebookBinder extends AsyncTask<String, Void, String> {
+    static class FacebookBinder extends AsyncTask<String, Void, String> {
         String fbUserId;
 
-        public FacebookBinder(String fbUserId) {
+        FacebookBinder(String fbUserId) {
             this.fbUserId = fbUserId;
         }
 
@@ -609,16 +610,11 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(String... params) {
             String result;
             try {
-                if (HttpHelper.internetConnected(/*MainActivity.this*/)) {
+                if (HttpHelper.internetConnected()) {
                     result = HttpHelper.proceedRequest("socials", params[0], true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
             return result;
@@ -631,9 +627,9 @@ public class MainActivity extends AppCompatActivity {
             try {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals("success")){
-                    message = MainActivity.this.getResources().getString(R.string.facebook_profile_binded);
+                    message = KaratelApplication.getInstance().getResources().getString(R.string.facebook_profile_binded);
                 } else message = json.getString("error");
-                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                Toast.makeText(KaratelApplication.getInstance(), message, Toast.LENGTH_LONG).show();
             } catch (JSONException e){
                 Globals.showError(R.string.cannot_connect_server, e);
             }
@@ -691,19 +687,7 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
                 } else return HttpHelper.ERROR_JSON;
 
             } catch (final IOException e){
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
-
-                /*MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });*/
+                Globals.showError(R.string.cannot_connect_server, e);
                 return HttpHelper.ERROR_JSON;
             }
             return result == null ? "" : result;

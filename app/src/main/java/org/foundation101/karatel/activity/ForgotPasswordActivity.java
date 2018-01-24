@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -71,12 +72,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                     return HttpHelper.proceedRequest("password", request, false);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
-                ForgotPasswordActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
         }
@@ -94,7 +90,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                     }
                     case Globals.SERVER_ERROR : {
                         String message = json.has("error") ? json.getString("error") : json.getString("errors");
-                        Toast.makeText(ForgotPasswordActivity.this, message, Toast.LENGTH_LONG).show();
+                        Toast.makeText(KaratelApplication.getInstance(), message, Toast.LENGTH_LONG).show();
                         break;
                     }
                 }

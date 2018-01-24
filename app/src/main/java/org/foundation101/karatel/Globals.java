@@ -3,6 +3,8 @@ package org.foundation101.karatel;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -78,7 +80,7 @@ public class Globals {
     public static final String USER_AVATAR = "USER_AVATAR";
 
     //interaction with server api
-    public static final String SERVER_URL = "https://karatel-api.foundation101.org/api/v1/"; //-api -test
+    public static final String SERVER_URL = "https://karatel-test.foundation101.org/api/v1/"; //-api -test
     public static final int MAX_SERVER_REQUEST_SIZE = 100 * 1024 * 1024; //100 mb
     public static final String SERVER_SUCCESS = "success";
     public static final String SERVER_ERROR = "error";
@@ -153,19 +155,37 @@ public class Globals {
         return outDate;
     }
 
-    public static void showError(int errorMessageResId, Exception e){
-        Toast.makeText(KaratelApplication.getInstance(), errorMessageResId, Toast.LENGTH_LONG).show();
+    public static void showError(final int errorMessageResId, Exception e){
+        showMessage(errorMessageResId);
         if (e != null) {
             //String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
             Log.d("Punisher error", "", e);
         }
     }
 
-    public static void showError(String errorMessage, Exception e){
-        Toast.makeText(KaratelApplication.getInstance(), errorMessage, Toast.LENGTH_LONG).show();
+    public static void showError(final String errorMessage, Exception e){
+        showMessage(errorMessage);
         if (e != null) {
             //String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
             Log.d("Punisher error", "", e);
         }
+    }
+
+    public static void showMessage(final int messageResId){
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(KaratelApplication.getInstance(), messageResId, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    public static void showMessage(final String message){
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(KaratelApplication.getInstance(), message, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

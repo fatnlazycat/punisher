@@ -353,12 +353,7 @@ public class RequestListFragment extends Fragment {
                     return HttpHelper.proceedRequest("complains", "GET", "", true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
-                if (getActivity() != null) getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
         }
@@ -388,7 +383,7 @@ public class RequestListFragment extends Fragment {
                         break;
                     }
                     case Globals.SERVER_ERROR : {
-                        Toast.makeText(getContext(), json.getString(Globals.SERVER_ERROR), Toast.LENGTH_LONG).show();
+                        Globals.showMessage(json.getString(Globals.SERVER_ERROR));
                         break;
                     }
                 }
@@ -424,12 +419,7 @@ public class RequestListFragment extends Fragment {
             try {
                 return HttpHelper.proceedRequest("complains/" + params[0], "DELETE", "", true);
             } catch (final IOException e){
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
         }

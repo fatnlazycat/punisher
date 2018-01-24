@@ -10,16 +10,15 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
+import static org.foundation101.karatel.utils.LayoutUtils.dpToPx;
 
 /**
  * Created by Dima on 04.05.2016.
@@ -121,15 +120,6 @@ public class DrawerAdapter extends BaseAdapter {
         image.setBounds( 0, 0, w, h );
         view.setCompoundDrawables( image, null, null, null );
         view.setCompoundDrawablePadding(dpToPx(12));
-    }
-
-    public int dpToPx(int dp){
-        return dpToPx(KaratelApplication.getInstance(), dp);
-    }
-
-    public static int dpToPx(Context context, int dp){
-        final float scale = context.getResources().getDisplayMetrics().density;
-        return (int)(dp * scale + 0.5f);
     }
 
     public static int getNumberOfRequests(Context context){

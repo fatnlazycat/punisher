@@ -175,12 +175,7 @@ public class TipsActivity extends Activity {
                 try {
                     return HttpHelper.proceedRequest(api, params[0], false);
                 } catch (final IOException e) {
-                    TipsActivity.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Globals.showError(R.string.cannot_connect_server, e);
-                        }
-                    });
+                    Globals.showError(R.string.cannot_connect_server, e);
                     return "";
                 }
             } else return HttpHelper.ERROR_JSON;
@@ -270,12 +265,7 @@ public class TipsActivity extends Activity {
                 fos.close();
             } catch (final Exception e){
                 Globals.user.avatarFileName = "";
-                context.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
             }
             KaratelPreferences.setUserAvatar(Globals.user.avatarFileName);
             return null;

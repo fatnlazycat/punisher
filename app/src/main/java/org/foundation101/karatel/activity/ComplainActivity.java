@@ -987,12 +987,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                     errorBody.close();
                 }
             } catch (final IOException e){
-                ComplainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return null;
             }
             return result;

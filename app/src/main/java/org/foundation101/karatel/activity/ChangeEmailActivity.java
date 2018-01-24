@@ -142,12 +142,7 @@ public class ChangeEmailActivity extends AppCompatActivity {
                     return HttpHelper.proceedRequest("email", request, true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
-                ChangeEmailActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
         }
@@ -184,7 +179,7 @@ public class ChangeEmailActivity extends AppCompatActivity {
                     } else {
                         message = ChangeEmailActivity.this.getString(R.string.invalid_email);
                     }
-                    Toast.makeText(ChangeEmailActivity.this, message, Toast.LENGTH_LONG).show();
+                    Toast.makeText(KaratelApplication.getInstance(), message, Toast.LENGTH_LONG).show();
                 }
             } catch (JSONException e) {
                 Globals.showError(e.getMessage(), e);
