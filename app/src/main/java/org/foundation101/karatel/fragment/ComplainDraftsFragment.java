@@ -196,7 +196,8 @@ public class ComplainDraftsFragment extends Fragment {
                         public void onClick(View view) {
                             undoDeleteRequest(requestToDelete, position);
                         }
-                    }).setActionTextColor(ContextCompat.getColor(KaratelApplication.getInstance(), R.color.colorPrimary))
+                    })
+                    .setActionTextColor(ContextCompat.getColor(KaratelApplication.getInstance(), R.color.colorPrimary))
                     .setCallback(new Snackbar.Callback() {
                         @Override
                         public void onDismissed(Snackbar snackbar, int event) {

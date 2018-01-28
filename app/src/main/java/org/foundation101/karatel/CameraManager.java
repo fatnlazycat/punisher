@@ -11,6 +11,8 @@ import android.widget.Toast;
 
 //import org.foundation101.karatel.activity.CameraActivity;
 
+import com.splunk.mint.Mint;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -69,6 +71,7 @@ public class CameraManager {
     }
 
     public void startCustomCamera(int photoOrVideo, boolean startImmediately, boolean noSwitch) {
+        Mint.leaveBreadcrumb("startCustomCamera from " + context + " startImmediately=" + startImmediately);
         String actionFlag = "";
         switch (photoOrVideo) {
             case IMAGE_CAPTURE_INTENT : {

@@ -602,7 +602,7 @@ public class ViolationActivity extends AppCompatActivity implements
         switch (item.getItemId()) {
             case android.R.id.home:
                 //KaratelApplication.longLastingOperation(1000000);
-                onBackPressed();
+                finish(); //onBackPressed(); - previous version - sometimes strangely caused IllegalStateException: Can not perform this action after onSaveInstanceState
                 return true;
         }
         return super.onOptionsItemSelected(item);

@@ -453,7 +453,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                onBackPressed();
+                finish(); //onBackPressed(); - previous version - sometimes strangely caused IllegalStateException: Can not perform this action after onSaveInstanceState
                 return true;
         }
         return super.onOptionsItemSelected(item);
