@@ -13,4 +13,7 @@ public interface RetrofitDownloader {
     @Streaming
     @GET
     Call<ResponseBody> downloadFileWithDynamicUrl(@Url String fileUrl);
+
+    @GET
+    Call<ResponseBody> downloadSmallFileWithDynamicUrl(@Url String fileUrl);
 }

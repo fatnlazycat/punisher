@@ -9,6 +9,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.R;
 
 public class ForgotPassword2Activity extends Activity {
@@ -26,10 +27,8 @@ public class ForgotPassword2Activity extends Activity {
             startActivity(Intent.createChooser(intent, getString(R.string.chooseEmailClient)));
         }
 
-        SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        if (globalPreferences.contains(Globals.SESSION_TOKEN)){
-            globalPreferences.edit().putBoolean(Globals.APP_CLOSED, true).apply();
+        if (KaratelPreferences.loggedIn()){
+            KaratelPreferences.setAppClosed();
 
             Intent logoutIntent = new Intent(MainActivity.BROADCAST_RECEIVER_TAG);
             logoutIntent.putExtra(MainActivity.TAG_JUST_LOGOUT, true);

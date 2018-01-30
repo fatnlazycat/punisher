@@ -12,10 +12,12 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -47,6 +49,7 @@ import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.DrawerAdapter;
 import org.foundation101.karatel.fragment.AboutFragment;
@@ -125,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
 
         progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
 
-        ((KaratelApplication)getApplication()).restoreUserFromPreferences();
+        KaratelPreferences.restoreUser();
 
         toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -238,8 +241,8 @@ public class MainActivity extends AppCompatActivity {
         if (!loggedIn()){ //this happens when we tap push notification icon after logging out - we are not signed in so close the app
             finish();
         } else {
-            if (KaratelApplication.MAIN_ACTIVITY_FROM_PUSH) {
-                KaratelApplication.MAIN_ACTIVITY_FROM_PUSH = false;
+            if (KaratelPreferences.startedFromPush()) {
+                KaratelPreferences.setStartedFromPush(false);
                 currentFragment = Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT;
                 tag = fragmentTags.get(currentFragment);
                 ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
@@ -247,7 +250,55 @@ public class MainActivity extends AppCompatActivity {
                 if (savedInstanceState != null) {
                     currentFragment = savedInstanceState.getInt(Globals.MAIN_ACTIVITY_SAVED_INSTANCE_STATE, 0);
                     tag = fragmentTags.get(currentFragment);
-                    switch (currentFragment) {
+
+                    Fragment fragmentInstance = fManager.findFragmentByTag(tag);
+                    if (fragmentInstance == null) {
+                        switch (currentFragment) {
+                            case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
+                                fragmentInstance = new MainFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT: {
+                                fragmentInstance = new RequestListFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT: {
+                                fragmentInstance = new ComplainsBookFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT: {
+                                fragmentInstance = new VideoListFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT: {
+                                fragmentInstance = new AboutFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_PARTNERS_FRAGMENT: {
+                                fragmentInstance = new PartnersFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT: {
+                                fragmentInstance = new NewsFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT: {
+                                fragmentInstance = new ContactsFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT: {
+                                fragmentInstance = new ProfileFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_COMPLAIN_DRAFTS: {
+                                fragmentInstance = new ComplainDraftsFragment();
+                                break;
+                            }
+                        }
+                    }
+                    ft.replace(R.id.frameLayoutMain, fragmentInstance, tag)/*.addToBackStack(tag)*/.commit();
+
+                    /*switch (currentFragment) {
                         case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
                             ft.replace(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
                             break;
@@ -288,7 +339,7 @@ public class MainActivity extends AppCompatActivity {
                             ft.replace(R.id.frameLayoutMain, new ComplainDraftsFragment(), tag).addToBackStack(tag).commit();
                             break;
                         }
-                    }
+                    }*/
                 } else {
                     currentFragment = Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT;
                     tag = fragmentTags.get(currentFragment);
@@ -351,6 +402,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
     protected void onDestroy() {
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(myBroadcastReceiver);
         Log.d(TAG, "onDestroy");
@@ -392,9 +448,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     boolean loggedIn(){
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        return preferences.contains(Globals.SESSION_TOKEN);
-        //Globals.sessionToken != null;
+        return KaratelPreferences.loggedIn();
     }
 
     public void startTutorial(View view) {
@@ -443,7 +497,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void bindFacebook(View view) {
-        if (HttpHelper.internetConnected(this)) {
+        if (HttpHelper.internetConnected(/*this*/)) {
             AccessToken fbToken = AccessToken.getCurrentAccessToken();
             boolean loggedIn = fbToken != null;
             if (loggedIn) {
@@ -473,12 +527,12 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onCancel() {
-                        Globals.showError(MainActivity.this, R.string.operation_cancelled, null);
+                        Globals.showError(R.string.operation_cancelled, null);
                     }
 
                     @Override
                     public void onError(FacebookException e) {
-                        Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 });
             }
@@ -506,7 +560,7 @@ public class MainActivity extends AppCompatActivity {
         } else try {
             avatarView.setBackground(Drawable.createFromPath(Globals.user.avatarFileName));
         } catch (Exception e){
-            Globals.showError(this, R.string.error, e);
+            Globals.showError(R.string.error, e);
         }
     }
 
@@ -545,10 +599,10 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    class FacebookBinder extends AsyncTask<String, Void, String> {
+    static class FacebookBinder extends AsyncTask<String, Void, String> {
         String fbUserId;
 
-        public FacebookBinder(String fbUserId) {
+        FacebookBinder(String fbUserId) {
             this.fbUserId = fbUserId;
         }
 
@@ -556,16 +610,11 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(String... params) {
             String result;
             try {
-                if (HttpHelper.internetConnected(MainActivity.this)) {
+                if (HttpHelper.internetConnected()) {
                     result = HttpHelper.proceedRequest("socials", params[0], true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
             return result;
@@ -578,11 +627,11 @@ public class MainActivity extends AppCompatActivity {
             try {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals("success")){
-                    message = MainActivity.this.getResources().getString(R.string.facebook_profile_binded);
+                    message = KaratelApplication.getInstance().getResources().getString(R.string.facebook_profile_binded);
                 } else message = json.getString("error");
-                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                Toast.makeText(KaratelApplication.getInstance(), message, Toast.LENGTH_LONG).show();
             } catch (JSONException e){
-                Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
+                Globals.showError(R.string.cannot_connect_server, e);
             }
         }
     }
@@ -600,13 +649,11 @@ public class MainActivity extends AppCompatActivity {
         Activity activity;
         View progressBar;
 
-        SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(KaratelApplication.getInstance());
-
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
             if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
-            if (HttpHelper.internetConnected(KaratelApplication.getInstance())) {
+            if (HttpHelper.internetConnected()) {
                 Toast.makeText(KaratelApplication.getInstance(), R.string.loggingOut, Toast.LENGTH_LONG).show();
             }
         }
@@ -615,9 +662,8 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(Void... params) {
             String result;
             try {
-                if (HttpHelper.internetConnected(KaratelApplication.getInstance())){
-                    String gcmToken = globalPreferences.contains(Globals.PUSH_TOKEN) ?
-                        globalPreferences.getString(Globals.PUSH_TOKEN, "") : "";
+                if (HttpHelper.internetConnected()){
+                    String gcmToken = KaratelPreferences.pushToken();
 
 
                     RetrofitSignOutSender api = KaratelApplication.getClient().create(RetrofitSignOutSender.class);
@@ -641,19 +687,7 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
                 } else return HttpHelper.ERROR_JSON;
 
             } catch (final IOException e){
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(KaratelApplication.getInstance(), R.string.cannot_connect_server, e);
-                    }
-                });
-
-                /*MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(MainActivity.this, R.string.cannot_connect_server, e);
-                    }
-                });*/
+                Globals.showError(R.string.cannot_connect_server, e);
                 return HttpHelper.ERROR_JSON;
             }
             return result == null ? "" : result;
@@ -670,19 +704,23 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
                         Toast.makeText(KaratelApplication.getInstance(), json.getString("error"), Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
-                    Globals.showError(KaratelApplication.getInstance(), R.string.error, e);
+                    Globals.showError(R.string.error, e);
                 }
                 return;
             }
-            boolean appClosed = globalPreferences.getBoolean(Globals.APP_CLOSED, false);
-            globalPreferences.edit().clear().apply();
+            boolean appClosed = KaratelPreferences.appClosed();
+            KaratelPreferences.clearAll();
             if (appClosed){
-                globalPreferences.edit().putBoolean(Globals.APP_CLOSED, true).apply();
+                KaratelPreferences.setAppClosed();
             }
 
             //Google Analytics part
             KaratelApplication.getInstance().sendScreenName(TAG);
-            if (activity != null) activity.finishAffinity();
+            try { activity.finishAffinity(); } catch (NullPointerException ignored) {
+                /*two reasons for NPE:
+                * 1 - activity can be null
+                * 2 - activity.finishAffinity() can throw */
+            }
         }
     }
 }

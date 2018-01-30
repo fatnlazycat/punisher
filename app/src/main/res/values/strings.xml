@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Каратєль</string>
+    <string name="app_name">КАРАТЄЛЬ</string>
     <string name="facebook_app_id">601206453369141</string>
 
     <!--GUI strings-->
@@ -111,6 +111,7 @@
     <string name="estimateGivenAnswer">Оцініть надану відповідь</string>
     <string name="cannot_define_location">Неможливо виконати дію, оскільки ваше місцезнаходження не знайдено</string>
     <string name="requestSaved">Заявка збережена</string>
+    <string name="complainSaved">Скарга збережена</string>
     <string name="show_details">Показати подробиці</string>
     <string name="hide_details">Сховати подробиці</string>
     <string name="chooseEmailClient">Яка поштова скринька?</string>
@@ -136,6 +137,8 @@
     <string name="you_request_is_being_moderated">Ваша заявка знаходиться на модерації</string>
     <string name="media_format_not_supported">Формат медіафайлу не підтримується</string>
     <string name="request_too_big">Розмір фото та відео файлів завеликий. Максимум 100Mb. Видаліть зайві матеріали.</string>
+
+    <string name="title_activity_camera">CameraActivity</string>
     <string name="complains_book">Книга скарг</string>
     <string name="video_tutorial">Відеонавчання</string>
     <string name="complainsBookDisclaimer">Направляючи скаргу через цей розділ, Ви надаєте згоду на передачу Ваших персональних даних. Звернення буде направлено одразу в організацію, а не через оператора системи «КАРАТЄЛЬ».</string>

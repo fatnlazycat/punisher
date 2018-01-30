@@ -31,6 +31,7 @@ import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.MultipartUtility;
 import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.R;
@@ -164,7 +165,7 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (HttpHelper.internetConnected(getActivity())) {
+        if (HttpHelper.internetConnected(/*getActivity()*/)) {
             new ProfileFetcher(getActivity()).execute(Globals.user.id);
         }
         fillTextFields();
@@ -188,6 +189,11 @@ public class ProfileFragment extends Fragment {
                 }
             }
             if (requestCode == CameraManager.IMAGE_CAPTURE_INTENT && resultCode == Activity.RESULT_OK) {
+                //no need to call CameraManager.setLastCapturedFile because with built in camera intent
+                //we call cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mediaFileUri); (see CameraManager.startCamera())
+                // and the result is in the path provided
+                //the below line will be needed if we switch to CustomCamera
+                //CameraManager.setLastCapturedFile(data.getStringExtra(eu.aejis.mycustomcamera.IntentExtras.MEDIA_FILE));
                 Bitmap bigImage = BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options);
 
                 int orientation = MediaUtils.getOrientation(CameraManager.lastCapturedFile);
@@ -195,8 +201,8 @@ public class ProfileFragment extends Fragment {
                 setNewAvatar(MediaUtils.rotateBitmap(bigImage, orientation));
                 boolean b = new File(CameraManager.lastCapturedFile).delete();
             }
-        } catch (IOException e) {
-            Globals.showError(getActivity(), R.string.error, e);
+        } catch (IOException | NullPointerException e) {
+            Globals.showError(R.string.error, e);
         }
     }
 
@@ -251,7 +257,7 @@ public class ProfileFragment extends Fragment {
         @Override
         protected String doInBackground(Void... params) {
             StringBuilder response = new StringBuilder();
-            if (HttpHelper.internetConnected(getActivity())) {
+            if (HttpHelper.internetConnected(/*getActivity()*/)) {
                 int tries = 0;
                 final int MAX_TRIES = 2;
                 while (tries++ < MAX_TRIES) try {
@@ -282,12 +288,7 @@ public class ProfileFragment extends Fragment {
                     return response.toString();
                 } catch (final IOException e) {
                     if (tries == MAX_TRIES) {
-                        activity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Globals.showError(getActivity(), R.string.cannot_connect_server, e);
-                            }
-                        });
+                        Globals.showError(R.string.cannot_connect_server, e);
                     }
                 }
             } else {
@@ -309,12 +310,8 @@ public class ProfileFragment extends Fragment {
                         Globals.user.secondName = secondName;
                         Globals.user.phone = phone;
 
-                        PreferenceManager.getDefaultSharedPreferences(activity).edit()
-                                .putString(Globals.USER_SURNAME, surname)
-                                .putString(Globals.USER_NAME, name)
-                                .putString(Globals.USER_SECOND_NAME, secondName)
-                                .putString(Globals.USER_PHONE, phone)
-                                .putString(Globals.USER_AVATAR, Globals.user.avatarFileName).apply();
+                        KaratelPreferences.saveUserWithAvatar
+                                (surname, name, secondName, phone, Globals.user.avatarFileName);
                         break;
                     }
                     case Globals.SERVER_ERROR : {
@@ -334,7 +331,7 @@ public class ProfileFragment extends Fragment {
                     }
                 }
             } catch (JSONException eJSON){
-                Globals.showError(activity, R.string.error, eJSON);
+                Globals.showError(R.string.error, eJSON);
             }
         }
     }
@@ -357,12 +354,7 @@ public class ProfileFragment extends Fragment {
             try {
                 return HttpHelper.proceedRequest("users/" + params[0], "GET", "", true);
             } catch (final IOException e){
-                if (activity != null) activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(getActivity(), R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
         }
@@ -383,12 +375,12 @@ public class ProfileFragment extends Fragment {
                             dataJSON.getString("phone_number"));
                     Globals.user.id = dataJSON.getInt("id");
 
-                    PreferenceManager.getDefaultSharedPreferences(activity).edit()
-                            .putString(Globals.USER_EMAIL, dataJSON.getString("email"))
-                            .putString(Globals.USER_SURNAME, dataJSON.getString("surname"))
-                            .putString(Globals.USER_NAME, dataJSON.getString("firstname"))
-                            .putString(Globals.USER_SECOND_NAME, dataJSON.getString("secondname"))
-                            .putString(Globals.USER_PHONE, dataJSON.getString("phone_number")).apply();
+                    KaratelPreferences.saveUserWithEmail(
+                            dataJSON.getString("email"),
+                            dataJSON.getString("surname"),
+                            dataJSON.getString("firstname"),
+                            dataJSON.getString("secondname"),
+                            dataJSON.getString("phone_number"));
 
                     String avatarUrl = dataJSON.getJSONObject("avatar").getString("url");
                     if (avatarUrl != null && !avatarUrl.equals("null")) {
@@ -409,7 +401,7 @@ public class ProfileFragment extends Fragment {
                     Toast.makeText(activity, errorMessage, Toast.LENGTH_LONG).show();
                 }
             } catch (JSONException e) {
-                Globals.showError(activity, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
             progressBar.setVisibility(View.GONE);
         }

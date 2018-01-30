@@ -216,12 +216,7 @@ public class ShowMediaActivity extends AppCompatActivity {
                     }
                 }
             } catch (final IOException e) {
-                ShowMediaActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(ShowMediaActivity.this, R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
             }
             return picture;
         }

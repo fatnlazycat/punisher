@@ -70,6 +70,7 @@ import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
 import org.foundation101.karatel.adapter.HistoryAdapter;
@@ -112,8 +113,11 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-public class ViolationActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener, Formular {
+public class ViolationActivity extends AppCompatActivity implements
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        LocationListener,
+        Formular {
 
     final int RQS_GooglePlayServices = 1000;
 
@@ -123,7 +127,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     public static final String TAG = "ViolationActivity";
 
     RequisitesListAdapter requisitesAdapter;
-    LinearLayout requisitesList, llAddEvidence;
+    LinearLayout requisitesList;
     RelativeLayout tabStatus;
     EvidenceAdapter evidenceAdapter = new EvidenceAdapter(this);
     HistoryAdapter historyAdapter;
@@ -164,6 +168,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     android.location.LocationListener locationListener;
     static final int REQUEST_CHECK_SETTINGS = 2000;
 
+    boolean videoOnly = false;
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -203,18 +209,17 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_violation);
 
-        requisitesList = (LinearLayout) findViewById(R.id.requisitesList);
-        llAddEvidence = (LinearLayout) findViewById(R.id.llAddEvidence);
+        requisitesList                      = (LinearLayout)findViewById(R.id.requisitesList);
 
-        TextView addedPhotoVideoTextView = (TextView)findViewById(R.id.addedPhotoVideoTextView);
-        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
-        punishButton = (Button) findViewById(R.id.punishButton);
-        saveButton = (Button) findViewById(R.id.saveButton);
+        TextView addedPhotoVideoTextView    = (TextView)    findViewById(R.id.addedPhotoVideoTextView);
+        progressBar                         = (FrameLayout) findViewById(R.id.frameLayoutProgress);
+        punishButton                        = (Button)      findViewById(R.id.punishButton);
+        saveButton                          = (Button)      findViewById(R.id.saveButton);
 
         if (checkGooglePlayServices()) { buildGoogleApiClient(); }
         initOldAndroidLocation();
 
-        ((KaratelApplication)getApplication()).restoreUserFromPreferences();
+        KaratelPreferences.restoreUser();
 
         //initializing tab view with only one tab - the second will be initialized later
         tabs=(TabHost)findViewById(android.R.id.tabhost);
@@ -264,7 +269,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             requisitesAdapter.content = violation.getRequisites();
             if (violation.usesCamera) {//create mode means we have to capture video at start
                 CameraManager cameraManager = CameraManager.getInstance(this);
-                cameraManager.startCamera(CameraManager.VIDEO_CAPTURE_INTENT);
+                videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
+                cameraManager.startCustomCamera(CameraManager.VIDEO_CAPTURE_INTENT, true, videoOnly);
             }
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
             if (savedInstanceState != null && savedInstanceState.containsKey(Globals.ITEM_ID)) {
@@ -320,7 +326,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                         String fieldName = requisitesAdapter.content.get(i).dbTag.replace(violation.getType() + "_", "");
                         requisitesAdapter.content.get(i).value = (String)Request.class.getField(fieldName).get(request);
                     } catch (Exception e) {
-                        Globals.showError(this, R.string.error, e);
+                        Globals.showError(R.string.error, e);
                     }
                 }
 
@@ -374,15 +380,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             if (getResources().getString(disclaimerId).isEmpty()) textViewViolationDisclaimer.setVisibility(View.GONE);
             else textViewViolationDisclaimer.setText(disclaimerId);
 
-            if (violation.getMediaTypes() == Violation.VIDEO_ONLY)
-                addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
-
-            llAddEvidence.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    photoVideoPopupMenu(v);
-                }
-            });
+            if (videoOnly) addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
         }
 
         makeRequisitesViews();
@@ -493,7 +491,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 evidenceAdapter.content.add(evidenceFileName);
                 evidenceAdapter.mediaContent.add(thumbnail);
             } catch (IOException e) {
-                Globals.showError(this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
         } else if (mode == MODE_EDIT) {
             SQLiteDatabase _db = dbHelper.getReadableDatabase();
@@ -511,7 +509,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     evidenceAdapter.content.add(evidenceFileName);
                     evidenceAdapter.mediaContent.add(thumbnail);
                 } catch (Exception e){//we read files so need to catch exceptions
-                    Globals.showError(this, R.string.error, e);
+                    Globals.showError(R.string.error, e);
                 } while (_cursor.moveToNext());
             }
             _cursor.close();
@@ -540,9 +538,10 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (resultCode == RESULT_OK &&
-                (requestCode == CameraManager.IMAGE_CAPTURE_INTENT || requestCode == CameraManager.VIDEO_CAPTURE_INTENT)) {
+                (requestCode == CameraManager.GENERIC_CAMERA_CAPTURE_INTENT)) {
             try {
                 Bitmap bmp;
+                CameraManager.setLastCapturedFile(intent.getStringExtra(eu.aejis.mycustomcamera.IntentExtras.MEDIA_FILE));
                 if (CameraManager.lastCapturedFile.endsWith(CameraManager.JPG)) {
                     int orientation = MediaUtils.getOrientation(CameraManager.lastCapturedFile);
 
@@ -580,7 +579,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 evidenceAdapter.mediaContent.add(bmp);
                 evidenceAdapter.notifyDataSetChanged();
             } catch (Exception e) {
-                Globals.showError(this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
         }
 
@@ -602,7 +601,8 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                onBackPressed();
+                //KaratelApplication.longLastingOperation(1000000);
+                finish(); //onBackPressed(); - previous version - sometimes strangely caused IllegalStateException: Can not perform this action after onSaveInstanceState
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -691,7 +691,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     new File(fileToDelete).delete();
                 }
             } catch (Exception e) {
-                Globals.showError(this, R.string.cannot_write_file, e);
+                Globals.showError(R.string.cannot_write_file, e);
             }*/
 
             //show toast only if the method is called by Save button
@@ -708,6 +708,13 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             dialog.show();*/
             return false;
         } else return true;
+    }
+
+    public void launchCamera(View view) {
+        int actionFlag = (violation.getMediaTypes() == Violation.VIDEO_ONLY) ?
+                CameraManager.VIDEO_CAPTURE_INTENT :
+                0; //0 means photoOrVideo not defined - user switches this in the camera
+        CameraManager.getInstance(this).startCustomCamera(actionFlag, false, videoOnly);
     }
 
     public void photoVideoPopupMenu(View view) {
@@ -756,7 +763,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 saveToBase(null); //we pass null to point that it's called from punish()
                 new ViolationSender(this).execute(violation);
             } catch (Exception e) {
-                Globals.showError(this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
         }
     }
@@ -1092,7 +1099,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
 
         @Override
         protected CreationResponse doInBackground(Violation... params) {
-            if (!HttpHelper.internetConnected(context)) return null;
+            if (!HttpHelper.internetConnected(/*context*/)) return null;
 
             Violation violation = params[0];
             CreationResponse result;
@@ -1232,12 +1239,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                 }
 
             } catch (final IOException e){
-                ViolationActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return null;
             }
             return result;
@@ -1343,7 +1345,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
             ViolationActivity.this.evidenceAdapter.notifyDataSetChanged();
             super.onPostExecute(e);
             if (e != null)
-                Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
+                Globals.showError(R.string.cannot_connect_server, e);
         }
     }
 
@@ -1359,16 +1361,11 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
         @Override
         protected String doInBackground(Integer... params) {
             String result;
-            if (HttpHelper.internetConnected(ViolationActivity.this)) {
+            if (HttpHelper.internetConnected(/*ViolationActivity.this*/)) {
                 try {
                     result = HttpHelper.proceedRequest("complains/" + params[0], "GET", "", true);
                 } catch (final IOException e) {
-                    ViolationActivity.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
-                        }
-                    });
+                    Globals.showError(R.string.cannot_connect_server, e);
                     return "";
                 }
             } else return HttpHelper.ERROR_JSON;
@@ -1402,7 +1399,7 @@ public class ViolationActivity extends AppCompatActivity implements GoogleApiCli
                     switchTabToHistory();
                 }
             } catch (JSONException | IOException | NullPointerException e) {
-                Globals.showError(ViolationActivity.this, R.string.cannot_connect_server, e);
+                Globals.showError(R.string.cannot_connect_server, e);
             }
         }
     }

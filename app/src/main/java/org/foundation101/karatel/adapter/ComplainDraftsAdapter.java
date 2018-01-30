@@ -24,7 +24,7 @@ public class ComplainDraftsAdapter extends RecyclerView.Adapter<ComplainDraftsAd
     public static final String INPUT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ";
     public static final String OUTPUT_DATE_FORMAT = "dd.MM.yyyy, HH:mm";
 
-    public ArrayList<ComplainRequest> content;
+    public ArrayList<ComplainRequest> content = new ArrayList<>();
     private Context context;
     private RecyclerView recycler;
 
@@ -50,7 +50,7 @@ public class ComplainDraftsAdapter extends RecyclerView.Adapter<ComplainDraftsAd
     public void onBindViewHolder(ViewHolder holder, int position) {
         ComplainRequest thisRequest = content.get(position);
 
-        String dateString = Globals.translateDate(INPUT_DATE_FORMAT, OUTPUT_DATE_FORMAT, thisRequest.created_at);
+        String dateString = Globals.translateDate(INPUT_DATE_FORMAT, OUTPUT_DATE_FORMAT, thisRequest.creation_date);
         String formattedDateString = "<b>" + dateString.substring(0, 10) + "</b>"
                 + dateString.substring(11, dateString.length());
         holder.textViewComplainTimeStamp.setText(Html.fromHtml(formattedDateString));

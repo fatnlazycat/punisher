@@ -55,6 +55,7 @@ import com.google.android.gms.location.places.Places;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.CameraManager;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.entity.ComplainCreationResponse;
 import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
@@ -138,6 +139,9 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     android.location.LocationListener locationListener;
     static final int REQUEST_CHECK_SETTINGS = 2000;
 
+    //variable for customCamera
+    boolean videoOnly = false;
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -186,7 +190,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         if (checkGooglePlayServices()) { buildGoogleApiClient(); }
         initOldAndroidLocation();
 
-        ((KaratelApplication)getApplication()).restoreUserFromPreferences();
+        KaratelPreferences.restoreUser();
 
         dbHelper = new DBHelper(this, DBHelper.DATABASE, DBHelper.DB_VERSION);
 
@@ -213,7 +217,8 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
             requisites = violation.getRequisites();
             if (violation.usesCamera) {//create mode means we have to capture video at start
                 CameraManager cameraManager = CameraManager.getInstance(this);
-                cameraManager.startCamera(CameraManager.VIDEO_CAPTURE_INTENT);
+                videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;                        //
+                cameraManager.startCustomCamera(CameraManager.VIDEO_CAPTURE_INTENT, true, videoOnly); //cameraManager.startCamera(CameraManager.VIDEO_CAPTURE_INTENT);
             }
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
             if (savedInstanceState != null && savedInstanceState.containsKey(Globals.ITEM_ID)) {
@@ -272,19 +277,18 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         ImageView violationImage = (ImageView) findViewById(R.id.ivComplainLogo);
         violationImage.setImageResource(violation.drawableId);
 
-        if (violation.getMediaTypes() == Violation.VIDEO_ONLY)
-            addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
+        if (videoOnly) addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
 
-        llAddEvidence.setOnClickListener(new View.OnClickListener() {
+        /*llAddEvidence.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 photoVideoPopupMenu(v);
             }
-        });
+        });*/
 
         makeRequisitesViews();
 
-        //KaratelApplication.getInstance().sendScreenName(violation.type);
+        KaratelApplication.getInstance().sendScreenName(violation.type);
     }
 
     void makeRequisitesViews(){
@@ -334,6 +338,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                         Intent intent = new Intent(ComplainActivity.this, PossibleValuesActivity.class);
                         intent.putExtra(Globals.POSSIBLE_VALUES, thisRequisite.getPossibleValues());
                         intent.putExtra(Globals.POSSIBLE_VALUES_HEADER, thisRequisite.getName());
+                        intent.putExtra(Globals.VIOLATION_TYPE, violation.getType());
                         intent.putExtra(Globals.REQUISITE_NUMBER_FOR_POSSIBLE_VALUES, requisites.indexOf(thisRequisite));
                         startActivityForResult(intent, REQUEST_CODE_SELECT_POSSIBLE_VALUE);
                     }
@@ -352,7 +357,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 evidenceAdapter.content.add(evidenceFileName);
                 evidenceAdapter.mediaContent.add(thumbnail);
             } catch (IOException e) {
-                Globals.showError(this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
         } else if (mode == MODE_EDIT) {
             SQLiteDatabase _db = dbHelper.getReadableDatabase();
@@ -370,7 +375,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                     evidenceAdapter.content.add(evidenceFileName);
                     evidenceAdapter.mediaContent.add(thumbnail);
                 } catch (Exception e) {//we read files so need to catch exceptions
-                    Globals.showError(this, R.string.error, e);
+                    Globals.showError(R.string.error, e);
                 } while (_cursor.moveToNext());
             }
             _cursor.close();
@@ -381,9 +386,10 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (resultCode == RESULT_OK &&
-                (requestCode == CameraManager.IMAGE_CAPTURE_INTENT || requestCode == CameraManager.VIDEO_CAPTURE_INTENT)) {
+                (requestCode == CameraManager.GENERIC_CAMERA_CAPTURE_INTENT)) { //(requestCode == CameraManager.IMAGE_CAPTURE_INTENT || requestCode == CameraManager.VIDEO_CAPTURE_INTENT)) {
             try {
                 Bitmap bmp;
+                CameraManager.setLastCapturedFile(intent.getStringExtra(eu.aejis.mycustomcamera.IntentExtras.MEDIA_FILE)); //new line
                 if (CameraManager.lastCapturedFile.endsWith(CameraManager.JPG)) {
                     int orientation = MediaUtils.getOrientation(CameraManager.lastCapturedFile);
 
@@ -421,7 +427,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 evidenceAdapter.mediaContent.add(bmp);
                 evidenceAdapter.notifyDataSetChanged();
             } catch (Exception e) {
-                Globals.showError(this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
         }
 
@@ -447,7 +453,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                onBackPressed();
+                finish(); //onBackPressed(); - previous version - sometimes strangely caused IllegalStateException: Can not perform this action after onSaveInstanceState
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -515,7 +521,10 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
             db.close();
 
             //show toast only if the method is called by Save button
-            if (view != null ) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
+            if (view != null ) {
+                Toast.makeText(this, R.string.complainSaved, Toast.LENGTH_SHORT).show();
+                finish();
+            }
         } else {
             Toast.makeText(this, R.string.cannot_define_location, Toast.LENGTH_LONG).show();
         }
@@ -532,6 +541,14 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
             dialog.show();*/
             return false;
         } else return true;
+    }
+
+    //new method in customCamera - don't forget to set onClick to it in activity_complain.xml
+    public void launchCamera(View view) {
+        int actionFlag = (violation.getMediaTypes() == Violation.VIDEO_ONLY) ?
+                CameraManager.VIDEO_CAPTURE_INTENT :
+                0; //0 means photoOrVideo not defined - user switches this in the camera
+        CameraManager.getInstance(this).startCustomCamera(actionFlag, false, videoOnly);
     }
 
     public void photoVideoPopupMenu(View view) {
@@ -580,7 +597,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 saveToBase(null); //we pass null to point that it's called from punish()
                 new ComplainSender(this).execute(violation);
             } catch (Exception e) {
-                Globals.showError(this, R.string.error, e);
+                Globals.showError(R.string.error, e);
             }
         }
     }
@@ -828,6 +845,8 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
             //locationListener = null;
         }
 
+        if (violation != null) violation.clearValues();
+
         super.onDestroy();
     }
 
@@ -867,7 +886,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
 
         @Override
         protected ComplainCreationResponse doInBackground(Violation... params) {
-            if (!HttpHelper.internetConnected(context)) return null;
+            if (!HttpHelper.internetConnected(/*context*/)) return null;
 
             Violation violation = params[0];
             ComplainCreationResponse result;
@@ -929,6 +948,10 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                             requestParameters.add(DescriptionFormatter.format(dbRowData));
                             break;
                         }
+                        case "creation_date" : {
+                            requestParameters.add(time_stamp);
+                            break;
+                        }
                     }
                 }
                 String[] requestParametersArray = requestParameters.toArray(new String[0]);
@@ -964,12 +987,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                     errorBody.close();
                 }
             } catch (final IOException e){
-                ComplainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(ComplainActivity.this, R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return null;
             }
             return result;

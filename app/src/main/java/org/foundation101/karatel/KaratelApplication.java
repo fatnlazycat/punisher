@@ -35,8 +35,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public class KaratelApplication extends MultiDexApplication {
-    public static boolean MAIN_ACTIVITY_FROM_PUSH = false;
-
+    public static final String TAG = "KaratelApplication";
     private static Retrofit retrofit = null;
 
     private static KaratelApplication instance;
@@ -79,24 +78,6 @@ public class KaratelApplication extends MultiDexApplication {
         if (!BuildConfig.DEBUG) {
             Mint.initAndStartSession(this, "c609df56");
             //Mint.startANRMonitoring(5000, true);
-        }
-    }
-
-    public void restoreUserFromPreferences(){
-        if (Globals.user == null) {
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-            Globals.user = new PunisherUser(
-                    preferences.getString(Globals.USER_EMAIL, ""),
-                    "", //for password
-                    preferences.getString(Globals.USER_SURNAME, ""),
-                    preferences.getString(Globals.USER_NAME, ""),
-                    preferences.getString(Globals.USER_SECOND_NAME, ""),
-                    preferences.getString(Globals.USER_PHONE, ""));
-            Globals.user.id = preferences.getInt(Globals.USER_ID, 0);
-            Globals.user.avatarFileName = preferences.getString(Globals.USER_AVATAR, "");
-            if (Globals.sessionToken == null) {
-                Globals.sessionToken = preferences.getString(Globals.SESSION_TOKEN, "");
-            }
         }
     }
 
@@ -165,5 +146,13 @@ public class KaratelApplication extends MultiDexApplication {
         }
 
 
+    }
+
+    public static void longLastingOperation(long duration) {
+        for (long l = 0; l < duration; l++) {
+            double d = l / Math.PI;
+            if (Math.round(d) % 1000 == 0) Log.d(TAG, "longLastingOperation, d=" + d);
+        }
+        Log.d(TAG, "longLastingOperation ended");
     }
 }

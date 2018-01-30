@@ -12,6 +12,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
 
@@ -29,9 +30,8 @@ public class RegistrationIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         Log.d(TAG, "onHandleIntent");
-        SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        String oldToken = globalPreferences.getString(Globals.PUSH_TOKEN, "");
+        String oldToken = KaratelPreferences.pushToken();
 
         try {
             // [START register_for_gcm]
@@ -48,7 +48,7 @@ public class RegistrationIntentService extends IntentService {
             if (!oldToken.equals("") && !oldToken.equals(token)) {
                 logoutToChangeToken();
             } else {
-                globalPreferences.edit().putString(Globals.PUSH_TOKEN, token).apply();
+                KaratelPreferences.setPushToken(token);
                 // [END get_token]
 
                 // TODO: Implement this method to send any registration to your app's servers.
@@ -60,7 +60,7 @@ public class RegistrationIntentService extends IntentService {
                 // You should store a boolean that indicates whether the generated token has been
                 // sent to your server. If the boolean is false, send the token to your server,
                 // otherwise your server should have already received the token.
-                globalPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, true).apply();
+                //globalPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, true).apply();
                 // [END register_for_gcm]
 
                 // Notify UI that registration has completed, so the progress indicator can be hidden.
@@ -74,7 +74,7 @@ public class RegistrationIntentService extends IntentService {
 
             // If an exception happens while fetching the new token or updating our registration data
             // on a third-party server, this ensures that we'll attempt the update at a later time.
-            globalPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, false).apply();
+           // globalPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, false).apply();
         }
 
     }

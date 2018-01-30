@@ -28,6 +28,7 @@ import android.widget.Toast;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -97,9 +98,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
         super.onResume();
 
         //see comments in Globals.APP_CLOSED
-        SharedPreferences globalPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if (globalPreferences.contains(Globals.APP_CLOSED)){
-            globalPreferences.edit().remove(Globals.APP_CLOSED).apply();
+        if (KaratelPreferences.appClosed()){
             finishAffinity();
         }
     }
@@ -195,16 +194,11 @@ public class ChangePasswordActivity extends AppCompatActivity {
             String request = new HttpHelper("user").makeRequestString(new String[]
                     {"password", oldPass, "new_user_password", newPass});
             try {
-                if (HttpHelper.internetConnected(ChangePasswordActivity.this)) {
+                if (HttpHelper.internetConnected(/*ChangePasswordActivity.this*/)) {
                     return HttpHelper.proceedRequest("change_password", request, true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e) {
-                ChangePasswordActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(ChangePasswordActivity.this, R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
         }
@@ -244,12 +238,12 @@ public class ChangePasswordActivity extends AppCompatActivity {
                         } else {
                             message = json.getString("errors");
                         }
-                        Toast.makeText(ChangePasswordActivity.this, message, Toast.LENGTH_LONG).show();
+                        Toast.makeText(KaratelApplication.getInstance(), message, Toast.LENGTH_LONG).show();
                         break;
                     }
                 }
             } catch (JSONException e) {
-                Globals.showError(ChangePasswordActivity.this, R.string.cannot_connect_server, e);
+                Globals.showError(R.string.cannot_connect_server, e);
             }
         }
     }

@@ -29,6 +29,8 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import javax.microedition.khronos.opengles.GL;
+
 public class NewsFragment extends Fragment implements AdapterView.OnItemClickListener{
     static final String TAG = "News";
 
@@ -64,7 +66,7 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
             docFetcher.execute(rssURL);
 
         } catch (Exception e){
-            Globals.showError(getActivity(), R.string.cannot_connect_server, e);
+            Globals.showError(R.string.cannot_connect_server, e);
         }
         return v;
     }
@@ -92,7 +94,7 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
 
         @Override
         protected Void doInBackground(String... params) {
-            if (HttpHelper.internetConnected(getActivity())) {
+            if (HttpHelper.internetConnected(/*getActivity()*/)) {
                 try {
                     Document doc = Jsoup.connect(params[0]).get();
                     Elements news = doc.select("item");
@@ -111,24 +113,10 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
                         publishProgress(new NewsItem(title, description, pubDate, link, imageLink));
                     }
                 } catch (final IOException e){
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Globals.showError(getActivity(), R.string.cannot_connect_server, e);
-                            }
-                        });
-                    }
+                    Globals.showError(R.string.cannot_connect_server, e);
                 }
             } else {
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getActivity(), R.string.no_internet_connection, Toast.LENGTH_LONG).show();
-                        }
-                    });
-                }
+                Globals.showMessage(R.string.no_internet_connection);
             }
             return null;
         }

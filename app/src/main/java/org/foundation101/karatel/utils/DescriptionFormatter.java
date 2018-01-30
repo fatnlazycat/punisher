@@ -12,11 +12,12 @@ import java.util.Set;
 public class DescriptionFormatter {
     @NonNull
     public static String format(Map<String, String> data) {
-        StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder("<br/>");
         Set<Map.Entry<String, String>> entries = data.entrySet();
         for (Map.Entry<String, String> entry : entries) {
-            result  .append(entry.getKey())
-                    .append(": ")
+            result  .append("<b>")
+                    .append(entry.getKey())
+                    .append(":</b> ")
                     .append(entry.getValue())
                     .append("<br/>");
         }

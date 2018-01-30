@@ -3,30 +3,23 @@ package org.foundation101.karatel.adapter;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.net.http.SslError;
 import android.os.AsyncTask;
-import android.os.Message;
-import android.support.v4.content.ContextCompat;
+import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.util.Log;
-import android.view.InputEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.ClientCertRequest;
-import android.webkit.HttpAuthHandler;
-import android.webkit.SslErrorHandler;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.BaseAdapter;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -37,26 +30,44 @@ import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.entity.UpdateEntity;
 import org.foundation101.karatel.activity.ViolationActivity;
+import org.foundation101.karatel.entity.UpdateEntity;
+import org.foundation101.karatel.retrofit.RetrofitDownloader;
+import org.foundation101.karatel.utils.DrawingUtils;
+import org.foundation101.karatel.utils.PDFUtils;
+import org.foundation101.karatel.utils.RetrofitUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by Dima on 15.06.2016.
  */
 public class HistoryAdapter extends BaseAdapter {
+    public static final String TAG = "HistoryAdapter";
+
     public HistoryAdapter(Context context){
         this.context = context;
         violationStatuses = context.getResources().getStringArray(R.array.violationStatuses);
+        fourSidesGradient = new DrawingUtils().fourSidesGradient();
     }
 
+    private Drawable fourSidesGradient;
     public UpdateEntity[] content = new UpdateEntity[0];
     Context context;
-    String[] violationStatuses;
+    private String[] violationStatuses;
+    private Map<String, WebView> webViews= new ConcurrentHashMap<>();
     private static final String googleDocsUrl = "https://drive.google.com/viewerng/viewer?embedded=true&url=";//"http://docs.google.com/viewer?url=";
     public static final String PDF = ".pdf";
     public static final String STATUS_CLOSED = "Закрито";
@@ -68,7 +79,6 @@ public class HistoryAdapter extends BaseAdapter {
     public void setContent(UpdateEntity[] newContent) {
         this.content = newContent;
     }
-
     @Override
     public int getCount() {
         return content.length;
@@ -78,7 +88,6 @@ public class HistoryAdapter extends BaseAdapter {
     public Object getItem(int position) {
         return content[position];
     }
-
     @Override
     public long getItemId(int position) {
         return position;
@@ -104,8 +113,10 @@ public class HistoryAdapter extends BaseAdapter {
             holder.operatorComment          = (TextView)        convertView.findViewById(R.id.operatorComment);
             holder.headerAnswer             = (TextView)        convertView.findViewById(R.id.headerAnswer);
             holder.answerLayout             = (RelativeLayout)  convertView.findViewById(R.id.answerLayout);
-            holder.imageAnswer              = (WebView)         convertView.findViewById(R.id.imageAnswer);
-            holder.ic_zoom                  = (TextView)        convertView.findViewById(R.id.ic_zoom);
+            //holder.imageAnswer            = (WebView)         convertView.findViewById(R.id.imageAnswer);
+            holder.flWebView                = (FrameLayout)     convertView.findViewById(R.id.flWebView);
+            holder.ic_zoom                  =                   convertView.findViewById(R.id.ic_zoom);
+            holder.tvPressHere              = (TextView)        convertView.findViewById(R.id.tvPressHere);
             holder.headerAnswerBy           = (TextView)        convertView.findViewById(R.id.headerAnswerBy);
             holder.textAnswerBy             = (TextView)        convertView.findViewById(R.id.textAnswerBy);
             holder.rateLayout               = (LinearLayout)    convertView.findViewById(R.id.rateLayout);
@@ -118,6 +129,11 @@ public class HistoryAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
 
+        //the gradient (two linear gradients inside a compose shader) doesn't work with hardware acceleration
+        holder.tvPressHere.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        holder.tvPressHere.setBackground(fourSidesGradient);
+
+
         String dateString = Globals.translateDate(RequestListAdapter.INPUT_DATE_FORMAT,
                 RequestListAdapter.OUTPUT_DATE_FORMAT, thisUpdate.created_at);
         String formattedDateString = "<b>" + dateString.substring(0, 10) + "</b>"
@@ -128,7 +144,8 @@ public class HistoryAdapter extends BaseAdapter {
         int statusIdOnServer = thisUpdate.complain_status_id;
         if (Globals.statusesMap.containsKey(statusIdOnServer)) {
             int status = Globals.statusesMap.get(statusIdOnServer);
-            statusText = context.getResources().getStringArray(R.array.violationStatuses)[status];
+            //statusText = context.getResources().getStringArray(R.array.violationStatuses)[status];
+            statusText = violationStatuses[status];
             holder.textViewRequestStatus.setText(statusText);
             holder.imageViewStatus.setImageResource(R.drawable.level_list_status);
             holder.imageViewStatus.setImageLevel(status);
@@ -149,38 +166,54 @@ public class HistoryAdapter extends BaseAdapter {
             }
 
             if (thisUpdate.documents != null && thisUpdate.documents.length > 0) {
-                final String docUrl = getDocUrl(thisUpdate.documents[0]);
+                UpdateEntity.DocUrl firstDocument = thisUpdate.documents[0];
+                String thisUrl = firstDocument.url;
+
                 if (holder.answerLayout.getVisibility() == View.GONE
-                        || !docUrl.equals(holder.imageAnswer.getUrl())) {
+                        || (holder.imageAnswer == null)
+                        || !(holder.imageAnswer.equals(webViews.get(thisUrl)))) {
                     holder.headerAnswer.setVisibility(View.VISIBLE);
                     holder.answerLayout.setVisibility(View.VISIBLE);
+
+                    WebView wv = new WebView(KaratelApplication.getInstance());
+                    holder.imageAnswer = wv;
+                    holder.flWebView.addView(wv);
+
                     holder.imageAnswer.getSettings().setLoadWithOverviewMode(true);
                     holder.imageAnswer.getSettings().setUseWideViewPort(true);
                     holder.imageAnswer.getSettings().setJavaScriptEnabled(true); //for the pdf viewer
-
                     holder.imageAnswer.setWebViewClient(new WebViewClient() {
                         @Override
                         public void onPageFinished(WebView view, String url) {
-                            super.onPageFinished(view, url);
                             Log.d("", "onPageFinished");
-                            holder.ic_zoom.setText("");
-                        }
-
-                        @Override
-                        public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                            super.onPageStarted(view, url, favicon);
-                            holder.ic_zoom.setText(R.string.pressHereToSeeAnswer);
+                            Object condition = view.getTag(R.id.webViewTagTitleLoaded);
+                            if (condition != null && (Boolean)condition) {
+                                view.setTag(R.id.webViewTagTitleLoaded, false);
+                                super.onPageFinished(view, url);
+                            } else {
+                                view.loadUrl(url);
+                            }
                         }
                     });
-                    holder.imageAnswer.loadUrl(docUrl);
-                    int progress = holder.imageAnswer.getProgress();
-                /*if (progress >= 100) {
-                    //use the param "view", and call getContentHeight in scrollTo
-                    float scale = holder.imageAnswer.getScale();
-                    int height = holder.imageAnswer.getContentHeight();
-                    int yScroll = Math.round(height * scale / 20);
-                    holder.imageAnswer.scrollTo(0, 500);
-                }*/
+                    holder.imageAnswer.setWebChromeClient(new WebChromeClient() {
+                        @Override
+                        public void onReceivedTitle(WebView view, String title) {
+                            view.setTag(R.id.webViewTagTitleLoaded, true);
+                            super.onReceivedTitle(view, title);
+                        }
+                    });
+
+                    //using a map rewrites old non-actual webview with the new actual one so that only one webview for each url
+                    webViews.put(thisUrl, holder.imageAnswer);
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
+                            && thisUrl.endsWith(PDF)) {
+                        fetchPdf(thisUrl);
+                    } else {
+                        String docUrl = getDocUrl(firstDocument);
+                        holder.imageAnswer.loadUrl(docUrl);
+                    }
+
                     holder.ic_zoom.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -263,18 +296,51 @@ public class HistoryAdapter extends BaseAdapter {
         if (intent.resolveActivity(context.getPackageManager()) != null) {
             context.startActivity(intent);
         } else {
-            Toast.makeText(context, "web-browser not installed", Toast.LENGTH_LONG).show();
+            Toast.makeText(KaratelApplication.getInstance(),
+                    "web-browser not installed", Toast.LENGTH_LONG).show();
         }
         return true;
     }
 
+    private void fetchPdf(final String fileUrl) {
+        String[] pathSegments = fileUrl.split("/");
+        final String fileName = pathSegments[pathSegments.length - 1];
+
+        final File file = new File(KaratelApplication.getInstance().getCacheDir(), fileName);
+        if (file.exists()) webViews.get(fileUrl).loadUrl(PDFUtils.contentForWebView(file));
+        else {
+            RetrofitDownloader downloader = KaratelApplication.getClient().create(RetrofitDownloader.class);
+            Call<ResponseBody> call = downloader.downloadSmallFileWithDynamicUrl(fileUrl);
+
+            call.enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    if (response.isSuccessful()) {
+                        boolean writtenToDisk = RetrofitUtils.writeResponseBodyToDisk(response.body(), file);
+                        if (writtenToDisk) {
+                            webViews.get(fileUrl).loadUrl(PDFUtils.contentForWebView(file));
+                        }
+                    } else {
+                        Log.e(TAG, "response unsuccessfull, status= " + response.message());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                    Log.e(TAG, "error", t);
+                }
+            });
+        }
+    }
+
     public static class ViewHolder{
+        FrameLayout flWebView;
         ImageView imageViewStatus;
-        TextView ic_zoom;
+        View ic_zoom;
         WebView imageAnswer;
         ImageButton buttonLike, buttonDislike;
         TextView textViewRequestStatus, textViewRequestTimeStamp, headerOperatorComment, operatorComment,
-                headerAnswer, headerAnswerBy, textAnswerBy, textRate, textViewDetailsAction;
+                headerAnswer, headerAnswerBy, textAnswerBy, textRate, textViewDetailsAction, tvPressHere;
         LinearLayout rateLayout;
         RelativeLayout collapsableLayout, answerLayout;
     }
@@ -282,6 +348,7 @@ public class HistoryAdapter extends BaseAdapter {
     class LikeDislike extends AsyncTask<Void, Void, String> implements View.OnClickListener{
         int requestId;
         Integer rate;
+
         LikeDislike(int requestId, boolean like){
             this.requestId = requestId;
             rate = like ? 1 : -1;
@@ -295,8 +362,7 @@ public class HistoryAdapter extends BaseAdapter {
                     .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            new LikeDislike(requestId, (rate==1)) //reverse from int to boolean
-                                    .execute();
+                            execute();
                         }
                     }).create();
             dialog.show();
@@ -311,17 +377,12 @@ public class HistoryAdapter extends BaseAdapter {
 
         @Override
         protected String doInBackground(Void... params) {
-            if (HttpHelper.internetConnected(context)) {
+            if (HttpHelper.internetConnected(/*context*/)) {
                 String request = new HttpHelper("complain").makeRequestString(new String[]{"rating", rate.toString()});
                 try {
                     return HttpHelper.proceedRequest("complains/" + requestId, "PUT", request, true);
                 } catch (final IOException e) {
-                    ((ViolationActivity) context).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Globals.showError(context, R.string.cannot_connect_server, e);
-                        }
-                    });
+                    Globals.showError(R.string.cannot_connect_server, e);
                     return "";
                 }
             } else return HttpHelper.ERROR_JSON;
@@ -340,12 +401,13 @@ public class HistoryAdapter extends BaseAdapter {
                         break;
                     }
                     case Globals.SERVER_ERROR: {
-                        Toast.makeText(context, json.getString("error"), Toast.LENGTH_LONG).show();
+                        Toast.makeText(KaratelApplication.getInstance(),
+                                json.getString("error"), Toast.LENGTH_LONG).show();
                         break;
                     }
                 }
             } catch (JSONException e) {
-                Globals.showError(context, R.string.cannot_connect_server, e);
+                Globals.showError(R.string.cannot_connect_server, e);
             }
         }
     }

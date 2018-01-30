@@ -135,7 +135,7 @@ public class Violation implements Serializable{
 
         switch (getCategory()) {
             case Violation.CATEGORY_BUSINESS: {
-                common = new String[]{"user_id", "company_id", "longitude", "latitude", "description"};
+                common = new String[]{"user_id", "company_id", "longitude", "latitude", "description", "creation_date"};
                 resultingList = new ArrayList<>(Arrays.asList(common));
                 break;
             }
@@ -172,6 +172,7 @@ public class Violation implements Serializable{
     }
 
     public Violation clearValues() {
+        if (requisites == null) return this;
         for (ViolationRequisite requisite : requisites) {
             requisite.value = null;
         }

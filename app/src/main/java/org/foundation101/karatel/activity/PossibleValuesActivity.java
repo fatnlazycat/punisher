@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,16 +13,20 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.ComplainsBookAdapter;
 import org.foundation101.karatel.entity.Violation;
+import org.foundation101.karatel.utils.LayoutUtils;
 
 public class PossibleValuesActivity extends AppCompatActivity {
     private final String TAG_OTHERS = "Інше";
@@ -42,9 +47,13 @@ public class PossibleValuesActivity extends AppCompatActivity {
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
 
         final ListView lvPossibleValues = (ListView) findViewById(R.id.lvPossibleValues);
+        lvPossibleValues.addFooterView(footerForListView());
 
         final Intent intent = getIntent();
         if (intent != null) {
+            String analyticsTag = intent.getStringExtra(Globals.VIOLATION_TYPE) + "-choice";
+            KaratelApplication.getInstance().sendScreenName(analyticsTag);
+
             final String title = intent.getStringExtra(Globals.POSSIBLE_VALUES_HEADER);
             toolbar.setTitle(title);
 
@@ -107,5 +116,14 @@ public class PossibleValuesActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private View footerForListView() {
+        View footerView = new View(this);
+        AbsListView.LayoutParams lp = new AbsListView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, LayoutUtils.dpToPx(1));
+        footerView.setLayoutParams(lp);
+        footerView.setBackgroundColor(ContextCompat.getColor(this, R.color.green_button_disabled));
+        return footerView;
     }
 }

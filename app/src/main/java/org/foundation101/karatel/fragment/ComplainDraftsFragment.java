@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -16,6 +17,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,11 +30,12 @@ import org.foundation101.karatel.adapter.ComplainDraftsAdapter;
 import org.foundation101.karatel.adapter.ItemTouchHelperAdapter;
 import org.foundation101.karatel.entity.ComplainRequest;
 import org.foundation101.karatel.entity.Violation;
+import org.foundation101.karatel.utils.DBUtils;
 
 import java.util.ArrayList;
 
 public class ComplainDraftsFragment extends Fragment {
-    static final String TAG = "Complain Drafts";
+    static final String TAG = "Drafts";
 
     View mainView;
     RecyclerView recycler;
@@ -51,7 +54,9 @@ public class ComplainDraftsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         db = new DBHelper(getContext(), DBHelper.DATABASE, DBHelper.DB_VERSION).getReadableDatabase();
-        ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
+
+        //Google Analytics part
+        KaratelApplication.getInstance().sendScreenName(TAG);
     }
 
     @Override
@@ -81,18 +86,14 @@ public class ComplainDraftsFragment extends Fragment {
 
     @Override
     public void onResume() {
-        /*if (punishPerformed) {
-
-            punishPerformed = false;
-        }*/
         makeComplainsBookAdapterContent();
         super.onResume();
     }
 
     void makeComplainsBookAdapterContent(){
         ArrayList<ComplainRequest> drafts = getDraftRequests();
-        if (drafts.isEmpty() && getActivity() != null) {
-            getActivity().onBackPressed();
+        if (drafts.isEmpty()) {
+            returnToComplainsBook();
         } else {
             complainDraftsAdapter.setContent(drafts);
         }
@@ -113,7 +114,7 @@ public class ComplainDraftsFragment extends Fragment {
             String briefColumn = Violation.getByType(request.type).getRequisites().get(0).dbTag;
             request.brief = cursor.getString(cursor.getColumnIndex(briefColumn));
 
-            request.created_at = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
+            request.creation_date = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
             request.id = cursor.getInt(cursor.getColumnIndex(DBHelper._ID));
             draftRequests.add(request);
         }
@@ -129,6 +130,27 @@ public class ComplainDraftsFragment extends Fragment {
 
     void deleteDraftRequest(Integer position){
         DBHelper.deleteComplainRequest(db, position);
+    }
+
+    void returnToComplainsBook() {
+        Log.d(TAG, "isVisible = " + isVisible());
+        Log.d(TAG, "isResumed = " + isResumed());
+
+        //check if isResumed to avoid fragmentTransaction after activity's saveInstanceState
+        //and we need to delay because calling this before onViewCreated finishes causes IllegalStateException: FragmentManager is already executing transactions
+        if (isResumed()) new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (getActivity() != null) {
+                    getActivity().onBackPressed();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
     }
 
     private class MyItemTouchHelperCallback extends ItemTouchHelper.Callback{
@@ -174,7 +196,8 @@ public class ComplainDraftsFragment extends Fragment {
                         public void onClick(View view) {
                             undoDeleteRequest(requestToDelete, position);
                         }
-                    }).setActionTextColor(ContextCompat.getColor(KaratelApplication.getInstance(), R.color.colorPrimary))
+                    })
+                    .setActionTextColor(ContextCompat.getColor(KaratelApplication.getInstance(), R.color.colorPrimary))
                     .setCallback(new Snackbar.Callback() {
                         @Override
                         public void onDismissed(Snackbar snackbar, int event) {
@@ -184,6 +207,7 @@ public class ComplainDraftsFragment extends Fragment {
                                     || event == DISMISS_EVENT_SWIPE
                                     || event == DISMISS_EVENT_CONSECUTIVE) {
                                 deleteDraftRequest(requestToDelete.id);
+                                if (DBUtils.getNumberOfComplains() == 0) returnToComplainsBook();
                             }
                         }
                     });

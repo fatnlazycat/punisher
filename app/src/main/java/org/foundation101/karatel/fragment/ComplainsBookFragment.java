@@ -25,18 +25,24 @@ import org.foundation101.karatel.activity.ComplainActivity;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.adapter.ComplainsBookAdapter;
 import org.foundation101.karatel.entity.Violation;
+import org.foundation101.karatel.utils.DBUtils;
 
 /**
  * Created by Dima on 10.08.2017.
  */
 
 public class ComplainsBookFragment extends Fragment {
+    static final String TAG = "Skargy";
+
     public ComplainsBookFragment() { /*Required empty public constructor*/ }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        //Google Analytics part
+        KaratelApplication.getInstance().sendScreenName(TAG);
     }
 
     @Nullable
@@ -79,7 +85,7 @@ public class ComplainsBookFragment extends Fragment {
     }
 
     void showNumberOfComplains(Menu menu) {
-        int count = getNumberOfComplains();
+        int count = DBUtils.getNumberOfComplains();
 
         TextView tvNumberOfDrafts = (TextView) menu.findItem(R.id.complainsListItem).getActionView();
         tvNumberOfDrafts.setText(String.valueOf(count));
@@ -96,18 +102,5 @@ public class ComplainsBookFragment extends Fragment {
             tvNumberOfDrafts.setAlpha(0.5f);
             tvNumberOfDrafts.setTextColor(ContextCompat.getColor(KaratelApplication.getInstance(), R.color.veryDarkGreen));
         }
-    }
-
-    public static int getNumberOfComplains(){
-        SQLiteDatabase db = new DBHelper(KaratelApplication.getInstance(), DBHelper.DATABASE, DBHelper.DB_VERSION).getReadableDatabase();
-        String table = DBHelper.COMPLAINS_TABLE;
-        String[] columns = {DBHelper._ID};
-        String where = "user_id=?";
-        String[] selectionArgs = {Globals.user.id.toString()};
-        Cursor cursor = db.query(table, columns, where, selectionArgs, null, null, null);
-        int result = cursor.getCount();
-        cursor.close();
-        db.close();
-        return result;
     }
 }

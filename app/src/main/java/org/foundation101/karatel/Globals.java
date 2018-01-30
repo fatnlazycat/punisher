@@ -3,6 +3,8 @@ package org.foundation101.karatel;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -29,7 +31,7 @@ public class Globals {
     public static final String ITEM_ID = "PUNISHER_ITEM_ID";
     public static final String REQUEST_JSON = "PUNISHER_REQUEST_JSON";
     public static final String VIOLATION_ACTIVITY_MODE = "PUNISHER_VIOLATION_ACTIVITY_MODE";
-    public static final String VIOLATION = "com.example.dnk.punisher.Violation";
+    public static final String VIOLATION = "org.foundation101.karatel.entity.Violation";
     public static final String MEDIA_FILE = "PUNISHER_MEDIA_FILE";
     public static final String NEWS_ITEM = "PUNISHER_NEWS_ITEM";
     public static final String NEWS_TITLE = "PUNISHER_NEWS_TITLE";
@@ -41,6 +43,7 @@ public class Globals {
     public static final String POSSIBLE_VALUES = "PUNISHER_POSSIBLE_VALUES";
     public static final String POSSIBLE_VALUES_HEADER = "PUNISHER_POSSIBLE_VALUES_HEADER";
     public static final String REQUISITE_NUMBER_FOR_POSSIBLE_VALUES = "PUNISHER_REQUISITE_NUMBER_FOR_POSSIBLE_VALUES";
+    public static final String VIOLATION_TYPE = "PUNISHER_VIOLATION_TYPE";
 
     //Bundle keys
     public static final String REQUISITES_VALUES = "REQUISITES_VALUES";
@@ -88,9 +91,6 @@ public class Globals {
 
     public static String sessionToken;
     public static PunisherUser user;
-
-    //preferences
-    public static final String SENT_TOKEN_TO_SERVER = "SENT_TOKEN_TO_SERVER";
 
     //map of complain statuses: key-indexes on server, value-index in array in apk resources
     public static HashMap<Integer, Integer> statusesMap = new HashMap<>();
@@ -155,19 +155,37 @@ public class Globals {
         return outDate;
     }
 
-    public static void showError(Context context, int errorMessageResId, Exception e){
-        if (context != null) Toast.makeText(context, errorMessageResId, Toast.LENGTH_LONG).show();
+    public static void showError(final int errorMessageResId, Exception e){
+        showMessage(errorMessageResId);
         if (e != null) {
             //String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
             Log.d("Punisher error", "", e);
         }
     }
 
-    public static void showError(Context context, String errorMessage, Exception e){
-        Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show();
+    public static void showError(final String errorMessage, Exception e){
+        showMessage(errorMessage);
         if (e != null) {
             //String logMessage = (e.getMessage() == null) ? e.toString() : e.getMessage();
             Log.d("Punisher error", "", e);
         }
+    }
+
+    public static void showMessage(final int messageResId){
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(KaratelApplication.getInstance(), messageResId, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    public static void showMessage(final String message){
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(KaratelApplication.getInstance(), message, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

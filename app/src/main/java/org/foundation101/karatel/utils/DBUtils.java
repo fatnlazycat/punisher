@@ -72,11 +72,24 @@ public class DBUtils {
                     Log.e("Punisher", "files deleted successfully " + deletedSuccessfully);
 
                 } catch (Exception e) {
-                    Globals.showError(KaratelApplication.getInstance(), R.string.error, e);
+                    Globals.showError(R.string.error, e);
                 }
 
                 db.close();
             }
         }).start();
+    }
+
+    public static int getNumberOfComplains(){
+        SQLiteDatabase db = new DBHelper(KaratelApplication.getInstance(), DBHelper.DATABASE, DBHelper.DB_VERSION).getReadableDatabase();
+        String table = DBHelper.COMPLAINS_TABLE;
+        String[] columns = {DBHelper._ID};
+        String where = "user_id=?";
+        String[] selectionArgs = {Globals.user.id.toString()};
+        Cursor cursor = db.query(table, columns, where, selectionArgs, null, null, null);
+        int result = cursor.getCount();
+        cursor.close();
+        db.close();
+        return result;
     }
 }

@@ -83,7 +83,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         if (textViewSignUpErrorMessage.getVisibility() == View.VISIBLE)
             textViewSignUpErrorMessage.setVisibility(View.GONE);
         newUser = new PunisherUser(email, password, surname, name, secondName, phone);
-        if (HttpHelper.internetConnected(this)) {
+        if (HttpHelper.internetConnected(/*this*/)) {
             new SignUpSender(this).execute(newUser);
         } else {
             Toast.makeText(this, R.string.no_internet_connection, Toast.LENGTH_LONG).show();
@@ -175,12 +175,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
             try {
                 return HttpHelper.proceedRequest("users", request, false);
             } catch (final IOException e) {
-                SignUpActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Globals.showError(SignUpActivity.this, R.string.cannot_connect_server, e);
-                    }
-                });
+                Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
         }
@@ -223,7 +218,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                     textViewSignUpErrorMessage.setText(sb.toString());
                 }
             } catch (JSONException e) {
-                Globals.showError(SignUpActivity.this, R.string.error, e);
+                Globals.showError(R.string.error, e);
                 if (e.getMessage() != null) {
                     textViewSignUpErrorMessage.setVisibility(View.VISIBLE);
                     textViewSignUpErrorMessage.setText(e.getMessage());
