@@ -2,8 +2,6 @@ package org.foundation101.karatel.service;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -12,7 +10,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.KaratelPreferences;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
 

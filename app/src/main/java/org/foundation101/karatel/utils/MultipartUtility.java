@@ -1,6 +1,8 @@
-package org.foundation101.karatel;
+package org.foundation101.karatel.utils;
 
 import android.util.Log;
+
+import org.foundation101.karatel.Globals;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;

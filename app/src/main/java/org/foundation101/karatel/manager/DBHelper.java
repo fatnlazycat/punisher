@@ -1,4 +1,4 @@
-package org.foundation101.karatel;
+package org.foundation101.karatel.manager;
 
 import android.content.ContentValues;
 import android.content.Context;

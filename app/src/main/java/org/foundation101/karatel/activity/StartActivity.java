@@ -17,8 +17,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.KaratelPreferences;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.service.RegistrationIntentService;
 

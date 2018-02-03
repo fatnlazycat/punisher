@@ -42,7 +42,7 @@ import java.util.Locale;
 /**
  * Created by Dima on 08.05.2016.
  */
-public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCallback {
+public class RequisitesListAdapter implements OnMapReadyCallback {
 
     public RequisitesListAdapter(Context context){
         this.context=context;
@@ -78,61 +78,22 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
     private MapView mapView;
     public GoogleMap mMap;
     private PlaceLikelihoodBuffer likelyPlaces;
-    private PendingResult<PlaceLikelihoodBuffer> placeLikelihoodResult;
     public ArrayAdapter<PlaceLikelihoodHolder> addressAdapter;
 
     public void setEditTrigger(boolean editTrigger) {
         this.editTrigger = editTrigger;
     }
 
-    public static ArrayList<ViolationRequisite> makeContent(String violationType){
-        Context context = KaratelApplication.getInstance();
-        ArrayList<ViolationRequisite> result = new ArrayList<>();
-        String packageName = context.getPackageName();
-        Resources res = context.getResources();
-        int arrayId = res.getIdentifier(violationType + "Requisites", "array", packageName);
-        String[] array = res.getStringArray(arrayId);
-        int i = 0;
-        while (i < array.length){
-            ViolationRequisite requisite = new ViolationRequisite();
-            requisite.dbTag = array[i++];
-            requisite.name = array[i++];
-            requisite.description = array[i++];
-            requisite.hint = array[i++];
-            requisite.necessary = Boolean.valueOf(array[i++]);
-            result.add(requisite);
-        }
-        return result;
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        return position;
-    }
-
-    @Override
-    public int getViewTypeCount() {
-        return getCount();
-    }
-
-    @Override
     public int getCount() {
         return content.size();
     }
 
-    @Override
     public Object getItem(int position) {
         return content.get(position);
     }
 
-    @Override
     public long getItemId(int position) {
         return position;
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        return convertView;
     }
 
     @Override
@@ -233,31 +194,24 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
         }
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, zoom));
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        if (placeLikelihoodResult == null
-                && ((ViolationActivity) context).googleApiClient != null) {
-            placeLikelihoodResult = Places.PlaceDetectionApi.getCurrentPlace(((ViolationActivity) context).googleApiClient, null);
-            placeLikelihoodResult.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
-                @Override
-                public void onResult(PlaceLikelihoodBuffer placesResult) {
-                    likelyPlaces = placesResult;
-                    for (PlaceLikelihood placeLikelihood : likelyPlaces) {
-                        boolean uniqueValue = true;
-                        PlaceLikelihoodHolder holder = new PlaceLikelihoodHolder(placeLikelihood);
-                        for (int i = 0; i < addressAdapter.getCount(); i++){
-                            if (holder.toString().equals(addressAdapter.getItem(i).toString())){
-                                uniqueValue = false;
-                                break;
-                            }
-                        }
-                        if (uniqueValue) addressAdapter.add(holder);
-                    }
-                    addressAdapter.notifyDataSetChanged();
-                }
-            });
-        }
     }
 
-
+    public void onAddressesReady(PlaceLikelihoodBuffer placesResult) {
+        addressAdapter.clear();
+        likelyPlaces = placesResult;
+        for (PlaceLikelihood placeLikelihood : likelyPlaces) {
+            boolean uniqueValue = true;
+            PlaceLikelihoodHolder holder = new PlaceLikelihoodHolder(placeLikelihood);
+            for (int i = 0; i < addressAdapter.getCount(); i++){
+                if (holder.toString().equals(addressAdapter.getItem(i).toString())){
+                    uniqueValue = false;
+                    break;
+                }
+            }
+            if (uniqueValue) addressAdapter.add(holder);
+        }
+        addressAdapter.notifyDataSetChanged();
+    }
 
     public void reclaimMap(){
         if (mMap != null) onMapReady(mMap);
@@ -289,10 +243,6 @@ public class RequisitesListAdapter extends BaseAdapter implements OnMapReadyCall
             outState.putFloat(MAP_ZOOM, mMap.getCameraPosition().zoom);
             outState.putBoolean(MAP_HAS_MARKER, hasMarker);
         }
-    }
-
-    void setAddressText(String text){
-        if (addressEditText != null) addressEditText.setText(text);
     }
 
     public class PlaceLikelihoodHolder{

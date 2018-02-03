@@ -34,12 +34,11 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.foundation101.karatel.DBHelper;
+import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.entity.Request;

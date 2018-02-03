@@ -1,4 +1,4 @@
-package org.foundation101.karatel;
+package org.foundation101.karatel.manager;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -12,6 +12,9 @@ import android.widget.Toast;
 //import org.foundation101.karatel.activity.CameraActivity;
 
 import com.splunk.mint.Mint;
+
+import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.R;
 
 import java.io.File;
 import java.text.SimpleDateFormat;

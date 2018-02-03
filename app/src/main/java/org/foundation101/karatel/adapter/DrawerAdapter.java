@@ -14,7 +14,7 @@ import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.foundation101.karatel.DBHelper;
+import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;

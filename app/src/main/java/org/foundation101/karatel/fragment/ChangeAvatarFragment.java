@@ -8,7 +8,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 
-import org.foundation101.karatel.CameraManager;
+import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
 

@@ -54,12 +54,12 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.places.Places;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.foundation101.karatel.CameraManager;
-import org.foundation101.karatel.KaratelPreferences;
+import org.foundation101.karatel.manager.CameraManager;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.entity.ComplainCreationResponse;
-import org.foundation101.karatel.DBHelper;
+import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
@@ -68,7 +68,6 @@ import org.foundation101.karatel.adapter.RequisitesListAdapter;
 import org.foundation101.karatel.entity.ComplainRequest;
 import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.entity.ViolationRequisite;
-import org.foundation101.karatel.fragment.ComplainDraftsFragment;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
 import org.foundation101.karatel.utils.DBUtils;
 import org.foundation101.karatel.utils.DescriptionFormatter;
@@ -94,7 +93,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 public class ComplainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener, Formular {
+        GoogleApiClient.OnConnectionFailedListener, LocationListener/*, Formular*/ {
 
     final int RQS_GooglePlayServices = 1000;
     final int REQUEST_CODE_SELECT_POSSIBLE_VALUE = 1001;
@@ -606,12 +605,12 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         //empty method to handle click events
     }
 
-    @Override
+    //@Override
     public void validateSaveButton(){
         //saveButton.setEnabled(!evidenceAdapter.isEmpty());
     }
 
-    @Override
+    //@Override
     public void validatePunishButton(){
         punishButton.setEnabled(allDataEntered());
     }

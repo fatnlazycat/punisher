@@ -1,10 +1,12 @@
 package org.foundation101.karatel.activity;
 
+import android.Manifest;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -58,6 +60,8 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.places.PlaceLikelihood;
+import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -65,12 +69,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.foundation101.karatel.CameraManager;
-import org.foundation101.karatel.DBHelper;
+import org.foundation101.karatel.manager.CameraManager;
+import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.manager.GoogleApiManager;
+import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.KaratelPreferences;
+import org.foundation101.karatel.manager.KaratelLocationManager;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
 import org.foundation101.karatel.adapter.HistoryAdapter;
@@ -82,6 +88,8 @@ import org.foundation101.karatel.entity.UpdateEntity;
 import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.entity.ViolationRequisite;
 import org.foundation101.karatel.fragment.RequestListFragment;
+import org.foundation101.karatel.manager.PermissionManager;
+import static org.foundation101.karatel.manager.PermissionManager.*;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
 import org.foundation101.karatel.utils.DBUtils;
@@ -113,13 +121,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-public class ViolationActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        LocationListener,
-        Formular {
-
-    final int RQS_GooglePlayServices = 1000;
+public class ViolationActivity extends AppCompatActivity implements Formular {
 
     public static final int MODE_CREATE = -1;
     public static final int MODE_EDIT = 0;
@@ -139,13 +141,13 @@ public class ViolationActivity extends AppCompatActivity implements
 
     FragmentManager fm;
     SupportMapFragment supportMapFragment;
-    final Double REFRESH_ACCURACY = 0.001;
-    boolean mockLocationDialogShown = false;
+
     public boolean blockButtons = true;//used to check if the location is defined
 
-    public int getMode() {
-        return mode;
-    }
+    @Override
+    public int getMode() { return mode; }
+    @Override
+    public void setMode(int mode) { this.mode = mode; }
 
     ArrayList<String> savedInstanceStateEvidenceFileNames = new ArrayList<>();
     public Request request = null;
@@ -163,19 +165,25 @@ public class ViolationActivity extends AppCompatActivity implements
     Button punishButton, saveButton;
 
     public GoogleApiClient googleApiClient;
-    LocationManager locationManager;
-    LocationRequest locationRequest;
-    android.location.LocationListener locationListener;
-    static final int REQUEST_CHECK_SETTINGS = 2000;
+    GoogleApiManager googleApiManager;
+
+    @Override
+    public GoogleApiManager getGoogleManager() {
+        return googleApiManager;
+    }
+
+    public static final int REQUEST_CHECK_SETTINGS = 2000;
 
     boolean videoOnly = false;
+
+    KaratelLocationManager lManager;
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (googleApiClient != null) {
-            googleApiClient.connect();
-        }
+        lManager.onStart();
+        googleApiManager.onStart();
+
         validatePunishButton();
         validateSaveButton();
     }
@@ -216,8 +224,10 @@ public class ViolationActivity extends AppCompatActivity implements
         punishButton                        = (Button)      findViewById(R.id.punishButton);
         saveButton                          = (Button)      findViewById(R.id.saveButton);
 
-        if (checkGooglePlayServices()) { buildGoogleApiClient(); }
-        initOldAndroidLocation();
+        lManager = new KaratelLocationManager(this);
+        googleApiManager = new GoogleApiManager(this);
+        googleApiManager.init(lManager, lManager);
+        lManager.onCreate();
 
         KaratelPreferences.restoreUser();
 
@@ -536,6 +546,16 @@ public class ViolationActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == LOCATION_PERMISSIONS) {
+            boolean granted = (grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED);
+            lManager.onPermissionResult(granted);
+        } else if (requestCode == CAMERA_PERMISSIONS) {
+
+        }
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (resultCode == RESULT_OK &&
                 (requestCode == CameraManager.GENERIC_CAMERA_CAPTURE_INTENT)) {
@@ -586,10 +606,7 @@ public class ViolationActivity extends AppCompatActivity implements
         if (requestCode == REQUEST_CHECK_SETTINGS){
             /*switch (resultCode){
                 case RESULT_OK : {*/
-
-            if (googleApiClient != null && googleApiClient.isConnected()) {
-                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
-            }
+                lManager.onSettingsResult();
                     /*break;
                 }
             }*/
@@ -601,7 +618,6 @@ public class ViolationActivity extends AppCompatActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                //KaratelApplication.longLastingOperation(1000000);
                 finish(); //onBackPressed(); - previous version - sometimes strangely caused IllegalStateException: Can not perform this action after onSaveInstanceState
                 return true;
         }
@@ -801,205 +817,17 @@ public class ViolationActivity extends AppCompatActivity implements
         saveButton.setVisibility((visibility));
     }
 
-    /*private Location getLastLocation() throws NullPointerException {
-        //permission check required by the system
-        /*if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
-                        PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-        }
-        Location locationGoogle = null;
-        if (googleApiClient != null) {
-            locationGoogle = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-        }
-
-        if (((KaratelApplication)getApplicationContext()).locationIsMock(locationGoogle)) {
-            return null;
-        } else {
-            return locationGoogle;
-        }
-    }*/
-
-    /*
-    old Android package location code
-    */
-    void initOldAndroidLocation(){
-        locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            locationListener = new MyOldAndroidLocationListener();
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-        }
-    }
-
-    private class MyOldAndroidLocationListener implements android.location.LocationListener{
-        @Override
-        public void onLocationChanged(Location location) {
-            if (latitude == null || latitude == 0) {//use this only if no result from FusedLocationAPI
-
-                if (((KaratelApplication)getApplicationContext()).locationIsMock(location)){
-                    if (!mockLocationDialogShown) {
-                        mockLocationDialogShown = true;
-                        AlertDialog.Builder builder = new AlertDialog.Builder(ViolationActivity.this);
-                        AlertDialog dialog = builder
-                                .setTitle(R.string.turn_off_mock_locations)
-                                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
-                                        if (intent.resolveActivity(getPackageManager()) != null) {
-                                            startActivity(intent);
-                                        }
-                                    }
-                                })
-                                .setNegativeButton(R.string.cancel, null).create();
-                        dialog.show();
-                    }
-                } else if (mode == MODE_CREATE) {
-                    Double latToCheck = latitude != null ? latitude : 0;
-                    Double lonToCheck = longitude != null ? longitude : 0;
-                    Double absLat = Math.abs(latToCheck - location.getLatitude());
-                    Double absLon = Math.abs(lonToCheck - location.getLongitude());
-                    if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
-                        latitude = location.getLatitude();
-                        longitude = location.getLongitude();
-                        requisitesAdapter.nullSavedLatLng();
-                        requisitesAdapter.reclaimMap();
-                    }
-                }
-            }
-            locationManager.removeUpdates(locationListener);
-            //locationListener = null;
-        }
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {}
-        @Override
-        public void onProviderEnabled(String provider) {}
-        @Override
-        public void onProviderDisabled(String provider) {}
-    }
-
-    private boolean checkGooglePlayServices(){
-        GoogleApiAvailability gaa = GoogleApiAvailability.getInstance();
-        int resultCode = gaa.isGooglePlayServicesAvailable(getApplicationContext());
-        if (resultCode == ConnectionResult.SUCCESS){
-            return true;
-        }else{
-            if (gaa.isUserResolvableError(resultCode)) {
-                gaa.getErrorDialog(this, resultCode, RQS_GooglePlayServices).show();
-            } else {
-                Toast.makeText(getApplicationContext(), "This device is not supported.", Toast.LENGTH_LONG).show();
-            }
-            return false;
-        }
-    }
-
-    /**
-     * Creating google api client object
-     * */
-    protected synchronized void buildGoogleApiClient() {
-        googleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Places.GEO_DATA_API)
-                .addApi(Places.PLACE_DETECTION_API)
-                .addApi(LocationServices.API).build();
-        googleApiClient.connect();
+    @Override
+    public void onLocationChanged(double lat, double lon) {
+        latitude = lat;
+        longitude = lon;
+        requisitesAdapter.nullSavedLatLng();
+        requisitesAdapter.reclaimMap();
     }
 
     @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        if (mode == MODE_CREATE) {
-            locationRequest = LocationRequest.create()
-                    .setNumUpdates(3)
-                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                    .setInterval(1);
-            PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
-
-            result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-                @Override
-                public void onResult(LocationSettingsResult result) {
-                    final Status status = result.getStatus();
-                    //final LocationSettingsStates states = result.getLocationSettingsStates();
-                    switch (status.getStatusCode()) {
-                        case LocationSettingsStatusCodes.SUCCESS:
-                            // All location settings are satisfied. The client can initialize location requests here.
-                            if (googleApiClient != null && googleApiClient.isConnected()) {
-                                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient,
-                                        locationRequest, ViolationActivity.this);
-                            }
-                            break;
-                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                            // Location settings are not satisfied. But could be fixed by showing the user a dialog.
-                            try {
-                                // Show the dialog by calling startResolutionForResult(),
-                                // and check the result in onActivityResult().
-                                status.startResolutionForResult(ViolationActivity.this, REQUEST_CHECK_SETTINGS);
-                            } catch (IntentSender.SendIntentException e) {
-                                // Ignore the error.
-                            }
-                            break;
-                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                            // Location settings are not satisfied. However, we have no way to fix the
-                            // settings so we won't show the dialog.
-                            Toast.makeText(ViolationActivity.this,  "location settings not available", Toast.LENGTH_LONG).show();
-                            ViolationActivity.this.finish();
-                            break;
-                    }
-                }
-            });
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult result) {
-        Log.e("Punisher", "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
-    }
-
-    @Override
-    public void onLocationChanged(final Location location) {
-        if (mode == MODE_CREATE && !((KaratelApplication)getApplicationContext()).locationIsMock(location)){
-            Double latToCheck = latitude!=null ? latitude : 0;
-            Double lonToCheck = longitude!=null ? longitude : 0;
-            Double absLat = Math.abs(latToCheck - location.getLatitude());
-            Double absLon = Math.abs(lonToCheck - location.getLongitude());
-            if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
-                PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
-
-                result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-                    @Override
-                    public void onResult(LocationSettingsResult result) {
-                        if (result.getStatus().getStatusCode() == LocationSettingsStatusCodes.SUCCESS) {
-                            latitude = location.getLatitude();
-                            longitude = location.getLongitude();
-                            requisitesAdapter.nullSavedLatLng();
-                            requisitesAdapter.reclaimMap();
-                        } else {
-                            latitude = null; //this will block the buttons
-                        }
-                    }
-                });
-            }
-        }
-    }
-
-    PendingResult<LocationSettingsResult> getPendingLocationSettings(){
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest);
-        PendingResult<LocationSettingsResult> result =
-                LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
-        return result;
+    public void onAddressesReady(PlaceLikelihoodBuffer places) {
+        requisitesAdapter.onAddressesReady(places);
     }
 
     @Override
@@ -1036,10 +864,8 @@ public class ViolationActivity extends AppCompatActivity implements
 
     @Override //Activity method
     protected void onStop() {
-        if (googleApiClient != null && googleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
-            googleApiClient.disconnect();
-        }
+        lManager.onStop();
+        googleApiManager.onStop();
         super.onStop();
     }
 
@@ -1047,10 +873,10 @@ public class ViolationActivity extends AppCompatActivity implements
     protected void onDestroy() {
         if (!saveInstanceStateCalled) clearEvidences(); //just destroy without saving state, e.g. on back pressed
 
-        if (locationListener != null) {
-            locationManager.removeUpdates(locationListener);
-            //locationListener = null;
-        }
+        lManager.onDestroy();
+        lManager = null;
+
+        googleApiManager = null;
 
         requisitesAdapter.releaseMap();
 

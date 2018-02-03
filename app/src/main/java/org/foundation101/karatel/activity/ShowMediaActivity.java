@@ -23,7 +23,7 @@ import android.widget.VideoView;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import org.foundation101.karatel.CameraManager;
+import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
