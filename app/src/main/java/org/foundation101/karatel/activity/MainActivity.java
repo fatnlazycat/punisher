@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -348,6 +349,11 @@ public class MainActivity extends AppCompatActivity {
 
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .registerReceiver(myBroadcastReceiver, new IntentFilter(BROADCAST_RECEIVER_TAG));
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override

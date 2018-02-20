@@ -144,10 +144,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
     public boolean blockButtons = true;//used to check if the location is defined
 
-    @Override
     public int getMode() { return mode; }
-    @Override
-    public void setMode(int mode) { this.mode = mode; }
 
     ArrayList<String> savedInstanceStateEvidenceFileNames = new ArrayList<>();
     public Request request = null;
@@ -164,7 +161,6 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     TabHost.OnTabChangeListener tabChangeListener;
     Button punishButton, saveButton;
 
-    public GoogleApiClient googleApiClient;
     GoogleApiManager googleApiManager;
 
     @Override
@@ -217,14 +213,33 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_violation);
 
-        requisitesList                      = (LinearLayout)findViewById(R.id.requisitesList);
+        Intent intent = this.getIntent();
+        mode = intent.getIntExtra(Globals.VIOLATION_ACTIVITY_MODE, MODE_EDIT);
 
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey  (Globals.VIOLATION_ACTIVITY_MODE)) {
+                mode = savedInstanceState.getInt(Globals.VIOLATION_ACTIVITY_MODE);
+            }
+
+            //init evidences after activity recreation otherwise they will be lost
+            if (savedInstanceState.containsKey(Globals.EVIDENCES)) { //this will be true only in MODE_CREATE | MODE_EDIT
+                savedInstanceStateEvidenceFileNames       = savedInstanceState.getStringArrayList(Globals.EVIDENCES);
+                //evidenceAdapter.filesDeletedDuringSession = savedInstanceState.getStringArrayList(Globals.DELETED_EVIDENCES);
+            }
+        }
+
+        requisitesList                      = (LinearLayout)findViewById(R.id.requisitesList);
         TextView addedPhotoVideoTextView    = (TextView)    findViewById(R.id.addedPhotoVideoTextView);
         progressBar                         = (FrameLayout) findViewById(R.id.frameLayoutProgress);
         punishButton                        = (Button)      findViewById(R.id.punishButton);
         saveButton                          = (Button)      findViewById(R.id.saveButton);
 
-        lManager = new KaratelLocationManager(this);
+        int[] locationServicesArray = new int[2];
+        switch (mode) {
+            case MODE_CREATE: locationServicesArray[0] = KaratelLocationManager.LOCATION_SERVICE_MAIN;
+            case MODE_EDIT  : locationServicesArray[1] = KaratelLocationManager.LOCATION_SERVICE_ADDRESS;
+        }
+        lManager = new KaratelLocationManager(this, locationServicesArray);
         googleApiManager = new GoogleApiManager(this);
         googleApiManager.init(lManager, lManager);
         lManager.onCreate();
@@ -257,30 +272,14 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         dbHelper = new DBHelper(this, DBHelper.DATABASE, DBHelper.DB_VERSION);
         requisitesAdapter = new RequisitesListAdapter(this);
 
-        Intent intent = this.getIntent();
-        mode = intent.getIntExtra(Globals.VIOLATION_ACTIVITY_MODE, MODE_EDIT);
-
-        if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey  (Globals.VIOLATION_ACTIVITY_MODE)) {
-                mode = savedInstanceState.getInt(Globals.VIOLATION_ACTIVITY_MODE);
-            }
-
-            //init evidences after activity recreation otherwise they will be lost
-            if (savedInstanceState.containsKey(Globals.EVIDENCES)) { //this will be true only in MODE_CREATE | MODE_EDIT
-                savedInstanceStateEvidenceFileNames       = savedInstanceState.getStringArrayList(Globals.EVIDENCES);
-                //evidenceAdapter.filesDeletedDuringSession = savedInstanceState.getStringArrayList(Globals.DELETED_EVIDENCES);
-            }
-        }
-
         if (mode == MODE_CREATE) {
             idOnServer = 0;
             violation = (Violation) intent.getExtras().getSerializable(Globals.VIOLATION);
             status = 0; //status = draft
             requisitesAdapter.content = violation.getRequisites();
+            videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
             if (violation.usesCamera) {//create mode means we have to capture video at start
-                CameraManager cameraManager = CameraManager.getInstance(this);
-                videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
-                cameraManager.startCustomCamera(CameraManager.VIDEO_CAPTURE_INTENT, true, videoOnly);
+                launchCamera(null);
             }
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
             if (savedInstanceState != null && savedInstanceState.containsKey(Globals.ITEM_ID)) {
@@ -547,11 +546,20 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == LOCATION_PERMISSIONS) {
-            boolean granted = (grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED);
-            lManager.onPermissionResult(granted);
-        } else if (requestCode == CAMERA_PERMISSIONS) {
-
+        boolean granted = PermissionManager.allGranted(grantResults);
+        switch (requestCode) {
+            case LOCATION_PERMISSIONS : {
+                lManager.onPermissionResult(granted);
+                break;
+            }
+            case CUSTOM_CAMERA_PERMISSIONS_START_NORMAL : {
+                if (granted) launchCamera(punishButton); //just a hack to signal that it's not an immediate start
+                break;
+            }
+            case CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY : {
+                if (granted) launchCamera(null);
+                break;
+            }
         }
     }
 
@@ -727,10 +735,10 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     }
 
     public void launchCamera(View view) {
-        int actionFlag = (violation.getMediaTypes() == Violation.VIDEO_ONLY) ?
-                CameraManager.VIDEO_CAPTURE_INTENT :
-                0; //0 means photoOrVideo not defined - user switches this in the camera
-        CameraManager.getInstance(this).startCustomCamera(actionFlag, false, videoOnly);
+        boolean startImmediately = (view == null); //view is null if we start camera from onCreate
+        int actionFlag = (startImmediately || videoOnly) ?
+                CameraManager.VIDEO_CAPTURE_INTENT : 0; //0 means photoOrVideo not defined - user switches this in the camera
+        CameraManager.getInstance(this).startCustomCamera(actionFlag, startImmediately, videoOnly);
     }
 
     public void photoVideoPopupMenu(View view) {

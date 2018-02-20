@@ -5,13 +5,11 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.SparseArray;
 
 import org.foundation101.karatel.KaratelApplication;
-
-import java.lang.ref.WeakReference;
-import java.util.HashMap;
 
 import javax.inject.Inject;
 
@@ -22,16 +20,26 @@ import dagger.Module;
  */
 @Module
 public class PermissionManager {
-    public static final int LOCATION_PERMISSIONS = 1;
-    public static final int CAMERA_PERMISSIONS   = 2;
+    public static final int LOCATION_PERMISSIONS                        = 1;
+    public static final int CUSTOM_CAMERA_PERMISSIONS_START_NORMAL      = 2;
+    public static final int CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY = 3;
+    public static final int CAMERA_PERMISSIONS_PHOTO                    = 4;
+    public static final int CAMERA_PERMISSIONS_VIDEO                    = 5;
+    public static final int STORAGE_PERMISSION                          = 6;
     private static final String[] LOCATION_PERMISSIONS_ARRAY = {Manifest.permission.ACCESS_FINE_LOCATION};
     private static final String[] CAMERA_PERMISSIONS_ARRAY   = {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
+    private static final String[] PHOTO_PERMISSIONS_ARRAY    = {Manifest.permission.CAMERA};
+    private static final String[] STORAGE_PERMISSIONS_ARRAY  = {Manifest.permission.READ_EXTERNAL_STORAGE};
 
     private static final SparseArray<String[]> permissionsMap = initPermissionsMap();
     private static SparseArray<String[]> initPermissionsMap() {
-        SparseArray<String[]> sparseArray = new SparseArray<>(2);
-        sparseArray.put(LOCATION_PERMISSIONS,   LOCATION_PERMISSIONS_ARRAY);
-        sparseArray.put(CAMERA_PERMISSIONS,     CAMERA_PERMISSIONS_ARRAY);
+        SparseArray<String[]> sparseArray = new SparseArray<>(6);
+        sparseArray.put(LOCATION_PERMISSIONS,                        LOCATION_PERMISSIONS_ARRAY);
+        sparseArray.put(CUSTOM_CAMERA_PERMISSIONS_START_NORMAL,      CAMERA_PERMISSIONS_ARRAY);
+        sparseArray.put(CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY, CAMERA_PERMISSIONS_ARRAY);
+        sparseArray.put(CAMERA_PERMISSIONS_PHOTO,                    PHOTO_PERMISSIONS_ARRAY);
+        sparseArray.put(CAMERA_PERMISSIONS_VIDEO,                    CAMERA_PERMISSIONS_ARRAY);
+        sparseArray.put(STORAGE_PERMISSION,                          STORAGE_PERMISSIONS_ARRAY);
         return sparseArray;
     }
 
@@ -41,6 +49,12 @@ public class PermissionManager {
     public boolean checkWithDialog(int permissionsKey, @NonNull Activity activity) {
         boolean result = checkPermissions(permissionsKey);
         if (!result) showPermissionsRequestDialog(permissionsKey, activity);
+        return result;
+    }
+
+    public boolean checkWithDialog(int permissionsKey, @NonNull Fragment fragment) {
+        boolean result = checkPermissions(permissionsKey);
+        if (!result) showPermissionsRequestDialog(permissionsKey, fragment);
         return result;
     }
 
@@ -57,5 +71,18 @@ public class PermissionManager {
     private void showPermissionsRequestDialog(int permissionsKey, @NonNull Activity activity) {
         String[] permissions = permissionsMap.get(permissionsKey);
         ActivityCompat.requestPermissions(activity, permissions, permissionsKey);
+    }
+
+    private void showPermissionsRequestDialog(int permissionsKey, @NonNull Fragment fragment) {
+        String[] permissions = permissionsMap.get(permissionsKey);
+        fragment.requestPermissions(permissions, permissionsKey);
+    }
+
+    public static boolean allGranted(@NonNull int[] grantResults){
+        boolean granted = grantResults.length > 0;
+        if (granted) {
+            for (int i : grantResults) granted = granted && (i == PackageManager.PERMISSION_GRANTED);
+        }
+        return granted;
     }
 }

@@ -30,7 +30,7 @@ public class GoogleApiManager {
         this.activity = activity;
     }
 
-    protected synchronized void buildClient(
+    private synchronized void buildClient(
             GoogleApiClient.ConnectionCallbacks connectionCallbacks,
             GoogleApiClient.OnConnectionFailedListener failedListener) {
         client = new GoogleApiClient.Builder(KaratelApplication.getInstance())

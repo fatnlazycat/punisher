@@ -15,11 +15,17 @@ import com.splunk.mint.Mint;
 
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
+import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_NORMAL;
+import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY;
+import static org.foundation101.karatel.manager.PermissionManager.CAMERA_PERMISSIONS_PHOTO;
+import static org.foundation101.karatel.manager.PermissionManager.CAMERA_PERMISSIONS_VIDEO;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+
+import javax.inject.Inject;
 
 /**
  * Created by Dima on 07.05.2016.
@@ -47,10 +53,14 @@ public class CameraManager {
         CameraManager.lastCapturedFile = lastCapturedFile;
     }
 
+    @Inject PermissionManager permissionManager;
+
     private Activity context;
 
     private CameraManager(Activity context){
         this.context = context;
+
+        KaratelApplication.dagger().inject(this);
     }
 
     public static CameraManager getInstance(Activity context){
@@ -58,6 +68,8 @@ public class CameraManager {
     }
 
     public void startCamera(int photoOrVideo){
+        if (!checkPermissionsBuiltInCamera(photoOrVideo)) return;
+
         String actionFlag = MediaStore.ACTION_VIDEO_CAPTURE; //capture video by default
         if (photoOrVideo == IMAGE_CAPTURE_INTENT){ //capture photo
             actionFlag = MediaStore.ACTION_IMAGE_CAPTURE;
@@ -74,6 +86,8 @@ public class CameraManager {
     }
 
     public void startCustomCamera(int photoOrVideo, boolean startImmediately, boolean noSwitch) {
+        if (!checkPermissions(startImmediately)) return;
+
         Mint.leaveBreadcrumb("startCustomCamera from " + context + " startImmediately=" + startImmediately);
         String actionFlag = "";
         switch (photoOrVideo) {
@@ -146,5 +160,15 @@ public class CameraManager {
         cameraIntent.setPackage(listCam.get(0).activityInfo.packageName);
         //cameraIntent.setPackage(DEFAULT_CAMERA_PACKAGE);
         return cameraIntent;
+    }
+
+    private boolean checkPermissionsBuiltInCamera(int photoOrVideo) {
+        int permissionKey = (photoOrVideo == IMAGE_CAPTURE_INTENT) ? CAMERA_PERMISSIONS_PHOTO : CAMERA_PERMISSIONS_VIDEO;
+        return permissionManager.checkWithDialog (permissionKey, context);
+    }
+
+    private boolean checkPermissions(boolean startImmediately) {
+        int permissionKey = startImmediately ? CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY : CUSTOM_CAMERA_PERMISSIONS_START_NORMAL;
+        return permissionManager.checkWithDialog (permissionKey, context);
     }
 }

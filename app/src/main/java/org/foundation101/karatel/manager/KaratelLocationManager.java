@@ -13,7 +13,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -26,7 +25,6 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.location.places.Places;
 
@@ -36,15 +34,11 @@ import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.ViolationActivity;
 import org.foundation101.karatel.utils.Formular;
 
-import java.lang.ref.WeakReference;
+import java.util.Arrays;
 
 import javax.inject.Inject;
 
-import dagger.DaggerComponent;
-import dagger.DaggerDaggerComponent;
-
 import static org.foundation101.karatel.activity.ViolationActivity.MODE_CREATE;
-import static org.foundation101.karatel.activity.ViolationActivity.MODE_EDIT;
 import static org.foundation101.karatel.manager.PermissionManager.LOCATION_PERMISSIONS;
 
 /**
@@ -56,76 +50,40 @@ public class KaratelLocationManager implements
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
-    public KaratelLocationManager(Formular formularActivity){
+    public static final int LOCATION_SERVICE_MAIN    = 0;
+    public static final int LOCATION_SERVICE_ADDRESS = 1;
+
+    public KaratelLocationManager(Formular formularActivity, int[] services){
         if (!(formularActivity instanceof Activity))
             throw new IllegalArgumentException("formularActivity should be an instance of Activity");
         activity = (Activity) formularActivity;
         formular =            formularActivity;
-        googleApiClient = formular.getGoogleManager().client;
 
-        DaggerComponent component = DaggerDaggerComponent.builder().build();
-        component.inject(this);
+        KaratelApplication.dagger().inject(this);
+
+        needCoordinates = findInArray(services, LOCATION_SERVICE_MAIN);
+        needAddress     = findInArray(services, LOCATION_SERVICE_ADDRESS);
     }
 
     private Activity activity;
     private Formular formular;
 
-    @Inject
-    PermissionManager permissionManager;
+    @Inject PermissionManager permissionManager;
 
-    boolean locationPermitted = false;
+    private boolean needCoordinates, needAddress;
+
+    private boolean locationPermitted = false;
     public Double latitude, longitude;
-    final Double REFRESH_ACCURACY = 0.001;
-    boolean mockLocationDialogShown = false;
-    LocationRequest locationRequest;
-    android.location.LocationListener locationListener;
-    LocationManager locationManager;
-    GoogleApiClient googleApiClient;
+    private final Double REFRESH_ACCURACY = 0.001;
+    private boolean mockLocationDialogShown = false;
+    private LocationRequest locationRequest;
+    private android.location.LocationListener locationListener;
+    private LocationManager locationManager;
+    private GoogleApiClient googleApiClient;
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        if (locationPermitted) {
-            if (formular.getMode() == MODE_CREATE) {
-                locationRequest = LocationRequest.create()
-                        .setNumUpdates(3)
-                        .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                        .setInterval(1);
-                PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
-
-                result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-                    @Override
-                    public void onResult(@NonNull LocationSettingsResult result) {
-                        final Status status = result.getStatus();
-                        //final LocationSettingsStates states = result.getLocationSettingsStates();
-                        switch (status.getStatusCode()) {
-                            case LocationSettingsStatusCodes.SUCCESS:
-                                // All location settings are satisfied. The client can initialize location requests here.
-                                requestLocationFromFusedApi();
-                                break;
-                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                                // Location settings are not satisfied. But could be fixed by showing the user a dialog.
-                                if (activity != null) try {
-                                    // Show the dialog by calling startResolutionForResult(),
-                                    // and check the result in onActivityResult().
-                                    status.startResolutionForResult(activity, ViolationActivity.REQUEST_CHECK_SETTINGS);
-                                } catch (IntentSender.SendIntentException e) {
-                                    // Ignore the error.
-                                }
-                                break;
-                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                // Location settings are not satisfied. However, we have no way to fix the
-                                // settings so we won't show the dialog.
-                                Globals.showMessage("location settings not available");
-                                if (activity != null) activity.finish();
-                                break;
-                        }
-                    }
-                });
-            }
-            if (formular.getMode() >= MODE_CREATE) {
-                getCurrentPlace();
-            }
-        }
+        obtainGoogleLocation();
     }
 
     @Override
@@ -138,7 +96,7 @@ public class KaratelLocationManager implements
 
     @Override
     public void onLocationChanged(final Location location) {
-        if (formular.getMode() == MODE_CREATE
+        if (needCoordinates
                 && !(KaratelApplication.getInstance().locationIsMock(location))
                 && googleClientOk()){
 
@@ -151,7 +109,7 @@ public class KaratelLocationManager implements
 
                 result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
                     @Override
-                    public void onResult(LocationSettingsResult result) {
+                    public void onResult(@NonNull LocationSettingsResult result) {
                         if (result.getStatus().getStatusCode() == LocationSettingsStatusCodes.SUCCESS) {
                             latitude = location.getLatitude();
                             longitude = location.getLongitude();
@@ -168,32 +126,39 @@ public class KaratelLocationManager implements
         }
     }
 
-    PendingResult<LocationSettingsResult> getPendingLocationSettings(){
+    private PendingResult<LocationSettingsResult> getPendingLocationSettings(){
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest);
+                .addLocationRequest(getLocationRequest());
         PendingResult<LocationSettingsResult> result =
                 LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
         return result;
     }
 
-    void obtainLocation() {
-        initOldAndroidLocation();
-        locationPermitted = true;
+    private LocationRequest getLocationRequest() {
+        if (locationRequest == null) {
+            locationRequest = LocationRequest.create()
+                    .setNumUpdates(3)
+                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                    .setInterval(1);
+        }
+        return locationRequest;
     }
 
     @SuppressWarnings({"MissingPermission"})
-    public void requestLocationFromFusedApi() {
+    private void requestLocationFromFusedApi() {
         if (googleClientOk() && locationPermitted)
             LocationServices.FusedLocationApi
-                    .requestLocationUpdates(googleApiClient, locationRequest, this);
+                    .requestLocationUpdates(googleApiClient, getLocationRequest(), this);
     }
 
     /*
     old Android package location code
     */
     @SuppressWarnings({"MissingPermission"})
-    void initOldAndroidLocation(){
-        if (activity != null) {
+    private void obtainAndroidLocation(){
+        if (locationPermitted
+                && (needCoordinates || needAddress)
+                && activity != null) {
             locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 locationListener = new MyOldAndroidLocationListener();
@@ -227,7 +192,7 @@ public class KaratelLocationManager implements
                                 .setNegativeButton(R.string.cancel, null).create();
                         dialog.show();
                     }
-                } else if (formular.getMode() == MODE_CREATE) {
+                } else {
                     Double latToCheck = latitude != null ? latitude : 0;
                     Double lonToCheck = longitude != null ? longitude : 0;
                     Double absLat = Math.abs(latToCheck - location.getLatitude());
@@ -262,23 +227,64 @@ public class KaratelLocationManager implements
         } else return true;
     }
 
+    private void obtainGoogleLocation() {
+        googleApiClient = formular.getGoogleManager().client;
+        if (locationPermitted && googleClientOk()) {
+            if (needCoordinates || needAddress) {
+                PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
+
+                result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+                    @Override
+                    public void onResult(@NonNull LocationSettingsResult result) {
+                        final Status status = result.getStatus();
+                        //final LocationSettingsStates states = result.getLocationSettingsStates();
+                        switch (status.getStatusCode()) {
+                            case LocationSettingsStatusCodes.SUCCESS:
+                                // All location settings are satisfied. The client can initialize location requests here.
+                                requestLocationFromFusedApi();
+                                break;
+                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                                // Location settings are not satisfied. But could be fixed by showing the user a dialog.
+                                if (activity != null) try {
+                                    // Show the dialog by calling startResolutionForResult(),
+                                    // and check the result in onActivityResult().
+                                    status.startResolutionForResult(activity, ViolationActivity.REQUEST_CHECK_SETTINGS);
+                                } catch (IntentSender.SendIntentException e) {
+                                    // Ignore the error.
+                                }
+                                break;
+                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                                // Location settings are not satisfied. However, we have no way to fix the
+                                // settings so we won't show the dialog.
+                                Globals.showMessage("location settings not available");
+                                if (activity != null) activity.finish();
+                                break;
+                        }
+                    }
+                });
+            }
+            if (needAddress) {
+                getCurrentPlace();
+            }
+        }
+    }
+
     public void onPermissionResult(boolean granted) {
-        if (granted) {
-            obtainLocation();
-            requestLocationFromFusedApi();
-        } else locationPermitted = false;
+        locationPermitted = granted;
+        obtainAndroidLocation();
+        obtainGoogleLocation();
     }
 
     public void onSettingsResult() {
         requestLocationFromFusedApi();
     }
 
-    boolean checkLocationPermissions(boolean withDialog) {
+    private boolean checkLocationPermissions(boolean withDialog) {
         if (withDialog) return permissionManager.checkWithDialog (LOCATION_PERMISSIONS, activity);
         else            return permissionManager.checkPermissions(LOCATION_PERMISSIONS);
     }
 
-    public boolean googleClientOk() {
+    private boolean googleClientOk() {
         return (googleApiClient != null) && (googleApiClient.isConnected());
     }
 
@@ -299,7 +305,8 @@ public class KaratelLocationManager implements
      */
 
     public void onCreate() {
-        if (checkLocationPermissions(true)) obtainLocation();
+        //check needCoordinates to prevent showing permission dialog
+        if ((needAddress || needCoordinates) && checkLocationPermissions(true)) obtainAndroidLocation();
     }
 
     public void onStart(){
@@ -319,5 +326,12 @@ public class KaratelLocationManager implements
 
         activity = null;
         formular = null;
+    }
+
+    /** end of lifecycle methods**/
+
+    private boolean findInArray(int[] array, int key) {
+        Arrays.sort(array);
+        return Arrays.binarySearch(array, key) >= 0;
     }
 }

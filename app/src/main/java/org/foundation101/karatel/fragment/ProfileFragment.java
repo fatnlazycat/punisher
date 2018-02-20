@@ -1,5 +1,6 @@
 package org.foundation101.karatel.fragment;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -8,6 +9,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -31,6 +33,7 @@ import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.manager.KaratelPreferences;
+import org.foundation101.karatel.manager.PermissionManager;
 import org.foundation101.karatel.utils.MultipartUtility;
 import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.R;
@@ -46,6 +49,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+
+import static org.foundation101.karatel.fragment.ChangeAvatarFragment.PICK_IMAGE;
+import static org.foundation101.karatel.manager.PermissionManager.CAMERA_PERMISSIONS_PHOTO;
+import static org.foundation101.karatel.manager.PermissionManager.STORAGE_PERMISSION;
 
 public class ProfileFragment extends Fragment {
     static final String TAG = "Profile";
@@ -152,7 +159,7 @@ public class ProfileFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 DialogFragment dialog = new ChangeAvatarFragment();
-                setTargetFragment(ProfileFragment.this, CHANGE_AVATAR_DIALOG);
+                //setTargetFragment(ProfileFragment.this, CHANGE_AVATAR_DIALOG);
                 dialog.show(getChildFragmentManager(), "changeAvatar");
             }
         });
@@ -171,13 +178,40 @@ public class ProfileFragment extends Fragment {
         ((MainActivity)getActivity()).setAvatarImageView(avatarView);
     }
 
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        boolean granted = PermissionManager.allGranted(grantResults);
+        if (granted) switch (requestCode) {
+            case CAMERA_PERMISSIONS_PHOTO : {
+                startCamera();
+                break;
+            }
+            case STORAGE_PERMISSION : {
+                startGallery();
+                break;
+            }
+        }
+    }
+
+    void startCamera() {
+        CameraManager cameraManager = CameraManager.getInstance(getActivity());
+        cameraManager.startCamera(CameraManager.IMAGE_CAPTURE_INTENT);
+    }
+
+    void startGallery() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT).setType("image/*");
+        startActivityForResult(Intent.createChooser(intent,
+                getResources().getString(R.string.choose_picture)), PICK_IMAGE);
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inSampleSize = 4;
-            if (requestCode == ChangeAvatarFragment.PICK_IMAGE && resultCode == Activity.RESULT_OK) {
+            if (requestCode == PICK_IMAGE && resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     Log.e("Punisher", "data=null");
                 } else {

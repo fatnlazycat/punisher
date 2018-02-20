@@ -9,8 +9,8 @@ import org.foundation101.karatel.manager.GoogleApiManager;
  */
 
 public interface Formular {
-    int getMode();
-    void setMode(int mode);
+    /*int getMode();
+    void setMode(int mode);*/
 
     void validatePunishButton();
     void validateSaveButton();

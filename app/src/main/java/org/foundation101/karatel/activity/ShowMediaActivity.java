@@ -20,8 +20,9 @@ import android.widget.MediaController;
 import android.widget.Toast;
 import android.widget.VideoView;
 
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.common.api.GoogleApiClient;
+//AppIndexing - don't know why did I add this here
+/*import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;*/
 
 import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.Globals;
@@ -83,13 +84,11 @@ public class ShowMediaActivity extends AppCompatActivity {
             finish();
         }
 
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
         /*
-      ATTENTION: This was auto-generated to implement the App Indexing API.
-      See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-        GoogleApiClient client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+          ATTENTION: This was auto-generated to implement the App Indexing API.
+          See https://g.co/AppIndexing/AndroidStudio for more information.
+         */
+        //GoogleApiClient client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
