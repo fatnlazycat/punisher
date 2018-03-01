@@ -30,7 +30,6 @@ public class Globals {
     //intent extras
     public static final String ITEM_ID = "PUNISHER_ITEM_ID";
     public static final String REQUEST_JSON = "PUNISHER_REQUEST_JSON";
-    public static final String VIOLATION_ACTIVITY_MODE = "PUNISHER_VIOLATION_ACTIVITY_MODE";
     public static final String VIOLATION = "org.foundation101.karatel.entity.Violation";
     public static final String MEDIA_FILE = "PUNISHER_MEDIA_FILE";
     public static final String NEWS_ITEM = "PUNISHER_NEWS_ITEM";
@@ -49,6 +48,9 @@ public class Globals {
     public static final String REQUISITES_VALUES = "REQUISITES_VALUES";
     public static final String EVIDENCES = "EVIDENCES";
     public static final String DELETED_EVIDENCES = "DELETED_EVIDENCES";
+    public static final String VIOLATION_ACTIVITY_MODE = "VIOLATION_ACTIVITY_MODE";
+    public static final String VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION = "VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION";
+    public static final String VIOLATION_ACTIVITY_CHANGES_MADE = "VIOLATION_ACTIVITY_CHANGES_MADE";
 
     //fragment tags for MainActivity
     public static final int MAIN_ACTIVITY_PUNISH_FRAGMENT = 1;

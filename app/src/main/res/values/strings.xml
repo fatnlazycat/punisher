@@ -148,4 +148,6 @@
     <string name="Describe_what_happened">Опишіть, що сталося</string>
     <string name="drafts">Чернетки</string>
     <string name="pressHereToSeeAnswer">Натисніть тут, щоб переглянути відповідь</string>
+    <string name="attention">Увага!</string>
+    <string name="allChangesWillBeLost">Всі не збережені зміни будуть скасовані. Ви дійсно бажаєте вийти в головне меню?</string>
 </resources>

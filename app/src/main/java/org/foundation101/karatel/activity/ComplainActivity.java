@@ -96,6 +96,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
 
+import static org.foundation101.karatel.manager.KaratelLocationManager.*;
 import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY;
 import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_NORMAL;
 import static org.foundation101.karatel.manager.PermissionManager.LOCATION_PERMISSIONS;
@@ -128,6 +129,15 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     Violation violation = new Violation();
     public Double latitude, longitude;
     boolean saveInstanceStateCalled = false;
+    boolean needReclaimFullLocation = false;
+
+    boolean changesMade = false;
+    @Override
+    public boolean changesMade() { return changesMade; }
+    @Override
+    public void setChangesMade(boolean value) { changesMade = value; }
+
+    AlertDialog changesLostDialog;
 
     public FrameLayout progressBar;
     Button punishButton, saveButton;
@@ -149,7 +159,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     @Override
     protected void onStart() {
         super.onStart();
-        lManager.onStart();
+        lManager.onStart(getLocationServicesArray(needReclaimFullLocation));
         googleApiManager.onStart();
 
         validatePunishButton();
@@ -160,8 +170,8 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
 
-        //init requisite EditTexts after activity recreation otherwise they all contain the same value (value of the last one)
         if (savedInstanceState != null) {
+            //init requisite EditTexts after activity recreation otherwise they all contain the same value (value of the last one)
             ArrayList<String> savedValues = savedInstanceState.getStringArrayList(Globals.REQUISITES_VALUES);
             if (savedValues != null) {
                 int listSize = requisiteViews.size();
@@ -169,6 +179,8 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                     requisiteViews.get(i).editTextRequisite.setText(savedValues.get(i));
                 }
             }
+
+            changesMade = savedInstanceState.getBoolean(Globals.VIOLATION_ACTIVITY_CHANGES_MADE, false);
         }
     }
 
@@ -192,10 +204,11 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                 mode = savedInstanceState.getInt(Globals.VIOLATION_ACTIVITY_MODE);
             }
 
+            needReclaimFullLocation = savedInstanceState.getBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, false);
+
             //init evidences after activity recreation otherwise they will be lost
             if (savedInstanceState.containsKey(Globals.EVIDENCES)) { //this will be true only in MODE_CREATE | MODE_EDIT
                 savedInstanceStateEvidenceFileNames       = savedInstanceState.getStringArrayList(Globals.EVIDENCES);
-                //evidenceAdapter.filesDeletedDuringSession = savedInstanceState.getStringArrayList(Globals.DELETED_EVIDENCES);
             }
         }
 
@@ -207,10 +220,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         punishButton = (Button) findViewById(R.id.punishButton);
         saveButton = (Button) findViewById(R.id.saveButton);
 
-        int[] locationServicesArray = new int[1];
-        if (mode == MODE_CREATE) locationServicesArray[0] = KaratelLocationManager.LOCATION_SERVICE_MAIN;
-
-        lManager = new KaratelLocationManager(this, locationServicesArray);
+        lManager = new KaratelLocationManager(this, getLocationServicesArray(false));
         googleApiManager = new GoogleApiManager(this);
         googleApiManager.init(lManager, lManager);
         lManager.onCreate();
@@ -223,9 +233,12 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
             violation = (Violation) intent.getExtras().getSerializable(Globals.VIOLATION);
             requisites = violation.getRequisites();
             videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
-            if (violation.usesCamera) {//create mode means we have to capture video at start
+
+            //create mode means we have to capture video at start (if it's not a recreation of course)
+            if (violation.usesCamera && savedInstanceState == null) {
                 launchCamera(null);
             }
+
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
             if (savedInstanceState != null && savedInstanceState.containsKey(Globals.ITEM_ID)) {
                 id = savedInstanceState.getInt(Globals.ITEM_ID);
@@ -331,6 +344,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
 
                 @Override
                 public void afterTextChanged(Editable s) {
+                    setChangesMade(true);
                     validatePunishButton();
                 }
             });
@@ -354,6 +368,14 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
             requisiteViews.add(holder);
             requisitesList.addView(v);
         }
+    }
+
+    int[] getLocationServicesArray(boolean force) {
+        int[] locationServicesArray = {LOCATION_SERVICE_NONE};
+        if (mode == MODE_CREATE || force) {
+            locationServicesArray[0] = LOCATION_SERVICE_MAIN;
+        }
+        return locationServicesArray;
     }
 
     void makeEvidenceAdapterContent(ArrayList<String> fileNames){
@@ -448,6 +470,9 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                 } else {
                     bmp = ThumbnailUtils.createVideoThumbnail(CameraManager.lastCapturedFile, MediaStore.Video.Thumbnails.MICRO_KIND);
                 }
+
+                setChangesMade(true);
+
                 evidenceAdapter.content.add(CameraManager.lastCapturedFile);
                 evidenceAdapter.mediaContent.add(bmp);
                 evidenceAdapter.notifyDataSetChanged();
@@ -461,10 +486,11 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         }
 
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE_SELECT_POSSIBLE_VALUE && intent != null) {
+            setChangesMade(true);
             String newValue = intent.getStringExtra(Globals.POSSIBLE_VALUES);
             int targetViewNumber = intent.getIntExtra(Globals.REQUISITE_NUMBER_FOR_POSSIBLE_VALUES, 0);
             if (requisitesList.getChildCount() >= targetViewNumber) {
-                TextView targetView = (TextView) requisitesList.getChildAt(targetViewNumber).findViewById(R.id.editTextRequisite);
+                TextView targetView = requisitesList.getChildAt(targetViewNumber).findViewById(R.id.editTextRequisite);
                 if (targetView != null) targetView.setText(newValue);
             }
         }
@@ -476,10 +502,16 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                finish(); //onBackPressed(); - previous version - sometimes strangely caused IllegalStateException: Can not perform this action after onSaveInstanceState
+                onBackPressed();
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (changesMade()) showChangesLostDialog();
+        else finish();
     }
 
     //hides the software keyboard
@@ -487,6 +519,24 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     public boolean dispatchTouchEvent(MotionEvent event) {
         Globals.hideSoftKeyboard(this, event);
         return super.dispatchTouchEvent( event );
+    }
+
+    public void showChangesLostDialog() {
+        changesLostDialog = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.attention))
+                .setMessage(getString(R.string.allChangesWillBeLost))
+                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {/*just dismiss*/ }
+                })
+                .create();
+        changesLostDialog.show();
     }
 
     public void saveToBase(View view) throws Exception {
@@ -543,18 +593,23 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
             }
             db.close();
 
+            setChangesMade(false);
+
             //show toast only if the method is called by Save button
             if (view != null ) {
                 Toast.makeText(this, R.string.complainSaved, Toast.LENGTH_SHORT).show();
                 finish();
             }
         } else {
-            Toast.makeText(this, R.string.cannot_define_location, Toast.LENGTH_LONG).show();
+            String message = needReclaimFullLocation ?
+                    "Зачекайте поки пристрій визначить Ваше місцезнаходження та спробуйте ще раз" :
+                    getString(R.string.cannot_define_location);
+            Globals.showMessage(message);
         }
     }
 
     boolean checkLocationIfRequired() {
-        return evidenceAdapter.isEmpty() || (checkLocation() && !blockButtons);
+        return evidenceAdapter.isEmpty() || (checkLocation() && !blockButtons && !needReclaimFullLocation);
     }
 
     boolean checkLocation(){
@@ -566,12 +621,17 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         } else return true;
     }
 
-    //new method in customCamera - don't forget to set onClick to it in activity_complain.xml
     public void launchCamera(View view) {
         boolean startImmediately = (view == null); //view is null if we start camera from onCreate
         int actionFlag = (startImmediately || videoOnly) ?
                 CameraManager.VIDEO_CAPTURE_INTENT : 0; //0 means photoOrVideo not defined - user switches this in the camera
         CameraManager.getInstance(this).startCustomCamera(actionFlag, startImmediately, videoOnly);
+    }
+
+    boolean initialEvidencesDeleted() {
+        ArrayList<String> temp = new ArrayList<>(evidenceAdapter.content);
+        temp.retainAll(dbHelper.getMediaFiles(DBHelper.COMPLAINS_MEDIA_TABLE));
+        return temp.isEmpty();
     }
 
     public void photoVideoPopupMenu(View view) {
@@ -654,9 +714,18 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     }
 
     @Override
+    public void onEvidenceRemoved() {
+        if (initialEvidencesDeleted()) {
+            lManager.restart(getLocationServicesArray(true));
+            needReclaimFullLocation = true;
+        }
+    }
+
+    @Override
     public void onLocationChanged(double lat, double lon) {
         latitude = lat;
         longitude = lon;
+        needReclaimFullLocation = false;
     }
 
     @Override
@@ -684,6 +753,8 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         //otherwise started with MODE_CREATE and saved to base (mode=MODE_EDIT) will be recreated as MODE_CREATE again
         outState.putInt(Globals.VIOLATION_ACTIVITY_MODE, mode);
         if (mode == MODE_EDIT) outState.putInt(Globals.ITEM_ID, id);
+        outState.putBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, needReclaimFullLocation);
+        outState.putBoolean(Globals.VIOLATION_ACTIVITY_CHANGES_MADE, changesMade);
 
         //this is needed in onDestroy to distinguish whether it was initiated by user or by system
         saveInstanceStateCalled = true;
@@ -702,6 +773,8 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     @Override
     protected void onDestroy() {
         if (!saveInstanceStateCalled) clearEvidences(); //just destroy without saving state, e.g. on back pressed
+
+        if (changesLostDialog != null) changesLostDialog.dismiss();
 
         lManager.onDestroy();
         lManager = null;

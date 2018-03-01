@@ -40,6 +40,8 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
+import com.splunk.mint.Mint;
+import com.splunk.mint.MintLogLevel;
 
 import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.Globals;
@@ -649,6 +651,7 @@ public class MainActivity extends AppCompatActivity {
 
         Activity activity;
         View progressBar;
+        String resultData = null;
 
         @Override
         protected void onPreExecute() {
@@ -697,17 +700,27 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
+            resultData = s;
+
             if (progressBar != null) progressBar.setVisibility(View.GONE);
             if (!s.isEmpty() && !s.equals(BANNED)) {
                 try {
                     JSONObject json = new JSONObject(s);
-                    if (json.getString("status").equals(Globals.SERVER_ERROR)) {
-                        Toast.makeText(KaratelApplication.getInstance(), json.getString("error"), Toast.LENGTH_LONG).show();
+                    String status = json.optString("status");
+                    if (Globals.SERVER_ERROR.equals(status)) {
+                        String error =  json.getString("error");
+                        if (!"Bad Request".equalsIgnoreCase(error)) {
+                            logAndMint(error);
+                            return;
+                        }
+                        //I faced these error codes when we don't need the user to stay signed in
+                    } else if (!"500".equals(status) && !"404".equals(status)) {
+                        logAndMint(status);
+                        return;
                     }
                 } catch (JSONException e) {
                     Globals.showError(R.string.error, e);
                 }
-                return;
             }
             boolean appClosed = KaratelPreferences.appClosed();
             KaratelPreferences.clearAll();
@@ -722,6 +735,16 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
                 * 1 - activity can be null
                 * 2 - activity.finishAffinity() can throw */
             }
+        }
+
+        private void logAndMint(String message) {
+            Toast.makeText(KaratelApplication.getInstance(), message, Toast.LENGTH_LONG).show();
+
+            HashMap<String, Object> logData = new HashMap<>();
+            logData.put("result", resultData);
+            logData.put("sessionToken",  Globals.sessionToken);
+            logData.put("gcmToken", KaratelPreferences.pushToken());
+            Mint.logEvent("signoffFailed", MintLogLevel.Error, logData);
         }
     }
 }

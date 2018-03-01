@@ -12,6 +12,11 @@ public interface Formular {
     /*int getMode();
     void setMode(int mode);*/
 
+    boolean changesMade();
+    void setChangesMade(boolean changesMade);
+
+    void onEvidenceRemoved();
+
     void validatePunishButton();
     void validateSaveButton();
 

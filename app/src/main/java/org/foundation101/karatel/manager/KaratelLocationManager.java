@@ -50,6 +50,7 @@ public class KaratelLocationManager implements
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
+    public static final int LOCATION_SERVICE_NONE = -100;
     public static final int LOCATION_SERVICE_MAIN    = 0;
     public static final int LOCATION_SERVICE_ADDRESS = 1;
 
@@ -61,6 +62,10 @@ public class KaratelLocationManager implements
 
         KaratelApplication.dagger().inject(this);
 
+        defineRequiredServices(services);
+    }
+
+    private void defineRequiredServices(int[] services) {
         needCoordinates = findInArray(services, LOCATION_SERVICE_MAIN);
         needAddress     = findInArray(services, LOCATION_SERVICE_ADDRESS);
     }
@@ -300,16 +305,29 @@ public class KaratelLocationManager implements
             });
     }
 
+    public void initFields(int[] services) {
+        if (services != null) defineRequiredServices(services);
+    }
+
+    public void restart(int[] services) {
+        initFields(services);
+        obtainGoogleLocation();
+        obtainAndroidLocation();
+    }
+
     /**
      * lyfecycle methods
      */
 
     public void onCreate() {
-        //check needCoordinates to prevent showing permission dialog
-        if ((needAddress || needCoordinates) && checkLocationPermissions(true)) obtainAndroidLocation();
+        if (
+            (needAddress || needCoordinates) //check needCoordinates to prevent showing permission dialog
+            && (locationPermitted = checkLocationPermissions(true))
+        ) obtainAndroidLocation();
     }
 
-    public void onStart(){
+    public void onStart(@Nullable int[] services){
+        initFields(services);
         locationPermitted = checkLocationPermissions(false);
     }
 

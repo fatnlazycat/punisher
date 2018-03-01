@@ -29,7 +29,6 @@ public class EvidenceAdapter extends BaseAdapter {
     private Context context;
     public ArrayList<String> content = new ArrayList<>();
     public ArrayList<Bitmap> mediaContent = new ArrayList<>();
-    public ArrayList<String> filesDeletedDuringSession = new ArrayList<>();
     private boolean editTrigger = true;
 
     public void setEditTrigger(boolean editTrigger) {
@@ -80,10 +79,12 @@ public class EvidenceAdapter extends BaseAdapter {
                 imageButtonDeleteEvidence.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        //filesDeletedDuringSession.add(content.get(position));
                         content.remove(position);
                         mediaContent.remove(position);
                         EvidenceAdapter.this.notifyDataSetChanged();
+
+                        ((Formular) context).setChangesMade(true);
+                        ((Formular) context).onEvidenceRemoved();
                     }
                 });
             } else {

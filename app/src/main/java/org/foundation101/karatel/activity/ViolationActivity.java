@@ -1,26 +1,19 @@
 package org.foundation101.karatel.activity;
 
-import android.Manifest;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Location;
-import android.location.LocationManager;
 import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -48,35 +41,15 @@ import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.foundation101.karatel.manager.CameraManager;
-import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.manager.GoogleApiManager;
-import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.manager.KaratelLocationManager;
-import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
 import org.foundation101.karatel.adapter.HistoryAdapter;
@@ -88,8 +61,13 @@ import org.foundation101.karatel.entity.UpdateEntity;
 import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.entity.ViolationRequisite;
 import org.foundation101.karatel.fragment.RequestListFragment;
+import org.foundation101.karatel.manager.CameraManager;
+import org.foundation101.karatel.manager.DBHelper;
+import org.foundation101.karatel.manager.GoogleApiManager;
+import org.foundation101.karatel.manager.HttpHelper;
+import org.foundation101.karatel.manager.KaratelLocationManager;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.manager.PermissionManager;
-import static org.foundation101.karatel.manager.PermissionManager.*;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
 import org.foundation101.karatel.utils.DBUtils;
@@ -121,6 +99,11 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
+import static org.foundation101.karatel.manager.KaratelLocationManager.*;
+import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY;
+import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_NORMAL;
+import static org.foundation101.karatel.manager.PermissionManager.LOCATION_PERMISSIONS;
+
 public class ViolationActivity extends AppCompatActivity implements Formular {
 
     public static final int MODE_CREATE = -1;
@@ -139,12 +122,22 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     int mode;
     Long rowID;
 
+    //debug view
+    TextView tv;
+
     FragmentManager fm;
     SupportMapFragment supportMapFragment;
+
+    AlertDialog changesLostDialog;
 
     public boolean blockButtons = true;//used to check if the location is defined
 
     public int getMode() { return mode; }
+
+    public void setMode(int mode) {
+        this.mode = mode;
+        if (lManager != null) lManager.initFields(getLocationServicesArray(false));
+    }
 
     ArrayList<String> savedInstanceStateEvidenceFileNames = new ArrayList<>();
     public Request request = null;
@@ -155,6 +148,13 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     public Double latitude, longitude;
     boolean statusTabFirstShow = true;
     boolean saveInstanceStateCalled = false;
+    boolean needReclaimFullLocation = false;
+
+    boolean changesMade = false;
+    @Override
+    public boolean changesMade() { return changesMade; }
+    @Override
+    public void setChangesMade(boolean value) { changesMade = value; }
 
     public FrameLayout progressBar;
     TabHost tabs;
@@ -177,7 +177,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     @Override
     protected void onStart() {
         super.onStart();
-        lManager.onStart();
+        lManager.onStart(getLocationServicesArray(needReclaimFullLocation));
         googleApiManager.onStart();
 
         validatePunishButton();
@@ -190,8 +190,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
         if (requisitesAdapter != null) requisitesAdapter.getMapDataFromBundle(savedInstanceState);
 
-        //init requisite EditTexts after activity recreation otherwise they all contain the same value (value of the last one)
         if (savedInstanceState != null) {
+            //init requisite EditTexts after activity recreation otherwise they all contain the same value (value of the last one)
             ArrayList<String> savedValues = savedInstanceState.getStringArrayList(Globals.REQUISITES_VALUES);
             if (savedValues != null) {
                 int listSize = requisitesAdapter.holders.size();
@@ -199,6 +199,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                     requisitesAdapter.holders.get(i).editTextRequisite.setText(savedValues.get(i));
                 }
             }
+
+            changesMade = savedInstanceState.getBoolean(Globals.VIOLATION_ACTIVITY_CHANGES_MADE, false);
         }
     }
 
@@ -206,6 +208,10 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     protected void onResume() {
         super.onResume();
         saveInstanceStateCalled = false;
+
+        String t = tv.getText().toString();
+        String t2 = t.length() > 2 ? t.substring(0, t.length() / 2 - 1) : t;
+        tv.setText(String.format(Locale.US, "lat: %1$10f\nlon: %2$10f\n%3$s", latitude, longitude, t2));
     }
 
     @Override
@@ -221,25 +227,22 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 mode = savedInstanceState.getInt(Globals.VIOLATION_ACTIVITY_MODE);
             }
 
+            needReclaimFullLocation = savedInstanceState.getBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, false);
+
             //init evidences after activity recreation otherwise they will be lost
             if (savedInstanceState.containsKey(Globals.EVIDENCES)) { //this will be true only in MODE_CREATE | MODE_EDIT
                 savedInstanceStateEvidenceFileNames       = savedInstanceState.getStringArrayList(Globals.EVIDENCES);
                 //evidenceAdapter.filesDeletedDuringSession = savedInstanceState.getStringArrayList(Globals.DELETED_EVIDENCES);
             }
         }
-
-        requisitesList                      = (LinearLayout)findViewById(R.id.requisitesList);
+        tv = findViewById(R.id.textViewViolationHeader);
+        requisitesList                      = findViewById(R.id.requisitesList);
         TextView addedPhotoVideoTextView    = (TextView)    findViewById(R.id.addedPhotoVideoTextView);
         progressBar                         = (FrameLayout) findViewById(R.id.frameLayoutProgress);
         punishButton                        = (Button)      findViewById(R.id.punishButton);
         saveButton                          = (Button)      findViewById(R.id.saveButton);
 
-        int[] locationServicesArray = new int[2];
-        switch (mode) {
-            case MODE_CREATE: locationServicesArray[0] = KaratelLocationManager.LOCATION_SERVICE_MAIN;
-            case MODE_EDIT  : locationServicesArray[1] = KaratelLocationManager.LOCATION_SERVICE_ADDRESS;
-        }
-        lManager = new KaratelLocationManager(this, locationServicesArray);
+        lManager = new KaratelLocationManager(this, getLocationServicesArray(false));
         googleApiManager = new GoogleApiManager(this);
         googleApiManager.init(lManager, lManager);
         lManager.onCreate();
@@ -278,9 +281,12 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             status = 0; //status = draft
             requisitesAdapter.content = violation.getRequisites();
             videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
-            if (violation.usesCamera) {//create mode means we have to capture video at start
+
+            //create mode means we have to capture video at start (if it's not a recreation of course)
+            if (violation.usesCamera && savedInstanceState == null) {
                 launchCamera(null);
             }
+
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
             if (savedInstanceState != null && savedInstanceState.containsKey(Globals.ITEM_ID)) {
                 id = savedInstanceState.getInt(Globals.ITEM_ID);
@@ -468,6 +474,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
                     @Override
                     public void afterTextChanged(Editable s) {
+                        setChangesMade(true);
                         validatePunishButton();
                     }
                 });
@@ -491,6 +498,17 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             }
         }*/
         return result;
+    }
+
+    int[] getLocationServicesArray(boolean forceFull) {
+        if (forceFull) return new int[] { LOCATION_SERVICE_MAIN, LOCATION_SERVICE_ADDRESS };
+
+        int[] locationServicesArray = {LOCATION_SERVICE_NONE, LOCATION_SERVICE_NONE};
+        switch (mode) {
+            case MODE_CREATE: locationServicesArray[0] = LOCATION_SERVICE_MAIN;
+            case MODE_EDIT  : locationServicesArray[1] = LOCATION_SERVICE_ADDRESS;
+        }
+        return locationServicesArray;
     }
 
     void makeEvidenceAdapterContent(int mode, ArrayList<String> fileNames, Request request){
@@ -603,6 +621,9 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 } else {
                     bmp = ThumbnailUtils.createVideoThumbnail(CameraManager.lastCapturedFile, MediaStore.Video.Thumbnails.MICRO_KIND);
                 }
+
+                setChangesMade(true);
+
                 evidenceAdapter.content.add(CameraManager.lastCapturedFile);
                 evidenceAdapter.mediaContent.add(bmp);
                 evidenceAdapter.notifyDataSetChanged();
@@ -626,10 +647,22 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                finish(); //onBackPressed(); - previous version - sometimes strangely caused IllegalStateException: Can not perform this action after onSaveInstanceState
+                onBackPressed(); //- previous version - sometimes strangely caused IllegalStateException: Can not perform this action after onSaveInstanceState
+                /*if (changesMade()) showChangesLostDialog(new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });*/
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (changesMade()) showChangesLostDialog();
+        else finish();
     }
 
     //hides the software keyboard
@@ -637,6 +670,24 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     public boolean dispatchTouchEvent(MotionEvent event) {
         Globals.hideSoftKeyboard(this, event);
         return super.dispatchTouchEvent( event );
+    }
+
+    public void showChangesLostDialog(/*final DialogInterface.OnClickListener exitAction*/) {
+        changesLostDialog = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.attention))
+                .setMessage(getString(R.string.allChangesWillBeLost))
+                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {/*just dismiss*/ }
+                })
+                .create();
+        changesLostDialog.show();
     }
 
     //called from onCreate to set the tabs
@@ -652,8 +703,9 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     public void saveToBase(View view) throws Exception {
         /*first check if location is available - show error dialog if not
         this is made to prevent saving request with zero LatLng -> leads to crash.
+        needReclaimFullLocation shows that old evidences were deleted and new ones created - we need their coordinates
          */
-        if (checkLocation() && !blockButtons) {
+        if (checkLocation() && !blockButtons && !needReclaimFullLocation) {
 
             //db actions
             SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -679,7 +731,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                     rowID = db.insertOrThrow(DBHelper.VIOLATIONS_TABLE, null, cv);
                     id = new BigDecimal(rowID).intValue();
                     idInDbString = rowID.toString();
-                    mode = MODE_EDIT; //once created the record we switch to edit mode
+                    setMode(MODE_EDIT); //once created the record we switch to edit mode
                     break;
                 }
                 case MODE_EDIT :{
@@ -709,19 +761,15 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             }
             db.close();
 
-            //delete from the filesystem the evidence files that were removed by the user
-            /*try {
-                for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
-                    new File(fileToDelete).delete();
-                }
-            } catch (Exception e) {
-                Globals.showError(R.string.cannot_write_file, e);
-            }*/
+            setChangesMade(false);
 
             //show toast only if the method is called by Save button
             if (view != null ) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, R.string.cannot_define_location, Toast.LENGTH_LONG).show();
+            String message = needReclaimFullLocation ?
+                    "Зачекайте поки пристрій визначить Ваше місцезнаходження та спробуйте ще раз" :
+                    getString(R.string.cannot_define_location);
+            Globals.showMessage(message);
         }
     }
 
@@ -739,6 +787,12 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         int actionFlag = (startImmediately || videoOnly) ?
                 CameraManager.VIDEO_CAPTURE_INTENT : 0; //0 means photoOrVideo not defined - user switches this in the camera
         CameraManager.getInstance(this).startCustomCamera(actionFlag, startImmediately, videoOnly);
+    }
+
+    boolean initialEvidencesDeleted() {
+        ArrayList<String> temp = new ArrayList<>(evidenceAdapter.content);
+        temp.retainAll(dbHelper.getMediaFiles(DBHelper.MEDIA_TABLE));
+        return temp.isEmpty();
     }
 
     public void photoVideoPopupMenu(View view) {
@@ -826,11 +880,20 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     }
 
     @Override
+    public void onEvidenceRemoved() {
+        if (mode == MODE_EDIT && initialEvidencesDeleted()) {
+            lManager.restart(getLocationServicesArray(true));
+            needReclaimFullLocation = true;
+        }
+    }
+
+    @Override
     public void onLocationChanged(double lat, double lon) {
         latitude = lat;
         longitude = lon;
         requisitesAdapter.nullSavedLatLng();
         requisitesAdapter.reclaimMap();
+        needReclaimFullLocation = false;
     }
 
     @Override
@@ -854,15 +917,14 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         if (mode <= MODE_EDIT) {
             ArrayList<String> filenamesToSave = new ArrayList<>(evidenceAdapter.content);
             outState.putStringArrayList(Globals.EVIDENCES, filenamesToSave);
-
-            /*ArrayList<String> deletedFilenamesToSave = new ArrayList<>(evidenceAdapter.filesDeletedDuringSession);
-            outState.putStringArrayList(Globals.DELETED_EVIDENCES, deletedFilenamesToSave);*/
         }
 
         //saving mode & intent related data
         //otherwise started with MODE_CREATE and saved to base (mode=MODE_EDIT) will be recreated as MODE_CREATE again
         outState.putInt(Globals.VIOLATION_ACTIVITY_MODE, mode);
         if (mode == MODE_EDIT) outState.putInt(Globals.ITEM_ID, id);
+        outState.putBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, needReclaimFullLocation);
+        outState.putBoolean(Globals.VIOLATION_ACTIVITY_CHANGES_MADE, changesMade);
 
         //this is needed in onDestroy to distinguish whether it was initiated by user or by system
         saveInstanceStateCalled = true;
@@ -880,6 +942,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     @Override
     protected void onDestroy() {
         if (!saveInstanceStateCalled) clearEvidences(); //just destroy without saving state, e.g. on back pressed
+
+        if (changesLostDialog != null) changesLostDialog.dismiss();
 
         lManager.onDestroy();
         lManager = null;
