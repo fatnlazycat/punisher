@@ -1,16 +1,6 @@
 package org.foundation101.karatel.entity;
 
-import android.content.Context;
-import android.content.res.Resources;
-
-import org.foundation101.karatel.DBHelper;
-
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Dima on 08.05.2016.

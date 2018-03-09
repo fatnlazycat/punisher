@@ -14,7 +14,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Display;
 
-import org.foundation101.karatel.CameraManager;
+import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 

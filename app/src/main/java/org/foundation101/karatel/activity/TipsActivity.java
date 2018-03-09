@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
@@ -24,13 +23,13 @@ import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 
-import org.foundation101.karatel.CameraManager;
+import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.KaratelPreferences;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.manager.HttpHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 

@@ -7,14 +7,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.DialogFragment;
-import android.util.Log;
 
-import org.foundation101.karatel.CameraManager;
-import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Created by Dima on 09.08.2016.

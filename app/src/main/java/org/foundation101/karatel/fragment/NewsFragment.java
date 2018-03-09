@@ -12,10 +12,9 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.NewsListAdapter;
@@ -28,8 +27,6 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
-
-import javax.microedition.khronos.opengles.GL;
 
 public class NewsFragment extends Fragment implements AdapterView.OnItemClickListener{
     static final String TAG = "News";

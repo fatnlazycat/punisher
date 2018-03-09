@@ -4,21 +4,16 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Location;
-import android.location.LocationManager;
 import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -46,31 +41,15 @@ import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.location.places.Places;
+import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.foundation101.karatel.CameraManager;
-import org.foundation101.karatel.DBHelper;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
 import org.foundation101.karatel.adapter.HistoryAdapter;
@@ -82,6 +61,13 @@ import org.foundation101.karatel.entity.UpdateEntity;
 import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.entity.ViolationRequisite;
 import org.foundation101.karatel.fragment.RequestListFragment;
+import org.foundation101.karatel.manager.CameraManager;
+import org.foundation101.karatel.manager.DBHelper;
+import org.foundation101.karatel.manager.GoogleApiManager;
+import org.foundation101.karatel.manager.HttpHelper;
+import org.foundation101.karatel.manager.KaratelLocationManager;
+import org.foundation101.karatel.manager.KaratelPreferences;
+import org.foundation101.karatel.manager.PermissionManager;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
 import org.foundation101.karatel.utils.DBUtils;
@@ -113,13 +99,12 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-public class ViolationActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        LocationListener,
-        Formular {
+import static org.foundation101.karatel.manager.KaratelLocationManager.*;
+import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY;
+import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_NORMAL;
+import static org.foundation101.karatel.manager.PermissionManager.LOCATION_PERMISSIONS;
 
-    final int RQS_GooglePlayServices = 1000;
+public class ViolationActivity extends AppCompatActivity implements Formular {
 
     public static final int MODE_CREATE = -1;
     public static final int MODE_EDIT = 0;
@@ -137,14 +122,21 @@ public class ViolationActivity extends AppCompatActivity implements
     int mode;
     Long rowID;
 
+    //debug view
+    //TextView tv;
+
     FragmentManager fm;
     SupportMapFragment supportMapFragment;
-    final Double REFRESH_ACCURACY = 0.001;
-    boolean mockLocationDialogShown = false;
+
+    AlertDialog changesLostDialog;
+
     public boolean blockButtons = true;//used to check if the location is defined
 
-    public int getMode() {
-        return mode;
+    public int getMode() { return mode; }
+
+    public void setMode(int mode) {
+        this.mode = mode;
+        if (lManager != null) lManager.initFields(getLocationServicesArray(false));
     }
 
     ArrayList<String> savedInstanceStateEvidenceFileNames = new ArrayList<>();
@@ -156,26 +148,38 @@ public class ViolationActivity extends AppCompatActivity implements
     public Double latitude, longitude;
     boolean statusTabFirstShow = true;
     boolean saveInstanceStateCalled = false;
+    boolean needReclaimFullLocation = false;
+
+    boolean changesMade = false;
+    @Override
+    public boolean changesMade() { return changesMade; }
+    @Override
+    public void setChangesMade(boolean value) { changesMade = value; }
 
     public FrameLayout progressBar;
     TabHost tabs;
     TabHost.OnTabChangeListener tabChangeListener;
     Button punishButton, saveButton;
 
-    public GoogleApiClient googleApiClient;
-    LocationManager locationManager;
-    LocationRequest locationRequest;
-    android.location.LocationListener locationListener;
-    static final int REQUEST_CHECK_SETTINGS = 2000;
+    GoogleApiManager googleApiManager;
+
+    @Override
+    public GoogleApiManager getGoogleManager() {
+        return googleApiManager;
+    }
+
+    public static final int REQUEST_CHECK_SETTINGS = 2000;
 
     boolean videoOnly = false;
+
+    KaratelLocationManager lManager;
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (googleApiClient != null) {
-            googleApiClient.connect();
-        }
+        lManager.onStart(getLocationServicesArray(needReclaimFullLocation));
+        googleApiManager.onStart();
+
         validatePunishButton();
         validateSaveButton();
     }
@@ -186,8 +190,8 @@ public class ViolationActivity extends AppCompatActivity implements
 
         if (requisitesAdapter != null) requisitesAdapter.getMapDataFromBundle(savedInstanceState);
 
-        //init requisite EditTexts after activity recreation otherwise they all contain the same value (value of the last one)
         if (savedInstanceState != null) {
+            //init requisite EditTexts after activity recreation otherwise they all contain the same value (value of the last one)
             ArrayList<String> savedValues = savedInstanceState.getStringArrayList(Globals.REQUISITES_VALUES);
             if (savedValues != null) {
                 int listSize = requisitesAdapter.holders.size();
@@ -195,6 +199,8 @@ public class ViolationActivity extends AppCompatActivity implements
                     requisitesAdapter.holders.get(i).editTextRequisite.setText(savedValues.get(i));
                 }
             }
+
+            changesMade = savedInstanceState.getBoolean(Globals.VIOLATION_ACTIVITY_CHANGES_MADE, false);
         }
     }
 
@@ -202,6 +208,11 @@ public class ViolationActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
         saveInstanceStateCalled = false;
+
+        //location debug block
+        /*String t = tv.getText().toString();
+        String t2 = t.length() > 2 ? t.substring(0, t.length() / 2 - 1) : t;
+        tv.setText(String.format(Locale.US, "lat: %1$10f\nlon: %2$10f\n%3$s", latitude, longitude, t2));*/
     }
 
     @Override
@@ -209,15 +220,35 @@ public class ViolationActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_violation);
 
-        requisitesList                      = (LinearLayout)findViewById(R.id.requisitesList);
+        Intent intent = this.getIntent();
+        mode = intent.getIntExtra(Globals.VIOLATION_ACTIVITY_MODE, MODE_EDIT);
 
-        TextView addedPhotoVideoTextView    = (TextView)    findViewById(R.id.addedPhotoVideoTextView);
-        progressBar                         = (FrameLayout) findViewById(R.id.frameLayoutProgress);
-        punishButton                        = (Button)      findViewById(R.id.punishButton);
-        saveButton                          = (Button)      findViewById(R.id.saveButton);
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey  (Globals.VIOLATION_ACTIVITY_MODE)) {
+                mode = savedInstanceState.getInt(Globals.VIOLATION_ACTIVITY_MODE);
+            }
 
-        if (checkGooglePlayServices()) { buildGoogleApiClient(); }
-        initOldAndroidLocation();
+            needReclaimFullLocation = savedInstanceState.getBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, false);
+
+            //init evidences after activity recreation otherwise they will be lost
+            if (savedInstanceState.containsKey(Globals.EVIDENCES)) { //this will be true only in MODE_CREATE | MODE_EDIT
+                savedInstanceStateEvidenceFileNames = savedInstanceState.getStringArrayList(Globals.EVIDENCES);
+            }
+        }
+
+        //debug view
+        //tv = findViewById(R.id.textViewViolationHeader);
+
+        requisitesList                      = findViewById(R.id.requisitesList);
+        TextView addedPhotoVideoTextView    = findViewById(R.id.addedPhotoVideoTextView);
+        progressBar                         = findViewById(R.id.frameLayoutProgress);
+        punishButton                        = findViewById(R.id.punishButton);
+        saveButton                          = findViewById(R.id.saveButton);
+
+        lManager = new KaratelLocationManager(this, getLocationServicesArray(false));
+        googleApiManager = new GoogleApiManager(this);
+        googleApiManager.init(lManager, lManager);
+        lManager.onCreate();
 
         KaratelPreferences.restoreUser();
 
@@ -247,31 +278,18 @@ public class ViolationActivity extends AppCompatActivity implements
         dbHelper = new DBHelper(this, DBHelper.DATABASE, DBHelper.DB_VERSION);
         requisitesAdapter = new RequisitesListAdapter(this);
 
-        Intent intent = this.getIntent();
-        mode = intent.getIntExtra(Globals.VIOLATION_ACTIVITY_MODE, MODE_EDIT);
-
-        if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey  (Globals.VIOLATION_ACTIVITY_MODE)) {
-                mode = savedInstanceState.getInt(Globals.VIOLATION_ACTIVITY_MODE);
-            }
-
-            //init evidences after activity recreation otherwise they will be lost
-            if (savedInstanceState.containsKey(Globals.EVIDENCES)) { //this will be true only in MODE_CREATE | MODE_EDIT
-                savedInstanceStateEvidenceFileNames       = savedInstanceState.getStringArrayList(Globals.EVIDENCES);
-                //evidenceAdapter.filesDeletedDuringSession = savedInstanceState.getStringArrayList(Globals.DELETED_EVIDENCES);
-            }
-        }
-
         if (mode == MODE_CREATE) {
             idOnServer = 0;
             violation = (Violation) intent.getExtras().getSerializable(Globals.VIOLATION);
             status = 0; //status = draft
             requisitesAdapter.content = violation.getRequisites();
-            if (violation.usesCamera) {//create mode means we have to capture video at start
-                CameraManager cameraManager = CameraManager.getInstance(this);
-                videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
-                cameraManager.startCustomCamera(CameraManager.VIDEO_CAPTURE_INTENT, true, videoOnly);
+            videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
+
+            //create mode means we have to capture video at start (if it's not a recreation of course)
+            if (violation.usesCamera && savedInstanceState == null) {
+                launchCamera(null);
             }
+
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
             if (savedInstanceState != null && savedInstanceState.containsKey(Globals.ITEM_ID)) {
                 id = savedInstanceState.getInt(Globals.ITEM_ID);
@@ -459,6 +477,7 @@ public class ViolationActivity extends AppCompatActivity implements
 
                     @Override
                     public void afterTextChanged(Editable s) {
+                        setChangesMade(true);
                         validatePunishButton();
                     }
                 });
@@ -482,6 +501,17 @@ public class ViolationActivity extends AppCompatActivity implements
             }
         }*/
         return result;
+    }
+
+    int[] getLocationServicesArray(boolean forceFull) {
+        if (forceFull) return new int[] { LOCATION_SERVICE_MAIN, LOCATION_SERVICE_ADDRESS };
+
+        int[] locationServicesArray = {LOCATION_SERVICE_NONE, LOCATION_SERVICE_NONE};
+        switch (mode) {
+            case MODE_CREATE: locationServicesArray[0] = LOCATION_SERVICE_MAIN;
+            case MODE_EDIT  : locationServicesArray[1] = LOCATION_SERVICE_ADDRESS;
+        }
+        return locationServicesArray;
     }
 
     void makeEvidenceAdapterContent(int mode, ArrayList<String> fileNames, Request request){
@@ -536,6 +566,33 @@ public class ViolationActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        boolean granted = PermissionManager.allGranted(grantResults);
+        switch (requestCode) {
+            case LOCATION_PERMISSIONS : {
+                lManager.onPermissionResult(granted);
+                break;
+            }
+            case CUSTOM_CAMERA_PERMISSIONS_START_NORMAL : {
+                if (granted) launchCamera(punishButton); //just a hack to signal that it's not an immediate start
+                break;
+            }
+            case CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY : {
+                if (granted) launchCamera(null);
+                break;
+            }
+        }
+
+        int pendingResult = PermissionManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (pendingResult) {
+            case CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY : {
+                launchCamera(null);
+                break;
+            }
+        }
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (resultCode == RESULT_OK &&
                 (requestCode == CameraManager.GENERIC_CAMERA_CAPTURE_INTENT)) {
@@ -575,6 +632,9 @@ public class ViolationActivity extends AppCompatActivity implements
                 } else {
                     bmp = ThumbnailUtils.createVideoThumbnail(CameraManager.lastCapturedFile, MediaStore.Video.Thumbnails.MICRO_KIND);
                 }
+
+                setChangesMade(true);
+
                 evidenceAdapter.content.add(CameraManager.lastCapturedFile);
                 evidenceAdapter.mediaContent.add(bmp);
                 evidenceAdapter.notifyDataSetChanged();
@@ -586,10 +646,7 @@ public class ViolationActivity extends AppCompatActivity implements
         if (requestCode == REQUEST_CHECK_SETTINGS){
             /*switch (resultCode){
                 case RESULT_OK : {*/
-
-            if (googleApiClient != null && googleApiClient.isConnected()) {
-                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
-            }
+                lManager.onSettingsResult();
                     /*break;
                 }
             }*/
@@ -601,11 +658,22 @@ public class ViolationActivity extends AppCompatActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                //KaratelApplication.longLastingOperation(1000000);
-                finish(); //onBackPressed(); - previous version - sometimes strangely caused IllegalStateException: Can not perform this action after onSaveInstanceState
+                onBackPressed(); //- previous version - sometimes strangely caused IllegalStateException: Can not perform this action after onSaveInstanceState
+                /*if (changesMade()) showChangesLostDialog(new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });*/
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (changesMade()) showChangesLostDialog();
+        else finish();
     }
 
     //hides the software keyboard
@@ -613,6 +681,24 @@ public class ViolationActivity extends AppCompatActivity implements
     public boolean dispatchTouchEvent(MotionEvent event) {
         Globals.hideSoftKeyboard(this, event);
         return super.dispatchTouchEvent( event );
+    }
+
+    public void showChangesLostDialog(/*final DialogInterface.OnClickListener exitAction*/) {
+        changesLostDialog = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.attention))
+                .setMessage(getString(R.string.allChangesWillBeLost))
+                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {/*just dismiss*/ }
+                })
+                .create();
+        changesLostDialog.show();
     }
 
     //called from onCreate to set the tabs
@@ -628,8 +714,9 @@ public class ViolationActivity extends AppCompatActivity implements
     public void saveToBase(View view) throws Exception {
         /*first check if location is available - show error dialog if not
         this is made to prevent saving request with zero LatLng -> leads to crash.
+        needReclaimFullLocation shows that old evidences were deleted and new ones created - we need their coordinates
          */
-        if (checkLocation() && !blockButtons) {
+        if (checkLocation() && !blockButtons && !needReclaimFullLocation) {
 
             //db actions
             SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -655,7 +742,7 @@ public class ViolationActivity extends AppCompatActivity implements
                     rowID = db.insertOrThrow(DBHelper.VIOLATIONS_TABLE, null, cv);
                     id = new BigDecimal(rowID).intValue();
                     idInDbString = rowID.toString();
-                    mode = MODE_EDIT; //once created the record we switch to edit mode
+                    setMode(MODE_EDIT); //once created the record we switch to edit mode
                     break;
                 }
                 case MODE_EDIT :{
@@ -685,19 +772,15 @@ public class ViolationActivity extends AppCompatActivity implements
             }
             db.close();
 
-            //delete from the filesystem the evidence files that were removed by the user
-            /*try {
-                for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
-                    new File(fileToDelete).delete();
-                }
-            } catch (Exception e) {
-                Globals.showError(R.string.cannot_write_file, e);
-            }*/
+            setChangesMade(false);
 
             //show toast only if the method is called by Save button
             if (view != null ) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, R.string.cannot_define_location, Toast.LENGTH_LONG).show();
+            String message = needReclaimFullLocation ?
+                    "Зачекайте поки пристрій визначить Ваше місцезнаходження та спробуйте ще раз" :
+                    getString(R.string.cannot_define_location);
+            Globals.showMessage(message);
         }
     }
 
@@ -711,10 +794,16 @@ public class ViolationActivity extends AppCompatActivity implements
     }
 
     public void launchCamera(View view) {
-        int actionFlag = (violation.getMediaTypes() == Violation.VIDEO_ONLY) ?
-                CameraManager.VIDEO_CAPTURE_INTENT :
-                0; //0 means photoOrVideo not defined - user switches this in the camera
-        CameraManager.getInstance(this).startCustomCamera(actionFlag, false, videoOnly);
+        boolean startImmediately = (view == null); //view is null if we start camera from onCreate
+        int actionFlag = (startImmediately || videoOnly) ?
+                CameraManager.VIDEO_CAPTURE_INTENT : 0; //0 means photoOrVideo not defined - user switches this in the camera
+        CameraManager.getInstance(this).startCustomCamera(actionFlag, startImmediately, videoOnly);
+    }
+
+    boolean initialEvidencesDeleted() {
+        ArrayList<String> temp = new ArrayList<>(evidenceAdapter.content);
+        temp.retainAll(dbHelper.getMediaFiles(DBHelper.MEDIA_TABLE));
+        return temp.isEmpty();
     }
 
     public void photoVideoPopupMenu(View view) {
@@ -801,205 +890,26 @@ public class ViolationActivity extends AppCompatActivity implements
         saveButton.setVisibility((visibility));
     }
 
-    /*private Location getLastLocation() throws NullPointerException {
-        //permission check required by the system
-        /*if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
-                        PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-        }
-        Location locationGoogle = null;
-        if (googleApiClient != null) {
-            locationGoogle = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-        }
-
-        if (((KaratelApplication)getApplicationContext()).locationIsMock(locationGoogle)) {
-            return null;
-        } else {
-            return locationGoogle;
-        }
-    }*/
-
-    /*
-    old Android package location code
-    */
-    void initOldAndroidLocation(){
-        locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            locationListener = new MyOldAndroidLocationListener();
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-        }
-    }
-
-    private class MyOldAndroidLocationListener implements android.location.LocationListener{
-        @Override
-        public void onLocationChanged(Location location) {
-            if (latitude == null || latitude == 0) {//use this only if no result from FusedLocationAPI
-
-                if (((KaratelApplication)getApplicationContext()).locationIsMock(location)){
-                    if (!mockLocationDialogShown) {
-                        mockLocationDialogShown = true;
-                        AlertDialog.Builder builder = new AlertDialog.Builder(ViolationActivity.this);
-                        AlertDialog dialog = builder
-                                .setTitle(R.string.turn_off_mock_locations)
-                                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
-                                        if (intent.resolveActivity(getPackageManager()) != null) {
-                                            startActivity(intent);
-                                        }
-                                    }
-                                })
-                                .setNegativeButton(R.string.cancel, null).create();
-                        dialog.show();
-                    }
-                } else if (mode == MODE_CREATE) {
-                    Double latToCheck = latitude != null ? latitude : 0;
-                    Double lonToCheck = longitude != null ? longitude : 0;
-                    Double absLat = Math.abs(latToCheck - location.getLatitude());
-                    Double absLon = Math.abs(lonToCheck - location.getLongitude());
-                    if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
-                        latitude = location.getLatitude();
-                        longitude = location.getLongitude();
-                        requisitesAdapter.nullSavedLatLng();
-                        requisitesAdapter.reclaimMap();
-                    }
-                }
-            }
-            locationManager.removeUpdates(locationListener);
-            //locationListener = null;
-        }
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {}
-        @Override
-        public void onProviderEnabled(String provider) {}
-        @Override
-        public void onProviderDisabled(String provider) {}
-    }
-
-    private boolean checkGooglePlayServices(){
-        GoogleApiAvailability gaa = GoogleApiAvailability.getInstance();
-        int resultCode = gaa.isGooglePlayServicesAvailable(getApplicationContext());
-        if (resultCode == ConnectionResult.SUCCESS){
-            return true;
-        }else{
-            if (gaa.isUserResolvableError(resultCode)) {
-                gaa.getErrorDialog(this, resultCode, RQS_GooglePlayServices).show();
-            } else {
-                Toast.makeText(getApplicationContext(), "This device is not supported.", Toast.LENGTH_LONG).show();
-            }
-            return false;
-        }
-    }
-
-    /**
-     * Creating google api client object
-     * */
-    protected synchronized void buildGoogleApiClient() {
-        googleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Places.GEO_DATA_API)
-                .addApi(Places.PLACE_DETECTION_API)
-                .addApi(LocationServices.API).build();
-        googleApiClient.connect();
-    }
-
     @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        if (mode == MODE_CREATE) {
-            locationRequest = LocationRequest.create()
-                    .setNumUpdates(3)
-                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                    .setInterval(1);
-            PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
-
-            result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-                @Override
-                public void onResult(LocationSettingsResult result) {
-                    final Status status = result.getStatus();
-                    //final LocationSettingsStates states = result.getLocationSettingsStates();
-                    switch (status.getStatusCode()) {
-                        case LocationSettingsStatusCodes.SUCCESS:
-                            // All location settings are satisfied. The client can initialize location requests here.
-                            if (googleApiClient != null && googleApiClient.isConnected()) {
-                                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient,
-                                        locationRequest, ViolationActivity.this);
-                            }
-                            break;
-                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                            // Location settings are not satisfied. But could be fixed by showing the user a dialog.
-                            try {
-                                // Show the dialog by calling startResolutionForResult(),
-                                // and check the result in onActivityResult().
-                                status.startResolutionForResult(ViolationActivity.this, REQUEST_CHECK_SETTINGS);
-                            } catch (IntentSender.SendIntentException e) {
-                                // Ignore the error.
-                            }
-                            break;
-                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                            // Location settings are not satisfied. However, we have no way to fix the
-                            // settings so we won't show the dialog.
-                            Toast.makeText(ViolationActivity.this,  "location settings not available", Toast.LENGTH_LONG).show();
-                            ViolationActivity.this.finish();
-                            break;
-                    }
-                }
-            });
+    public void onEvidenceRemoved() {
+        if (mode == MODE_EDIT && initialEvidencesDeleted()) {
+            lManager.restart(getLocationServicesArray(true));
+            needReclaimFullLocation = true;
         }
     }
 
     @Override
-    public void onConnectionSuspended(int i) {
-
+    public void onLocationChanged(double lat, double lon) {
+        latitude = lat;
+        longitude = lon;
+        requisitesAdapter.nullSavedLatLng();
+        requisitesAdapter.reclaimMap();
+        needReclaimFullLocation = false;
     }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult result) {
-        Log.e("Punisher", "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
-    }
-
-    @Override
-    public void onLocationChanged(final Location location) {
-        if (mode == MODE_CREATE && !((KaratelApplication)getApplicationContext()).locationIsMock(location)){
-            Double latToCheck = latitude!=null ? latitude : 0;
-            Double lonToCheck = longitude!=null ? longitude : 0;
-            Double absLat = Math.abs(latToCheck - location.getLatitude());
-            Double absLon = Math.abs(lonToCheck - location.getLongitude());
-            if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
-                PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
-
-                result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-                    @Override
-                    public void onResult(LocationSettingsResult result) {
-                        if (result.getStatus().getStatusCode() == LocationSettingsStatusCodes.SUCCESS) {
-                            latitude = location.getLatitude();
-                            longitude = location.getLongitude();
-                            requisitesAdapter.nullSavedLatLng();
-                            requisitesAdapter.reclaimMap();
-                        } else {
-                            latitude = null; //this will block the buttons
-                        }
-                    }
-                });
-            }
-        }
-    }
-
-    PendingResult<LocationSettingsResult> getPendingLocationSettings(){
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest);
-        PendingResult<LocationSettingsResult> result =
-                LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
-        return result;
+    public void onAddressesReady(PlaceLikelihoodBuffer places) {
+        requisitesAdapter.onAddressesReady(places);
     }
 
     @Override
@@ -1018,15 +928,14 @@ public class ViolationActivity extends AppCompatActivity implements
         if (mode <= MODE_EDIT) {
             ArrayList<String> filenamesToSave = new ArrayList<>(evidenceAdapter.content);
             outState.putStringArrayList(Globals.EVIDENCES, filenamesToSave);
-
-            /*ArrayList<String> deletedFilenamesToSave = new ArrayList<>(evidenceAdapter.filesDeletedDuringSession);
-            outState.putStringArrayList(Globals.DELETED_EVIDENCES, deletedFilenamesToSave);*/
         }
 
         //saving mode & intent related data
         //otherwise started with MODE_CREATE and saved to base (mode=MODE_EDIT) will be recreated as MODE_CREATE again
         outState.putInt(Globals.VIOLATION_ACTIVITY_MODE, mode);
         if (mode == MODE_EDIT) outState.putInt(Globals.ITEM_ID, id);
+        outState.putBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, needReclaimFullLocation);
+        outState.putBoolean(Globals.VIOLATION_ACTIVITY_CHANGES_MADE, changesMade);
 
         //this is needed in onDestroy to distinguish whether it was initiated by user or by system
         saveInstanceStateCalled = true;
@@ -1036,10 +945,8 @@ public class ViolationActivity extends AppCompatActivity implements
 
     @Override //Activity method
     protected void onStop() {
-        if (googleApiClient != null && googleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
-            googleApiClient.disconnect();
-        }
+        lManager.onStop();
+        googleApiManager.onStop();
         super.onStop();
     }
 
@@ -1047,10 +954,12 @@ public class ViolationActivity extends AppCompatActivity implements
     protected void onDestroy() {
         if (!saveInstanceStateCalled) clearEvidences(); //just destroy without saving state, e.g. on back pressed
 
-        if (locationListener != null) {
-            locationManager.removeUpdates(locationListener);
-            //locationListener = null;
-        }
+        if (changesLostDialog != null) changesLostDialog.dismiss();
+
+        lManager.onDestroy();
+        lManager = null;
+
+        googleApiManager = null;
 
         requisitesAdapter.releaseMap();
 

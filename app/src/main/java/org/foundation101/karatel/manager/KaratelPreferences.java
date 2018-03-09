@@ -1,9 +1,11 @@
-package org.foundation101.karatel;
+package org.foundation101.karatel.manager;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.entity.PunisherUser;
 
 /**

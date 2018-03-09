@@ -1,6 +1,7 @@
 package org.foundation101.karatel.activity;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,8 +18,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.KaratelPreferences;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.service.RegistrationIntentService;
 
@@ -26,6 +26,7 @@ public class StartActivity extends Activity {
     private static final String PREFERENCE_FIRST_RUN_FLAG = "firstRun";
     static final String TAG = "StartActivity";
     AlertDialog alertDialog;
+    Dialog settingsDialog;
 
     private final BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -58,12 +59,16 @@ public class StartActivity extends Activity {
 
         //start push notification service
         if (checkPlayServices()) {
-            Log.d(TAG, "starting registrationIntentService");
-            Intent intent = new Intent(this, RegistrationIntentService.class);
-            startService(intent);
-        } else {
+            startRegistrationService();
+        }/* else {
             finish();
-        }
+        }*/
+    }
+
+    private void startRegistrationService() {
+        Log.d(TAG, "starting registrationIntentService");
+        Intent intent = new Intent(this, RegistrationIntentService.class);
+        startService(intent);
     }
 
     private void registerReceiver() {
@@ -77,7 +82,8 @@ public class StartActivity extends Activity {
     @Override
     protected void onDestroy() {
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(myBroadcastReceiver);
-        if (alertDialog != null) alertDialog.dismiss();
+        if (alertDialog    != null) alertDialog   .dismiss();
+        if (settingsDialog != null) settingsDialog.dismiss();
         super.onDestroy();
     }
 
@@ -105,7 +111,9 @@ public class StartActivity extends Activity {
         int resultCode = apiAvailability.isGooglePlayServicesAvailable(this);
         if (resultCode != ConnectionResult.SUCCESS) {
             if (apiAvailability.isUserResolvableError(resultCode)) {
-                apiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST).show();
+                settingsDialog = apiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST);
+                settingsDialog.setCancelable(false);
+                settingsDialog.show();
             } else {
                 String message = "This device is not supported.";
                 Log.i(TAG, message);
@@ -135,5 +143,13 @@ public class StartActivity extends Activity {
                 .create();
         dialog.show();
         return dialog;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PLAY_SERVICES_RESOLUTION_REQUEST && resultCode == RESULT_OK) {
+            startRegistrationService();
+        } else finish();
     }
 }

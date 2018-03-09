@@ -14,11 +14,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.entity.Request;
 import org.foundation101.karatel.entity.Violation;
-import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.ViolationActivity;
 import org.json.JSONArray;
 import org.json.JSONException;

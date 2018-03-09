@@ -2,17 +2,17 @@ package org.foundation101.karatel.service;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GcmPubSub;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
+import com.splunk.mint.Mint;
+import com.splunk.mint.MintLogLevel;
 
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.KaratelPreferences;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
 
@@ -46,6 +46,7 @@ public class RegistrationIntentService extends IntentService {
             Log.i(TAG, "GCM Registration Token: " + token);
 
             if (!oldToken.equals("") && !oldToken.equals(token)) {
+                Mint.logEvent("logoutToChangeToken", MintLogLevel.Error, oldToken, token);
                 logoutToChangeToken();
             } else {
                 KaratelPreferences.setPushToken(token);
@@ -69,6 +70,7 @@ public class RegistrationIntentService extends IntentService {
             }
         } catch (Exception e) {
             Log.d(TAG, "Failed to complete token refresh", e);
+            Mint.logException(e);
             Intent tokenFailed = new Intent(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG);
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(tokenFailed);
 

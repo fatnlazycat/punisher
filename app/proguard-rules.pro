@@ -40,3 +40,6 @@
  public static final org.codehaus.jackson.annotate.JsonAutoDetect$Visibility *; }
 
  -keep class org.foundation101.karatel.entity.** { public protected private *; }
+
+ #Dagger
+ -dontwarn com.google.errorprone.annotations.*

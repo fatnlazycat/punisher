@@ -1,10 +1,8 @@
 package org.foundation101.karatel;
 
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Build;
-import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.multidex.MultiDexApplication;
 import android.support.v7.app.AlertDialog;
@@ -18,7 +16,8 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.splunk.mint.Mint;
 
-import org.foundation101.karatel.entity.PunisherUser;
+import org.foundation101.karatel.dagger.DaggerComponent;
+import org.foundation101.karatel.dagger.DaggerDaggerComponent;
 import org.foundation101.karatel.utils.RetrofitUtils;
 
 import java.io.File;
@@ -26,13 +25,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.util.List;
 
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public class KaratelApplication extends MultiDexApplication {
     public static final String TAG = "KaratelApplication";
@@ -41,6 +35,13 @@ public class KaratelApplication extends MultiDexApplication {
     private static KaratelApplication instance;
     public static KaratelApplication getInstance() {
         return instance;
+    }
+
+
+    private static DaggerComponent daggerComponent;
+    public static DaggerComponent dagger() {
+        if (daggerComponent == null) daggerComponent = DaggerDaggerComponent.builder().build();
+        return daggerComponent;
     }
 
     //Google Analytics part

@@ -51,15 +51,18 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.location.places.Places;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.foundation101.karatel.CameraManager;
-import org.foundation101.karatel.KaratelPreferences;
+import org.foundation101.karatel.manager.CameraManager;
+import org.foundation101.karatel.manager.GoogleApiManager;
+import org.foundation101.karatel.manager.KaratelLocationManager;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.entity.ComplainCreationResponse;
-import org.foundation101.karatel.DBHelper;
+import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.HttpHelper;
+import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
@@ -68,7 +71,7 @@ import org.foundation101.karatel.adapter.RequisitesListAdapter;
 import org.foundation101.karatel.entity.ComplainRequest;
 import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.entity.ViolationRequisite;
-import org.foundation101.karatel.fragment.ComplainDraftsFragment;
+import org.foundation101.karatel.manager.PermissionManager;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
 import org.foundation101.karatel.utils.DBUtils;
 import org.foundation101.karatel.utils.DescriptionFormatter;
@@ -93,8 +96,12 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class ComplainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener, Formular {
+import static org.foundation101.karatel.manager.KaratelLocationManager.*;
+import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY;
+import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_NORMAL;
+import static org.foundation101.karatel.manager.PermissionManager.LOCATION_PERMISSIONS;
+
+public class ComplainActivity extends AppCompatActivity implements Formular {
 
     final int RQS_GooglePlayServices = 1000;
     final int REQUEST_CODE_SELECT_POSSIBLE_VALUE = 1001;
@@ -113,41 +120,48 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     int mode;
     Long rowID;
 
-    final Double REFRESH_ACCURACY = 0.001;
-    boolean mockLocationDialogShown = false;
     public boolean blockButtons = true;//used to check if the location is defined
-
-    public int getMode() {
-        return mode;
-    }
 
     ArrayList<String> savedInstanceStateEvidenceFileNames = new ArrayList<>();
     public ComplainRequest request = null;
-    Integer id, status, companyIdOnServer;
+    Integer id;
     String idInDbString, time_stamp;
-    String id_number_server = "";
     Violation violation = new Violation();
     public Double latitude, longitude;
     boolean saveInstanceStateCalled = false;
+    boolean needReclaimFullLocation = false;
+
+    boolean changesMade = false;
+    @Override
+    public boolean changesMade() { return changesMade; }
+    @Override
+    public void setChangesMade(boolean value) { changesMade = value; }
+
+    AlertDialog changesLostDialog;
 
     public FrameLayout progressBar;
     Button punishButton, saveButton;
 
-    public GoogleApiClient googleApiClient;
-    LocationManager locationManager;
-    LocationRequest locationRequest;
-    android.location.LocationListener locationListener;
+    GoogleApiManager googleApiManager;
+
+    @Override
+    public GoogleApiManager getGoogleManager() {
+        return googleApiManager;
+    }
+
     static final int REQUEST_CHECK_SETTINGS = 2000;
 
     //variable for customCamera
     boolean videoOnly = false;
 
+    KaratelLocationManager lManager;
+
     @Override
     protected void onStart() {
         super.onStart();
-        if (googleApiClient != null) {
-            googleApiClient.connect();
-        }
+        lManager.onStart(getLocationServicesArray(needReclaimFullLocation));
+        googleApiManager.onStart();
+
         validatePunishButton();
         validateSaveButton();
     }
@@ -156,8 +170,8 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
 
-        //init requisite EditTexts after activity recreation otherwise they all contain the same value (value of the last one)
         if (savedInstanceState != null) {
+            //init requisite EditTexts after activity recreation otherwise they all contain the same value (value of the last one)
             ArrayList<String> savedValues = savedInstanceState.getStringArrayList(Globals.REQUISITES_VALUES);
             if (savedValues != null) {
                 int listSize = requisiteViews.size();
@@ -165,6 +179,8 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                     requisiteViews.get(i).editTextRequisite.setText(savedValues.get(i));
                 }
             }
+
+            changesMade = savedInstanceState.getBoolean(Globals.VIOLATION_ACTIVITY_CHANGES_MADE, false);
         }
     }
 
@@ -179,20 +195,6 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_complain);
 
-        requisitesList = (LinearLayout) findViewById(R.id.requisitesList);
-        llAddEvidence = (LinearLayout) findViewById(R.id.llAddEvidence);
-
-        TextView addedPhotoVideoTextView = (TextView)findViewById(R.id.addedPhotoVideoTextView);
-        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
-        punishButton = (Button) findViewById(R.id.punishButton);
-        saveButton = (Button) findViewById(R.id.saveButton);
-
-        if (checkGooglePlayServices()) { buildGoogleApiClient(); }
-        initOldAndroidLocation();
-
-        KaratelPreferences.restoreUser();
-
-        dbHelper = new DBHelper(this, DBHelper.DATABASE, DBHelper.DB_VERSION);
 
         Intent intent = this.getIntent();
         mode = intent.getIntExtra(Globals.VIOLATION_ACTIVITY_MODE, MODE_EDIT);
@@ -202,24 +204,41 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 mode = savedInstanceState.getInt(Globals.VIOLATION_ACTIVITY_MODE);
             }
 
+            needReclaimFullLocation = savedInstanceState.getBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, false);
+
             //init evidences after activity recreation otherwise they will be lost
             if (savedInstanceState.containsKey(Globals.EVIDENCES)) { //this will be true only in MODE_CREATE | MODE_EDIT
                 savedInstanceStateEvidenceFileNames       = savedInstanceState.getStringArrayList(Globals.EVIDENCES);
-                //evidenceAdapter.filesDeletedDuringSession = savedInstanceState.getStringArrayList(Globals.DELETED_EVIDENCES);
             }
         }
 
+        requisitesList = (LinearLayout) findViewById(R.id.requisitesList);
+        llAddEvidence = (LinearLayout) findViewById(R.id.llAddEvidence);
+
+        TextView addedPhotoVideoTextView = (TextView)findViewById(R.id.addedPhotoVideoTextView);
+        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
+        punishButton = (Button) findViewById(R.id.punishButton);
+        saveButton = (Button) findViewById(R.id.saveButton);
+
+        lManager = new KaratelLocationManager(this, getLocationServicesArray(false));
+        googleApiManager = new GoogleApiManager(this);
+        googleApiManager.init(lManager, lManager);
+        lManager.onCreate();
+
+        KaratelPreferences.restoreUser();
+
+        dbHelper = new DBHelper(this, DBHelper.DATABASE, DBHelper.DB_VERSION);
+
         if (mode == MODE_CREATE) {
             violation = (Violation) intent.getExtras().getSerializable(Globals.VIOLATION);
-            //companyIdOnServer = violation.getId();
-            //status = 0; //status = draft
-            //requisites = RequisitesListAdapter.makeContent(violation.type);
             requisites = violation.getRequisites();
-            if (violation.usesCamera) {//create mode means we have to capture video at start
-                CameraManager cameraManager = CameraManager.getInstance(this);
-                videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;                        //
-                cameraManager.startCustomCamera(CameraManager.VIDEO_CAPTURE_INTENT, true, videoOnly); //cameraManager.startCamera(CameraManager.VIDEO_CAPTURE_INTENT);
+            videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
+
+            //create mode means we have to capture video at start (if it's not a recreation of course)
+            if (violation.usesCamera && savedInstanceState == null) {
+                launchCamera(null);
             }
+
         } else {//edit or view mode means we have to fill requisites & evidenceGridView
             if (savedInstanceState != null && savedInstanceState.containsKey(Globals.ITEM_ID)) {
                 id = savedInstanceState.getInt(Globals.ITEM_ID);
@@ -316,19 +335,6 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 holder.editTextRequisite.setText(thisRequisite.value);
             }
 
-            holder.editTextRequisite.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    validatePunishButton();
-                }
-            });
-
             if (thisRequisite.getPossibleValues() != null) {
                 holder.editTextRequisite.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow, 0);
                 holder.editTextRequisite.setInputType(0); //disables editing
@@ -345,9 +351,31 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 });
             }
 
+            holder.editTextRequisite.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    setChangesMade(true);
+                    validatePunishButton();
+                }
+            });
+
             requisiteViews.add(holder);
             requisitesList.addView(v);
         }
+    }
+
+    int[] getLocationServicesArray(boolean force) {
+        int[] locationServicesArray = {LOCATION_SERVICE_NONE};
+        if (mode == MODE_CREATE || force) {
+            locationServicesArray[0] = LOCATION_SERVICE_MAIN;
+        }
+        return locationServicesArray;
     }
 
     void makeEvidenceAdapterContent(ArrayList<String> fileNames){
@@ -380,6 +408,25 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
             }
             _cursor.close();
             _db.close();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        boolean granted = PermissionManager.allGranted(grantResults);
+        switch (requestCode) {
+            case LOCATION_PERMISSIONS : {
+                lManager.onPermissionResult(granted);
+                break;
+            }
+            case CUSTOM_CAMERA_PERMISSIONS_START_NORMAL : {
+                if (granted) launchCamera(punishButton); //just a hack to signal that it's not an immediate start
+                break;
+            }
+            case CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY : {
+                if (granted) launchCamera(null);
+                break;
+            }
         }
     }
 
@@ -423,6 +470,9 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                 } else {
                     bmp = ThumbnailUtils.createVideoThumbnail(CameraManager.lastCapturedFile, MediaStore.Video.Thumbnails.MICRO_KIND);
                 }
+
+                setChangesMade(true);
+
                 evidenceAdapter.content.add(CameraManager.lastCapturedFile);
                 evidenceAdapter.mediaContent.add(bmp);
                 evidenceAdapter.notifyDataSetChanged();
@@ -432,16 +482,15 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         }
 
         if (requestCode == REQUEST_CHECK_SETTINGS){
-            if (googleApiClient != null && googleApiClient.isConnected()) {
-                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
-            }
+            lManager.onSettingsResult();
         }
 
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE_SELECT_POSSIBLE_VALUE && intent != null) {
+            setChangesMade(true);
             String newValue = intent.getStringExtra(Globals.POSSIBLE_VALUES);
             int targetViewNumber = intent.getIntExtra(Globals.REQUISITE_NUMBER_FOR_POSSIBLE_VALUES, 0);
             if (requisitesList.getChildCount() >= targetViewNumber) {
-                TextView targetView = (TextView) requisitesList.getChildAt(targetViewNumber).findViewById(R.id.editTextRequisite);
+                TextView targetView = requisitesList.getChildAt(targetViewNumber).findViewById(R.id.editTextRequisite);
                 if (targetView != null) targetView.setText(newValue);
             }
         }
@@ -453,10 +502,16 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                finish(); //onBackPressed(); - previous version - sometimes strangely caused IllegalStateException: Can not perform this action after onSaveInstanceState
+                onBackPressed();
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (changesMade()) showChangesLostDialog();
+        else finish();
     }
 
     //hides the software keyboard
@@ -464,6 +519,24 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     public boolean dispatchTouchEvent(MotionEvent event) {
         Globals.hideSoftKeyboard(this, event);
         return super.dispatchTouchEvent( event );
+    }
+
+    public void showChangesLostDialog() {
+        changesLostDialog = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.attention))
+                .setMessage(getString(R.string.allChangesWillBeLost))
+                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {/*just dismiss*/ }
+                })
+                .create();
+        changesLostDialog.show();
     }
 
     public void saveToBase(View view) throws Exception {
@@ -520,18 +593,23 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
             }
             db.close();
 
+            setChangesMade(false);
+
             //show toast only if the method is called by Save button
             if (view != null ) {
                 Toast.makeText(this, R.string.complainSaved, Toast.LENGTH_SHORT).show();
                 finish();
             }
         } else {
-            Toast.makeText(this, R.string.cannot_define_location, Toast.LENGTH_LONG).show();
+            String message = needReclaimFullLocation ?
+                    "Зачекайте поки пристрій визначить Ваше місцезнаходження та спробуйте ще раз" :
+                    getString(R.string.cannot_define_location);
+            Globals.showMessage(message);
         }
     }
 
     boolean checkLocationIfRequired() {
-        return evidenceAdapter.isEmpty() || (checkLocation() && !blockButtons);
+        return evidenceAdapter.isEmpty() || (checkLocation() && !blockButtons && !needReclaimFullLocation);
     }
 
     boolean checkLocation(){
@@ -543,12 +621,17 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         } else return true;
     }
 
-    //new method in customCamera - don't forget to set onClick to it in activity_complain.xml
     public void launchCamera(View view) {
-        int actionFlag = (violation.getMediaTypes() == Violation.VIDEO_ONLY) ?
-                CameraManager.VIDEO_CAPTURE_INTENT :
-                0; //0 means photoOrVideo not defined - user switches this in the camera
-        CameraManager.getInstance(this).startCustomCamera(actionFlag, false, videoOnly);
+        boolean startImmediately = (view == null); //view is null if we start camera from onCreate
+        int actionFlag = (startImmediately || videoOnly) ?
+                CameraManager.VIDEO_CAPTURE_INTENT : 0; //0 means photoOrVideo not defined - user switches this in the camera
+        CameraManager.getInstance(this).startCustomCamera(actionFlag, startImmediately, videoOnly);
+    }
+
+    boolean initialEvidencesDeleted() {
+        ArrayList<String> temp = new ArrayList<>(evidenceAdapter.content);
+        temp.retainAll(dbHelper.getMediaFiles(DBHelper.COMPLAINS_MEDIA_TABLE));
+        return temp.isEmpty();
     }
 
     public void photoVideoPopupMenu(View view) {
@@ -606,12 +689,12 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         //empty method to handle click events
     }
 
-    @Override
+    //@Override
     public void validateSaveButton(){
         //saveButton.setEnabled(!evidenceAdapter.isEmpty());
     }
 
-    @Override
+    //@Override
     public void validatePunishButton(){
         punishButton.setEnabled(allDataEntered());
     }
@@ -630,172 +713,23 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         return result;
     }
 
-    void initOldAndroidLocation(){
-        locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            locationListener = new MyOldAndroidLocationListener();
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-        }
-    }
-
-    private class MyOldAndroidLocationListener implements android.location.LocationListener{
-        @Override
-        public void onLocationChanged(Location location) {
-            if (latitude == null || latitude == 0) {//use this only if no result from FusedLocationAPI
-
-                if (((KaratelApplication)getApplicationContext()).locationIsMock(location)){
-                    if (!mockLocationDialogShown) {
-                        mockLocationDialogShown = true;
-                        AlertDialog.Builder builder = new AlertDialog.Builder(ComplainActivity.this);
-                        AlertDialog dialog = builder
-                                .setTitle(R.string.turn_off_mock_locations)
-                                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
-                                        if (intent.resolveActivity(getPackageManager()) != null) {
-                                            startActivity(intent);
-                                        }
-                                    }
-                                })
-                                .setNegativeButton(R.string.cancel, null).create();
-                        dialog.show();
-                    }
-                } else if (mode == MODE_CREATE) {
-                    Double latToCheck = latitude != null ? latitude : 0;
-                    Double lonToCheck = longitude != null ? longitude : 0;
-                    Double absLat = Math.abs(latToCheck - location.getLatitude());
-                    Double absLon = Math.abs(lonToCheck - location.getLongitude());
-                    if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
-                        latitude = location.getLatitude();
-                        longitude = location.getLongitude();
-                        blockButtons = false;
-                    }
-                }
-            }
-            locationManager.removeUpdates(locationListener);
-        }
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {}
-        @Override
-        public void onProviderEnabled(String provider) {}
-        @Override
-        public void onProviderDisabled(String provider) {}
-    }
-
-    private boolean checkGooglePlayServices(){
-        GoogleApiAvailability gaa = GoogleApiAvailability.getInstance();
-        int resultCode = gaa.isGooglePlayServicesAvailable(getApplicationContext());
-        if (resultCode == ConnectionResult.SUCCESS){
-            return true;
-        }else{
-            if (gaa.isUserResolvableError(resultCode)) {
-                gaa.getErrorDialog(this, resultCode, RQS_GooglePlayServices).show();
-            } else {
-                Toast.makeText(getApplicationContext(), "This device is not supported.", Toast.LENGTH_LONG).show();
-            }
-            return false;
-        }
-    }
-
-    /**
-     * Creating google api client object
-     * */
-    protected synchronized void buildGoogleApiClient() {
-        googleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                //.addApi(Places.GEO_DATA_API)
-                .addApi(Places.PLACE_DETECTION_API)
-                .addApi(LocationServices.API).build();
-        googleApiClient.connect();
-    }
-
     @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        if (mode == MODE_CREATE) {
-            locationRequest = LocationRequest.create()
-                    .setNumUpdates(3)
-                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                    .setInterval(1);
-            PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
-
-            result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-                @Override
-                public void onResult(LocationSettingsResult result) {
-                    final Status status = result.getStatus();
-                    switch (status.getStatusCode()) {
-                        case LocationSettingsStatusCodes.SUCCESS:
-                            // All location settings are satisfied. The client can initialize location requests here.
-                            if (googleApiClient != null && googleApiClient.isConnected()) {
-                                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient,
-                                        locationRequest, ComplainActivity.this);
-                            }
-                            break;
-                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                            // Location settings are not satisfied. But could be fixed by showing the user a dialog.
-                            try {
-                                // Show the dialog by calling startResolutionForResult(),
-                                // and check the result in onActivityResult().
-                                status.startResolutionForResult(ComplainActivity.this, REQUEST_CHECK_SETTINGS);
-                            } catch (IntentSender.SendIntentException e) {
-                                // Ignore the error.
-                            }
-                            break;
-                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                            // Location settings are not satisfied. However, we have no way to fix the
-                            // settings so we won't show the dialog.
-                            Toast.makeText(ComplainActivity.this,  "location settings not available", Toast.LENGTH_LONG).show();
-                            ComplainActivity.this.finish();
-                            break;
-                    }
-                }
-            });
+    public void onEvidenceRemoved() {
+        if (initialEvidencesDeleted()) {
+            lManager.restart(getLocationServicesArray(true));
+            needReclaimFullLocation = true;
         }
     }
 
     @Override
-    public void onConnectionSuspended(int i) {    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult result) {
-        Log.e("Punisher", "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
+    public void onLocationChanged(double lat, double lon) {
+        latitude = lat;
+        longitude = lon;
+        needReclaimFullLocation = false;
     }
 
     @Override
-    public void onLocationChanged(final Location location) {
-        if (mode == MODE_CREATE && !((KaratelApplication)getApplicationContext()).locationIsMock(location)){
-            Double latToCheck = latitude!=null ? latitude : 0;
-            Double lonToCheck = longitude!=null ? longitude : 0;
-            Double absLat = Math.abs(latToCheck - location.getLatitude());
-            Double absLon = Math.abs(lonToCheck - location.getLongitude());
-            if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
-                PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
-
-                result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-                    @Override
-                    public void onResult(LocationSettingsResult result) {
-                        if (result.getStatus().getStatusCode() == LocationSettingsStatusCodes.SUCCESS) {
-                            latitude = location.getLatitude();
-                            longitude = location.getLongitude();
-                            blockButtons = false;
-                        } else {
-                            latitude = null; //this will block the buttons
-                            blockButtons = true;
-                        }
-                    }
-                });
-            }
-        }
-    }
-
-    PendingResult<LocationSettingsResult> getPendingLocationSettings(){
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest);
-        PendingResult<LocationSettingsResult> result =
-                LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
-        return result;
-    }
+    public void onAddressesReady(PlaceLikelihoodBuffer places) { }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -819,6 +753,8 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
         //otherwise started with MODE_CREATE and saved to base (mode=MODE_EDIT) will be recreated as MODE_CREATE again
         outState.putInt(Globals.VIOLATION_ACTIVITY_MODE, mode);
         if (mode == MODE_EDIT) outState.putInt(Globals.ITEM_ID, id);
+        outState.putBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, needReclaimFullLocation);
+        outState.putBoolean(Globals.VIOLATION_ACTIVITY_CHANGES_MADE, changesMade);
 
         //this is needed in onDestroy to distinguish whether it was initiated by user or by system
         saveInstanceStateCalled = true;
@@ -828,10 +764,8 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
 
     @Override //Activity method
     protected void onStop() {
-        if (googleApiClient != null && googleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
-            googleApiClient.disconnect();
-        }
+        lManager.onStop();
+        googleApiManager.onStop();
         super.onStop();
     }
 
@@ -840,10 +774,12 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
     protected void onDestroy() {
         if (!saveInstanceStateCalled) clearEvidences(); //just destroy without saving state, e.g. on back pressed
 
-        if (locationListener != null) {
-            locationManager.removeUpdates(locationListener);
-            //locationListener = null;
-        }
+        if (changesLostDialog != null) changesLostDialog.dismiss();
+
+        lManager.onDestroy();
+        lManager = null;
+
+        googleApiManager = null;
 
         if (violation != null) violation.clearValues();
 
@@ -852,21 +788,6 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
 
     void clearEvidences() {
         DBUtils.clearEvidences(dbHelper);
-
-        /*boolean deletedSuccessfully = true;
-        //delete erased evidence files
-        for (String fileToDelete : evidenceAdapter.filesDeletedDuringSession) {
-            deletedSuccessfully = new File(fileToDelete).delete() && deletedSuccessfully;
-        }
-
-        if (mode == MODE_CREATE){
-            //delete the evidence files if the request was not saved
-            for (String fileToDelete : evidenceAdapter.content) {
-                deletedSuccessfully = new File(fileToDelete).delete() && deletedSuccessfully;
-            }
-        }
-
-        Log.e("Punisher", "files deleted successfully " + deletedSuccessfully);*/
     }
 
     private class ComplainSender extends AsyncTask<Violation, Void, ComplainCreationResponse> {
@@ -1013,7 +934,7 @@ public class ComplainActivity extends AppCompatActivity implements GoogleApiClie
                     break;
                 }
                 case Globals.SERVER_ERROR: {
-                    Toast.makeText(context, answer.error, Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, answer.error.toString(), Toast.LENGTH_LONG).show();
                     break;
                 }
             }

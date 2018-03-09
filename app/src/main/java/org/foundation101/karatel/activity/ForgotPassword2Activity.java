@@ -1,15 +1,12 @@
 package org.foundation101.karatel.activity;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.app.Activity;
-import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 
-import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.KaratelPreferences;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
 
 public class ForgotPassword2Activity extends Activity {

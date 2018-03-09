@@ -7,5 +7,6 @@ import java.io.Serializable;
  */
 public class ComplainCreationResponse implements Serializable {
     public ComplainRequest data;
-    public String status, error;
+    public String status;
+    public Object error; //because if it contains nested JSON then Jackson can't deserialize it to ordinary String
 }

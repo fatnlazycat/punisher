@@ -3,6 +3,8 @@ package org.foundation101.karatel.service;
 import android.content.Intent;
 
 import com.google.android.gms.iid.InstanceIDListenerService;
+import com.splunk.mint.Mint;
+import com.splunk.mint.MintLogLevel;
 
 
 public class MyInstanceIDListenerService extends InstanceIDListenerService {
@@ -17,6 +19,7 @@ public class MyInstanceIDListenerService extends InstanceIDListenerService {
     // [START refresh_token]
     @Override
     public void onTokenRefresh() {
+        Mint.logEvent(TAG);
         Intent intent = new Intent(this, RegistrationIntentService.class);
         startService(intent);
 

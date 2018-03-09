@@ -1,4 +1,4 @@
-package org.foundation101.karatel;
+package org.foundation101.karatel.manager;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -166,6 +166,20 @@ public class DBHelper extends SQLiteOpenHelper {
         String idString = id.toString();
         db.delete(DBHelper.COMPLAINS_TABLE, "_id = ?", new String[]{idString});
         db.delete(DBHelper.COMPLAINS_MEDIA_TABLE, "id = ?", new String[]{idString});
+    }
+
+    public ArrayList<String> getMediaFiles(String tableTag) {
+        ArrayList<String> result = new ArrayList<>();
+
+        SQLiteDatabase db = getReadableDatabase();
+        String[] columns =  {FILE_NAME};
+        Cursor cursor = db.query(tableTag, columns, null, null, null, null, null);
+        while (cursor.moveToNext()) {
+            result.add(cursor.getString(0));
+        }
+        cursor.close();
+        db.close();
+        return result;
     }
 }
 

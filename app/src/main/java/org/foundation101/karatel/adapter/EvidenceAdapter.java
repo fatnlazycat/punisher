@@ -3,11 +3,7 @@ package org.foundation101.karatel.adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.media.ThumbnailUtils;
-import android.net.Uri;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,11 +12,9 @@ import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
-import org.foundation101.karatel.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.ShowMediaActivity;
-import org.foundation101.karatel.activity.ViolationActivity;
 import org.foundation101.karatel.utils.Formular;
 
 import java.io.File;
@@ -35,7 +29,6 @@ public class EvidenceAdapter extends BaseAdapter {
     private Context context;
     public ArrayList<String> content = new ArrayList<>();
     public ArrayList<Bitmap> mediaContent = new ArrayList<>();
-    public ArrayList<String> filesDeletedDuringSession = new ArrayList<>();
     private boolean editTrigger = true;
 
     public void setEditTrigger(boolean editTrigger) {
@@ -86,10 +79,12 @@ public class EvidenceAdapter extends BaseAdapter {
                 imageButtonDeleteEvidence.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        //filesDeletedDuringSession.add(content.get(position));
                         content.remove(position);
                         mediaContent.remove(position);
                         EvidenceAdapter.this.notifyDataSetChanged();
+
+                        ((Formular) context).setChangesMade(true);
+                        ((Formular) context).onEvidenceRemoved();
                     }
                 });
             } else {

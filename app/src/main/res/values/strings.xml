@@ -80,7 +80,7 @@
     <string name="office_address">04215, м. Київ, пр. Георгія Гонгадзе, 32-Б.\nГО «Фундація.101»</string>
     <string name="url_foundation101">https://www.foundation101.org</string>
     <string name="url_peoples_project">http://www.peoplesproject.com</string>
-    <string name="url_donate">http://go.101.ua/support</string>
+    <string name="url_donate">https://karatel.foundation101.org/support/</string>
     <string name="change_profile_photo">Змінити фото профілю</string>
     <string name="cancel">СКАСУВАТИ</string>
     <string name="choose_picture">Оберіть картинку</string>
@@ -148,4 +148,6 @@
     <string name="Describe_what_happened">Опишіть, що сталося</string>
     <string name="drafts">Чернетки</string>
     <string name="pressHereToSeeAnswer">Натисніть тут, щоб переглянути відповідь</string>
+    <string name="attention">Увага!</string>
+    <string name="allChangesWillBeLost">Всі не збережені зміни будуть скасовані. Ви дійсно бажаєте вийти в головне меню?</string>
 </resources>
