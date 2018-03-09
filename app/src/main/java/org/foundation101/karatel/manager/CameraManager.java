@@ -5,14 +5,17 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.widget.Toast;
 
 //import org.foundation101.karatel.activity.CameraActivity;
 
 import com.splunk.mint.Mint;
 
+import org.foundation101.karatel.BuildConfig;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_NORMAL;
@@ -78,7 +81,6 @@ public class CameraManager {
         Uri mediaFileUri = getMediaFileUri(actionFlag);
         if (mediaFileUri != null) {
             cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mediaFileUri);
-            lastCapturedFile = mediaFileUri.getPath();
             context.startActivityForResult(cameraIntent, photoOrVideo);
         } else {
             Toast.makeText(KaratelApplication.getInstance(), R.string.cannot_write_file, Toast.LENGTH_LONG).show();
@@ -145,7 +147,13 @@ public class CameraManager {
                 String extension = mediaType.equals(MediaStore.ACTION_IMAGE_CAPTURE) ? JPG : MP4;
                 fileName = appPrivateDir + File.separator + FILE_NAME_PREFIX + timeStamp + extension;
                 File mediaFile = new File(fileName);
-                mediaFileUri = Uri.fromFile(mediaFile);
+
+                lastCapturedFile = fileName;
+
+                //mediaFileUri = Uri.fromFile(mediaFile);
+                mediaFileUri = (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) ?
+                    FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", mediaFile) :
+                    Uri.fromFile(mediaFile);
             } catch (Exception e){
                 return null;
             }
@@ -159,6 +167,7 @@ public class CameraManager {
         List<ResolveInfo> listCam = packageManager.queryIntentActivities(cameraIntent, 0);
         cameraIntent.setPackage(listCam.get(0).activityInfo.packageName);
         //cameraIntent.setPackage(DEFAULT_CAMERA_PACKAGE);
+        cameraIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         return cameraIntent;
     }
 

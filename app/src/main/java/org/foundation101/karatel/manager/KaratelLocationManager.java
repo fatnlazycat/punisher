@@ -175,7 +175,7 @@ public class KaratelLocationManager implements
     private class MyOldAndroidLocationListener implements android.location.LocationListener{
         @Override
         public void onLocationChanged(Location location) {
-            if (latitude == null || longitude == 0) {//use this only if no result from FusedLocationAPI
+            if (needCoordinates && (latitude == null || longitude == 0)) {//use this only if no result from FusedLocationAPI
 
                 if (KaratelApplication.getInstance().locationIsMock(location)){
                     if (!mockLocationDialogShown) {
@@ -212,7 +212,7 @@ public class KaratelLocationManager implements
                 }
             }
             locationManager.removeUpdates(locationListener);
-            //locationListener = null;
+            //locationListener = null; //don't do this! - since onLocationChanged is being fired several times which causes NPE
         }
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {}
@@ -341,6 +341,8 @@ public class KaratelLocationManager implements
             locationManager.removeUpdates(locationListener);
             //locationListener = null;
         }
+
+        PermissionManager.clearPendingRequests();
 
         activity = null;
         formular = null;

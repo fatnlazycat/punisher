@@ -123,7 +123,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     Long rowID;
 
     //debug view
-    TextView tv;
+    //TextView tv;
 
     FragmentManager fm;
     SupportMapFragment supportMapFragment;
@@ -209,9 +209,10 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         super.onResume();
         saveInstanceStateCalled = false;
 
-        String t = tv.getText().toString();
+        //location debug block
+        /*String t = tv.getText().toString();
         String t2 = t.length() > 2 ? t.substring(0, t.length() / 2 - 1) : t;
-        tv.setText(String.format(Locale.US, "lat: %1$10f\nlon: %2$10f\n%3$s", latitude, longitude, t2));
+        tv.setText(String.format(Locale.US, "lat: %1$10f\nlon: %2$10f\n%3$s", latitude, longitude, t2));*/
     }
 
     @Override
@@ -231,16 +232,18 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
             //init evidences after activity recreation otherwise they will be lost
             if (savedInstanceState.containsKey(Globals.EVIDENCES)) { //this will be true only in MODE_CREATE | MODE_EDIT
-                savedInstanceStateEvidenceFileNames       = savedInstanceState.getStringArrayList(Globals.EVIDENCES);
-                //evidenceAdapter.filesDeletedDuringSession = savedInstanceState.getStringArrayList(Globals.DELETED_EVIDENCES);
+                savedInstanceStateEvidenceFileNames = savedInstanceState.getStringArrayList(Globals.EVIDENCES);
             }
         }
-        tv = findViewById(R.id.textViewViolationHeader);
+
+        //debug view
+        //tv = findViewById(R.id.textViewViolationHeader);
+
         requisitesList                      = findViewById(R.id.requisitesList);
-        TextView addedPhotoVideoTextView    = (TextView)    findViewById(R.id.addedPhotoVideoTextView);
-        progressBar                         = (FrameLayout) findViewById(R.id.frameLayoutProgress);
-        punishButton                        = (Button)      findViewById(R.id.punishButton);
-        saveButton                          = (Button)      findViewById(R.id.saveButton);
+        TextView addedPhotoVideoTextView    = findViewById(R.id.addedPhotoVideoTextView);
+        progressBar                         = findViewById(R.id.frameLayoutProgress);
+        punishButton                        = findViewById(R.id.punishButton);
+        saveButton                          = findViewById(R.id.saveButton);
 
         lManager = new KaratelLocationManager(this, getLocationServicesArray(false));
         googleApiManager = new GoogleApiManager(this);
@@ -576,6 +579,14 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             }
             case CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY : {
                 if (granted) launchCamera(null);
+                break;
+            }
+        }
+
+        int pendingResult = PermissionManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (pendingResult) {
+            case CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY : {
+                launchCamera(null);
                 break;
             }
         }

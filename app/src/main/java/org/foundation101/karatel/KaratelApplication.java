@@ -76,10 +76,10 @@ public class KaratelApplication extends MultiDexApplication {
 
     void initACRA() {
         Log.d("KaratelApplication", "BuildConfig.DEBUG = " + BuildConfig.DEBUG);
-        //if (!BuildConfig.DEBUG) {
+        if (!BuildConfig.DEBUG) {
             Mint.initAndStartSession(this, "c609df56");
             //Mint.startANRMonitoring(5000, true);
-        //}
+        }
     }
 
     public void showOneButtonDialogFromService(String title, String message, DialogInterface.OnClickListener action) {

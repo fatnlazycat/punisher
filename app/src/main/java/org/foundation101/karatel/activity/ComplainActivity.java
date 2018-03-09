@@ -335,20 +335,6 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                 holder.editTextRequisite.setText(thisRequisite.value);
             }
 
-            holder.editTextRequisite.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    setChangesMade(true);
-                    validatePunishButton();
-                }
-            });
-
             if (thisRequisite.getPossibleValues() != null) {
                 holder.editTextRequisite.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow, 0);
                 holder.editTextRequisite.setInputType(0); //disables editing
@@ -364,6 +350,20 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                     }
                 });
             }
+
+            holder.editTextRequisite.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    setChangesMade(true);
+                    validatePunishButton();
+                }
+            });
 
             requisiteViews.add(holder);
             requisitesList.addView(v);
