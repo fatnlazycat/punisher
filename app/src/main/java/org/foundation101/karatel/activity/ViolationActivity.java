@@ -297,6 +297,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 id = intent.getIntExtra(Globals.ITEM_ID, 0);
             }
             idInDbString = id.toString();
+            blockButtons = false;
 
             if (mode == MODE_EDIT) {
                 SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -905,6 +906,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         requisitesAdapter.nullSavedLatLng();
         requisitesAdapter.reclaimMap();
         needReclaimFullLocation = false;
+        blockButtons = false;
     }
 
     @Override

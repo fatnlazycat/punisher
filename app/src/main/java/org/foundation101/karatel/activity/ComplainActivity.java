@@ -476,6 +476,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                 evidenceAdapter.content.add(CameraManager.lastCapturedFile);
                 evidenceAdapter.mediaContent.add(bmp);
                 evidenceAdapter.notifyDataSetChanged();
+                onEvidenceAdded();
             } catch (Exception e) {
                 Globals.showError(R.string.error, e);
             }
@@ -713,6 +714,17 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         return result;
     }
 
+    public void onEvidenceAdded() {
+        if (
+            evidenceAdapter.getCount() == 1 &&
+            (latitude == null || latitude == 0) &&
+            !needReclaimFullLocation
+        ) {
+            lManager.restart(getLocationServicesArray(true));
+            needReclaimFullLocation = true;
+        }
+    }
+
     @Override
     public void onEvidenceRemoved() {
         if (initialEvidencesDeleted()) {
@@ -726,6 +738,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         latitude = lat;
         longitude = lon;
         needReclaimFullLocation = false;
+        blockButtons = false;
     }
 
     @Override

@@ -103,14 +103,9 @@ public class RequisitesListAdapter implements OnMapReadyCallback {
         float zoom = DEFAULT_ZOOM;
         double latitude = 0;
         double longitude = 0;
-        if (((ViolationActivity) context).latitude == null){
-                ((ViolationActivity) context).blockButtons = true;
-        } else {
+        if (((ViolationActivity) context).latitude != null) {
             latitude = ((ViolationActivity) context).latitude;
             longitude = ((ViolationActivity) context).longitude;
-            if (    ((ViolationActivity) context).getMode() == ViolationActivity.MODE_CREATE
-                ||  ((ViolationActivity) context).getMode() == ViolationActivity.MODE_EDIT)
-                ((ViolationActivity) context).blockButtons = false;
         }
 
         LatLng here = new LatLng(latitude, longitude);
