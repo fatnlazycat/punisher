@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -56,6 +57,7 @@ import org.foundation101.karatel.adapter.HistoryAdapter;
 import org.foundation101.karatel.adapter.RequestListAdapter;
 import org.foundation101.karatel.adapter.RequisitesListAdapter;
 import org.foundation101.karatel.entity.CreationResponse;
+import org.foundation101.karatel.entity.EvidenceEntity;
 import org.foundation101.karatel.entity.Request;
 import org.foundation101.karatel.entity.UpdateEntity;
 import org.foundation101.karatel.entity.Violation;
@@ -136,19 +138,19 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
     public void setMode(int mode) {
         this.mode = mode;
-        if (lManager != null) lManager.initFields(getLocationServicesArray(false));
+        //if (lManager != null) lManager.initFields(getLocationServicesArray(false));
     }
 
-    ArrayList<String> savedInstanceStateEvidenceFileNames = new ArrayList<>();
+    ArrayList<EvidenceEntity> savedInstanceStateEvidenceFileNames = new ArrayList<>();
     public Request request = null;
     Integer id, status, idOnServer;
     String idInDbString, time_stamp;
     String id_number_server = "";
     Violation violation = new Violation();
-    public Double latitude, longitude;
+    public double latitude = 0, longitude = 0;
     boolean statusTabFirstShow = true;
     boolean saveInstanceStateCalled = false;
-    boolean needReclaimFullLocation = false;
+    //boolean needReclaimFullLocation = false;
 
     boolean changesMade = false;
     @Override
@@ -177,8 +179,10 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     @Override
     protected void onStart() {
         super.onStart();
-        lManager.onStart(getLocationServicesArray(needReclaimFullLocation));
-        googleApiManager.onStart();
+        if (mode <= MODE_EDIT) {
+            lManager.onStart(/*getLocationServicesArray(needReclaimFullLocation)*/);
+            googleApiManager.onStart();
+        }
 
         validatePunishButton();
         validateSaveButton();
@@ -228,11 +232,11 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 mode = savedInstanceState.getInt(Globals.VIOLATION_ACTIVITY_MODE);
             }
 
-            needReclaimFullLocation = savedInstanceState.getBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, false);
+            //needReclaimFullLocation = savedInstanceState.getBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, false);
 
             //init evidences after activity recreation otherwise they will be lost
             if (savedInstanceState.containsKey(Globals.EVIDENCES)) { //this will be true only in MODE_CREATE | MODE_EDIT
-                savedInstanceStateEvidenceFileNames = savedInstanceState.getStringArrayList(Globals.EVIDENCES);
+                savedInstanceStateEvidenceFileNames = (ArrayList<EvidenceEntity>) savedInstanceState.getSerializable(Globals.EVIDENCES);
             }
         }
 
@@ -245,10 +249,12 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         punishButton                        = findViewById(R.id.punishButton);
         saveButton                          = findViewById(R.id.saveButton);
 
-        lManager = new KaratelLocationManager(this, getLocationServicesArray(false));
-        googleApiManager = new GoogleApiManager(this);
-        googleApiManager.init(lManager, lManager);
-        lManager.onCreate();
+        if (mode <= MODE_EDIT) {
+            lManager = new KaratelLocationManager(this/*, getLocationServicesArray(false)*/);
+            googleApiManager = new GoogleApiManager(this);
+            googleApiManager.init(lManager, lManager);
+            lManager.onCreate();
+        }
 
         KaratelPreferences.restoreUser();
 
@@ -297,7 +303,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 id = intent.getIntExtra(Globals.ITEM_ID, 0);
             }
             idInDbString = id.toString();
-            blockButtons = false;
+            //blockButtons = false;
 
             if (mode == MODE_EDIT) {
                 SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -310,8 +316,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 if (cursor.moveToFirst()) {
                     idOnServer = cursor.getInt(cursor.getColumnIndex(DBHelper.ID_SERVER));
                     id_number_server = cursor.getString(cursor.getColumnIndex(DBHelper.ID_NUMBER_SERVER));
-                    latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
-                    longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
+                    /*latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
+                    longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));*/
                     time_stamp = cursor.getString(cursor.getColumnIndex(DBHelper.TIME_STAMP));
                     status = cursor.getInt(cursor.getColumnIndex("status"));
                     String type = cursor.getString(cursor.getColumnIndex("type"));
@@ -504,7 +510,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         return result;
     }
 
-    int[] getLocationServicesArray(boolean forceFull) {
+    /*int[] getLocationServicesArray(boolean forceFull) {
         if (forceFull) return new int[] { LOCATION_SERVICE_MAIN, LOCATION_SERVICE_ADDRESS };
 
         int[] locationServicesArray = {LOCATION_SERVICE_NONE, LOCATION_SERVICE_NONE};
@@ -513,13 +519,13 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             case MODE_EDIT  : locationServicesArray[1] = LOCATION_SERVICE_ADDRESS;
         }
         return locationServicesArray;
-    }
+    }*/
 
-    void makeEvidenceAdapterContent(int mode, ArrayList<String> fileNames, Request request){
-        if (!fileNames.isEmpty()) { //this can be true only in MODE_CREATE | MODE_EDIT
-            for (String evidenceFileName : fileNames) try {
-                Bitmap thumbnail = MediaUtils.getThumbnail(evidenceFileName);
-                evidenceAdapter.content.add(evidenceFileName);
+    void makeEvidenceAdapterContent(int mode, ArrayList<EvidenceEntity> savedEvidences, Request request){
+        if (!savedEvidences.isEmpty()) { //this can be true only in MODE_CREATE | MODE_EDIT
+            for (EvidenceEntity evidence : savedEvidences) try {
+                Bitmap thumbnail = MediaUtils.getThumbnail(evidence.fileName);
+                evidenceAdapter.content.add(evidence);
                 evidenceAdapter.mediaContent.add(thumbnail);
             } catch (IOException e) {
                 Globals.showError(R.string.error, e);
@@ -529,15 +535,20 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             //query to media table
             String table = DBHelper.VIOLATIONS_TABLE + " INNER JOIN " + DBHelper.MEDIA_TABLE + " ON "
                     + DBHelper.VIOLATIONS_TABLE + "._id = " + DBHelper.MEDIA_TABLE + ".id";
-            String[] columns = new String[]{DBHelper.ID, DBHelper.FILE_NAME};
+            String[] columns = null;//new String[]{DBHelper.ID, DBHelper.FILE_NAME};
             String where = "id=?";
             String[] selectionArgs = {idInDbString};
             Cursor _cursor = _db.query(table, columns, where, selectionArgs, null, null, null);
             if (_cursor.moveToFirst()) {
                 do try {
-                    String evidenceFileName = _cursor.getString(_cursor.getColumnIndex(DBHelper.FILE_NAME));
+                    String evidenceFileName  = _cursor.getString(_cursor.getColumnIndex(DBHelper.FILE_NAME));
+                    double evidenceLatitude  = _cursor.getDouble(_cursor.getColumnIndex(DBHelper.LATITUDE));
+                    double evidenceLongitude = _cursor.getDouble(_cursor.getColumnIndex(DBHelper.LONGITUDE));
+                    EvidenceEntity evidence  = new EvidenceEntity(evidenceFileName, evidenceLatitude, evidenceLongitude);
+
                     Bitmap thumbnail = MediaUtils.getThumbnail(evidenceFileName);
-                    evidenceAdapter.content.add(evidenceFileName);
+
+                    evidenceAdapter.content.add(evidence);
                     evidenceAdapter.mediaContent.add(thumbnail);
                 } catch (Exception e){//we read files so need to catch exceptions
                     Globals.showError(R.string.error, e);
@@ -552,7 +563,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 new ThumbnailFetcher().execute(evidenceFileName);
                 //when done with the thumbnail we get the full image name
                 evidenceFileName = serverUrl + request.images[i].url;
-                evidenceAdapter.content.add(evidenceFileName);
+                evidenceAdapter.content.add(new EvidenceEntity(evidenceFileName, latitude, longitude));//lat/lng are taken from request in onCreate
 
             }
             for (int i = 0; i < request.videos.length; i++) {
@@ -560,7 +571,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 new ThumbnailFetcher().execute(evidenceFileName);
                 //when done with the thumbnail we get the full image name
                 evidenceFileName = serverUrl + request.videos[i].url;
-                evidenceAdapter.content.add(evidenceFileName);
+                evidenceAdapter.content.add(new EvidenceEntity(evidenceFileName, latitude, longitude));
 
             }
         }
@@ -571,7 +582,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         boolean granted = PermissionManager.allGranted(grantResults);
         switch (requestCode) {
             case LOCATION_PERMISSIONS : {
-                lManager.onPermissionResult(granted);
+                if (lManager != null) lManager.onPermissionResult(granted);
                 break;
             }
             case CUSTOM_CAMERA_PERMISSIONS_START_NORMAL : {
@@ -636,7 +647,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
                 setChangesMade(true);
 
-                evidenceAdapter.content.add(CameraManager.lastCapturedFile);
+                evidenceAdapter.content.add(new EvidenceEntity(CameraManager.lastCapturedFile, 0, 0));
                 evidenceAdapter.mediaContent.add(bmp);
                 evidenceAdapter.notifyDataSetChanged();
             } catch (Exception e) {
@@ -647,7 +658,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         if (requestCode == REQUEST_CHECK_SETTINGS){
             /*switch (resultCode){
                 case RESULT_OK : {*/
-                lManager.onSettingsResult();
+                if (mode <= MODE_EDIT) lManager.onSettingsResult();
                     /*break;
                 }
             }*/
@@ -714,10 +725,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
     public void saveToBase(View view) throws Exception {
         /*first check if location is available - show error dialog if not
-        this is made to prevent saving request with zero LatLng -> leads to crash.
-        needReclaimFullLocation shows that old evidences were deleted and new ones created - we need their coordinates
-         */
-        if (checkLocation() && !blockButtons && !needReclaimFullLocation) {
+        this is made to prevent saving request with zero LatLng -> leads to crash. */
+        if (checkLocation() && !blockButtons /*&& !needReclaimFullLocation*/) {
 
             //db actions
             SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -728,8 +737,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             cv.put(DBHelper.ID_SERVER, idOnServer);
             cv.put(DBHelper.ID_NUMBER_SERVER, id_number_server);
             cv.put(DBHelper.USER_ID, Globals.user.id);
-            cv.put(DBHelper.LONGITUDE, longitude);
-            cv.put(DBHelper.LATITUDE, latitude);
+            /*cv.put(DBHelper.LONGITUDE, longitude);
+            cv.put(DBHelper.LATITUDE, latitude);*/
 
             for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                 ViolationRequisite thisRequisite = (ViolationRequisite) requisitesAdapter.getItem(i);
@@ -766,8 +775,15 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idInDbString});
             }
             for (int i = 0; i < evidenceAdapter.content.size(); i++) {
+                EvidenceEntity evidence = evidenceAdapter.content.get(i);
                 cv.put(DBHelper.ID, rowID);
-                cv.put(DBHelper.FILE_NAME, evidenceAdapter.content.get(i));
+                cv.put(DBHelper.FILE_NAME, evidence.fileName);
+
+                if (evidence.latitude  == 0) evidence.latitude  = latitude;
+                if (evidence.longitude == 0) evidence.longitude = longitude;
+
+                cv.put(DBHelper.LONGITUDE, evidence.longitude);
+                cv.put(DBHelper.LATITUDE,  evidence.latitude);
                 db.insert(DBHelper.MEDIA_TABLE, null, cv);
                 cv.clear();
             }
@@ -778,20 +794,26 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             //show toast only if the method is called by Save button
             if (view != null ) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
         } else {
-            String message = needReclaimFullLocation ?
-                    "Зачекайте поки пристрій визначить Ваше місцезнаходження та спробуйте ще раз" :
+            String message = /*needReclaimFullLocation ?
+                    "Зачекайте поки пристрій визначить Ваше місцезнаходження та спробуйте ще раз" :*/
                     getString(R.string.cannot_define_location);
             Globals.showMessage(message);
         }
     }
 
     boolean checkLocation(){
-        if (latitude == null){
+        if (latitude == 0){
             /*AlertDialog.Builder builder = new AlertDialog.Builder(this);
             AlertDialog dialog = builder.setTitle(R.string.cannot_define_location).setNegativeButton(R.string.ok, null).create();
             dialog.show();*/
             return false;
         } else return true;
+    }
+
+    public LatLng getLocationForMap() {
+        return (mode == MODE_EDIT && !evidenceAdapter.isEmpty()) ?
+                new LatLng(evidenceAdapter.content.get(0).latitude, evidenceAdapter.content.get(0).longitude) :
+                new LatLng(latitude, longitude);
     }
 
     public void launchCamera(View view) {
@@ -801,11 +823,11 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         CameraManager.getInstance(this).startCustomCamera(actionFlag, startImmediately, videoOnly);
     }
 
-    boolean initialEvidencesDeleted() {
+    /*boolean initialEvidencesDeleted() {
         ArrayList<String> temp = new ArrayList<>(evidenceAdapter.content);
         temp.retainAll(dbHelper.getMediaFiles(DBHelper.MEDIA_TABLE));
         return temp.isEmpty();
-    }
+    }*/
 
     public void photoVideoPopupMenu(View view) {
         if (violation.getMediaTypes() == Violation.VIDEO_ONLY){
@@ -891,13 +913,13 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         saveButton.setVisibility((visibility));
     }
 
-    @Override
+    /*@Override
     public void onEvidenceRemoved() {
         if (mode == MODE_EDIT && initialEvidencesDeleted()) {
             lManager.restart(getLocationServicesArray(true));
             needReclaimFullLocation = true;
         }
-    }
+    }*/
 
     @Override
     public void onLocationChanged(double lat, double lon) {
@@ -905,7 +927,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         longitude = lon;
         requisitesAdapter.nullSavedLatLng();
         requisitesAdapter.reclaimMap();
-        needReclaimFullLocation = false;
+        //needReclaimFullLocation = false;
         blockButtons = false;
     }
 
@@ -928,15 +950,15 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
         //saving evidence filenames & data about deleted files
         if (mode <= MODE_EDIT) {
-            ArrayList<String> filenamesToSave = new ArrayList<>(evidenceAdapter.content);
-            outState.putStringArrayList(Globals.EVIDENCES, filenamesToSave);
+            ArrayList<EvidenceEntity> filenamesToSave = new ArrayList<>(evidenceAdapter.content);
+            outState.putSerializable(Globals.EVIDENCES, filenamesToSave);
         }
 
         //saving mode & intent related data
         //otherwise started with MODE_CREATE and saved to base (mode=MODE_EDIT) will be recreated as MODE_CREATE again
         outState.putInt(Globals.VIOLATION_ACTIVITY_MODE, mode);
         if (mode == MODE_EDIT) outState.putInt(Globals.ITEM_ID, id);
-        outState.putBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, needReclaimFullLocation);
+        //outState.putBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, needReclaimFullLocation);
         outState.putBoolean(Globals.VIOLATION_ACTIVITY_CHANGES_MADE, changesMade);
 
         //this is needed in onDestroy to distinguish whether it was initiated by user or by system
@@ -947,8 +969,10 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
     @Override //Activity method
     protected void onStop() {
-        lManager.onStop();
-        googleApiManager.onStop();
+        if (mode <= MODE_EDIT) {
+            lManager.onStop();
+            googleApiManager.onStop();
+        }
         super.onStop();
     }
 
@@ -958,8 +982,10 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
         if (changesLostDialog != null) changesLostDialog.dismiss();
 
-        lManager.onDestroy();
-        lManager = null;
+        if (lManager != null) {
+            lManager.onDestroy();
+            lManager = null;
+        }
 
         googleApiManager = null;
 
@@ -1024,8 +1050,10 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             String[] selectionArgs = {idInDbString};
             cursor = db.query(table, columns, where, selectionArgs, null, null, null);
             cursor.moveToFirst();
-            Double latitude = cursor.getDouble(cursor.getColumnIndex(DBHelper.LATITUDE));
-            Double longitude = cursor.getDouble(cursor.getColumnIndex(DBHelper.LONGITUDE));
+            /*Double latitude = cursor.getDouble(cursor.getColumnIndex(DBHelper.LATITUDE));
+            Double longitude = cursor.getDouble(cursor.getColumnIndex(DBHelper.LONGITUDE));*/
+            Double latitude  = evidenceAdapter.content.get(0).latitude;
+            Double longitude = evidenceAdapter.content.get(0).longitude;
             Map<String, String> dbRowData = new HashMap<>();
             for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                 String columnName = requisitesAdapter.content.get(i).dbTag;
@@ -1094,9 +1122,9 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                         requestBodyBuilder.addFormDataPart(typeServerSuffixNoS + "[" + requestParametersArray[i++] + "]",
                                 requestParametersArray[i++]);
                     }
-                    for (String mediaFileName : evidenceAdapter.content) {
+                    for (EvidenceEntity evidenceEntity : evidenceAdapter.content) {
                         String requestTag, mimeType;
-                        if (mediaFileName.endsWith(CameraManager.JPG)){
+                        if (evidenceEntity.fileName.endsWith(CameraManager.JPG)){
                             requestTag = "images";
                             mimeType = "image/jpeg";
                         } else {
@@ -1104,8 +1132,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                             mimeType = "video/mp4";
                         }
                         requestBodyBuilder.addFormDataPart(typeServerSuffixNoS + "[" + requestTag + "][]",
-                                mediaFileName,
-                                RequestBody.create(MediaType.parse(mimeType), new File(mediaFileName)));
+                                evidenceEntity.fileName,
+                                RequestBody.create(MediaType.parse(mimeType), new File(evidenceEntity.fileName)));
                     }
 
                     RetrofitMultipartUploader api = KaratelApplication.getClient().create(RetrofitMultipartUploader.class);

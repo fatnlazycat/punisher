@@ -67,7 +67,7 @@ public class ChangeAvatarFragment extends DialogFragment {
                             try {
                                 new File(Globals.user.avatarFileName).delete();
                             } catch (Exception e){
-                                Log.e("Punisher", e.getMessage());
+                                Log.e("Punisher", e.toString());
                             }
                             try {
                                 /*excluded this into a separate try/catch block to avoid situation when
@@ -77,7 +77,7 @@ public class ChangeAvatarFragment extends DialogFragment {
                                  */
                                 parentFragment.setNewAvatar(null);
                             } catch (IOException e) {
-                                Log.e("Punisher", e.getMessage());
+                                Log.e("Punisher", e.toString());
                             }
                         }
                     }

@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.ShowMediaActivity;
+import org.foundation101.karatel.entity.EvidenceEntity;
 import org.foundation101.karatel.utils.Formular;
 
 import java.io.File;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 public class EvidenceAdapter extends BaseAdapter {
     public static String TAG = "EvidenceAdapter";
     private Context context;
-    public ArrayList<String> content = new ArrayList<>();
+    public ArrayList<EvidenceEntity> content = new ArrayList<>();
     public ArrayList<Bitmap> mediaContent = new ArrayList<>();
     private boolean editTrigger = true;
 
@@ -84,7 +85,6 @@ public class EvidenceAdapter extends BaseAdapter {
                         EvidenceAdapter.this.notifyDataSetChanged();
 
                         ((Formular) context).setChangesMade(true);
-                        ((Formular) context).onEvidenceRemoved();
                     }
                 });
             } else {
@@ -101,7 +101,7 @@ public class EvidenceAdapter extends BaseAdapter {
 
                     //show in app activity
                     Intent newIntent = new Intent(parent.getContext(), ShowMediaActivity.class);
-                    newIntent.putExtra(Globals.MEDIA_FILE, content.get(position));
+                    newIntent.putExtra(Globals.MEDIA_FILE, content.get(position).fileName);
                     parent.getContext().startActivity(newIntent);
                 }
             });
@@ -111,8 +111,8 @@ public class EvidenceAdapter extends BaseAdapter {
 
     public boolean sizeCheck() throws IOException {
         long count = 0;
-        for (String evidenceFileName : content) {
-            long fileLength = new File(evidenceFileName).length();
+        for (EvidenceEntity evidence : content) {
+            long fileLength = new File(evidence.fileName).length();
             count += fileLength;
             Log.d(TAG, "fileLength = " + fileLength + ", count = " + count);
         }

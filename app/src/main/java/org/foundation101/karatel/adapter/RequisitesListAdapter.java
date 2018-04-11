@@ -101,14 +101,8 @@ public class RequisitesListAdapter implements OnMapReadyCallback {
         mMap = googleMap;
 
         float zoom = DEFAULT_ZOOM;
-        double latitude = 0;
-        double longitude = 0;
-        if (((ViolationActivity) context).latitude != null) {
-            latitude = ((ViolationActivity) context).latitude;
-            longitude = ((ViolationActivity) context).longitude;
-        }
 
-        LatLng here = new LatLng(latitude, longitude);
+        LatLng here = ((ViolationActivity) context).getLocationForMap();
 
         if (((ViolationActivity) context).getMode() > ViolationActivity.MODE_EDIT){
 

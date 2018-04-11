@@ -54,7 +54,7 @@ public class KaratelLocationManager implements
     public static final int LOCATION_SERVICE_MAIN    = 0;
     public static final int LOCATION_SERVICE_ADDRESS = 1;
 
-    public KaratelLocationManager(Formular formularActivity, int[] services){
+    public KaratelLocationManager(Formular formularActivity/*, int[] services*/){
         if (!(formularActivity instanceof Activity))
             throw new IllegalArgumentException("formularActivity should be an instance of Activity");
         activity = (Activity) formularActivity;
@@ -62,23 +62,23 @@ public class KaratelLocationManager implements
 
         KaratelApplication.dagger().inject(this);
 
-        defineRequiredServices(services);
+        //defineRequiredServices(services);
     }
 
-    private void defineRequiredServices(int[] services) {
+    /*private void defineRequiredServices(int[] services) {
         needCoordinates = findInArray(services, LOCATION_SERVICE_MAIN);
         needAddress     = findInArray(services, LOCATION_SERVICE_ADDRESS);
-    }
+    }*/
 
     private Activity activity;
     private Formular formular;
 
     @Inject PermissionManager permissionManager;
 
-    private boolean needCoordinates, needAddress;
+    //private boolean needCoordinates, needAddress;
 
     private boolean locationPermitted = false;
-    public Double latitude, longitude;
+    public double latitude = 0, longitude = 0;
     private final Double REFRESH_ACCURACY = 0.001;
     private boolean mockLocationDialogShown = false;
     private LocationRequest locationRequest;
@@ -101,14 +101,14 @@ public class KaratelLocationManager implements
 
     @Override
     public void onLocationChanged(final Location location) {
-        if (needCoordinates
-                && !(KaratelApplication.getInstance().locationIsMock(location))
+        if (/*needCoordinates
+                && */!(KaratelApplication.getInstance().locationIsMock(location))
                 && googleClientOk()){
 
-            Double latToCheck = latitude!=null ? latitude : 0;
-            Double lonToCheck = longitude!=null ? longitude : 0;
-            Double absLat = Math.abs(latToCheck - location.getLatitude());
-            Double absLon = Math.abs(lonToCheck - location.getLongitude());
+            /*Double latToCheck = latitude!=null ? latitude : 0;
+            Double lonToCheck = longitude!=null ? longitude : 0;*/
+            Double absLat = Math.abs(latitude  - location.getLatitude());
+            Double absLon = Math.abs(longitude - location.getLongitude());
             if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
                 PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
 
@@ -122,8 +122,6 @@ public class KaratelLocationManager implements
                             if (formular != null) {
                                 formular.onLocationChanged(latitude, longitude);
                             }
-                        } else {
-                            latitude = null; //this will block the buttons
                         }
                     }
                 });
@@ -162,7 +160,7 @@ public class KaratelLocationManager implements
     @SuppressWarnings({"MissingPermission"})
     private void obtainAndroidLocation(){
         if (locationPermitted
-                && (needCoordinates || needAddress)
+                //&& (needCoordinates || needAddress)
                 && activity != null) {
             locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -175,7 +173,7 @@ public class KaratelLocationManager implements
     private class MyOldAndroidLocationListener implements android.location.LocationListener{
         @Override
         public void onLocationChanged(Location location) {
-            if (needCoordinates && (latitude == null || longitude == 0)) {//use this only if no result from FusedLocationAPI
+            if (/*needCoordinates && */(latitude == 0 || longitude == 0)) {//use this only if no result from FusedLocationAPI
 
                 if (KaratelApplication.getInstance().locationIsMock(location)){
                     if (!mockLocationDialogShown) {
@@ -198,10 +196,10 @@ public class KaratelLocationManager implements
                         dialog.show();
                     }
                 } else {
-                    Double latToCheck = latitude != null ? latitude : 0;
-                    Double lonToCheck = longitude != null ? longitude : 0;
-                    Double absLat = Math.abs(latToCheck - location.getLatitude());
-                    Double absLon = Math.abs(lonToCheck - location.getLongitude());
+                    /*Double latToCheck = latitude != null ? latitude : 0;
+                    Double lonToCheck = longitude != null ? longitude : 0;*/
+                    Double absLat = Math.abs(latitude  - location.getLatitude());
+                    Double absLon = Math.abs(longitude - location.getLongitude());
                     if (absLat > REFRESH_ACCURACY || absLon > REFRESH_ACCURACY) {
                         latitude = location.getLatitude();
                         longitude = location.getLongitude();
@@ -222,20 +220,10 @@ public class KaratelLocationManager implements
         public void onProviderDisabled(String provider) {}
     }
 
-
-    boolean checkLocation(){
-        if (latitude == null){
-            /*AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            AlertDialog dialog = builder.setTitle(R.string.cannot_define_location).setNegativeButton(R.string.ok, null).create();
-            dialog.show();*/
-            return false;
-        } else return true;
-    }
-
     private void obtainGoogleLocation() {
-        googleApiClient = formular.getGoogleManager().client;
+        if (formular != null) googleApiClient = formular.getGoogleManager().client;
         if (locationPermitted && googleClientOk()) {
-            if (needCoordinates || needAddress) {
+            //if (needCoordinates || needAddress) {
                 PendingResult<LocationSettingsResult> result = getPendingLocationSettings();
 
                 result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
@@ -267,10 +255,10 @@ public class KaratelLocationManager implements
                         }
                     }
                 });
-            }
-            if (needAddress) {
+            //}
+            //if (needAddress) {
                 getCurrentPlace();
-            }
+            //}
         }
     }
 
@@ -305,12 +293,12 @@ public class KaratelLocationManager implements
             });
     }
 
-    public void initFields(int[] services) {
+    /*public void initFields(int[] services) {
         if (services != null) defineRequiredServices(services);
-    }
+    }*/
 
-    public void restart(int[] services) {
-        initFields(services);
+    public void restart(/*int[] services*/) {
+        //initFields(services);
         obtainGoogleLocation();
         obtainAndroidLocation();
     }
@@ -321,13 +309,13 @@ public class KaratelLocationManager implements
 
     public void onCreate() {
         if (
-            (needAddress || needCoordinates) //check needCoordinates to prevent showing permission dialog
-            && (locationPermitted = checkLocationPermissions(true))
+            /*(needAddress || needCoordinates) //check needCoordinates to prevent showing permission dialog
+            &&*/ (locationPermitted = checkLocationPermissions(true))
         ) obtainAndroidLocation();
     }
 
-    public void onStart(@Nullable int[] services){
-        initFields(services);
+    public void onStart(/*@Nullable int[] services*/){
+        //initFields(services);
         locationPermitted = checkLocationPermissions(false);
     }
 
@@ -350,8 +338,8 @@ public class KaratelLocationManager implements
 
     /** end of lifecycle methods**/
 
-    private boolean findInArray(int[] array, int key) {
+    /*private boolean findInArray(int[] array, int key) {
         Arrays.sort(array);
         return Arrays.binarySearch(array, key) >= 0;
-    }
+    }*/
 }

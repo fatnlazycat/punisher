@@ -15,7 +15,7 @@ public interface Formular {
     boolean changesMade();
     void setChangesMade(boolean changesMade);
 
-    void onEvidenceRemoved();
+    //void onEvidenceRemoved();
 
     void validatePunishButton();
     void validateSaveButton();
