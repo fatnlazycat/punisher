@@ -7,6 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.splunk.mint.Mint;
+
 import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.entity.ViolationRequisite;
 
@@ -20,7 +22,7 @@ public class DBHelper extends SQLiteOpenHelper {
     //look at this - maybe we don't need it?
     Context context;
 
-    public static final int DB_VERSION = 2;
+    public static final int DB_VERSION = 3;
     public static final String DATABASE = "violations_db";
     public static final String VIOLATIONS_TABLE = "violations_table";
     public static final String MEDIA_TABLE = "media_table";
@@ -49,17 +51,27 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        createTablesForViolations(db);
+        createTablesForComplains(db);
+    }
 
-        /*Resources res = context.getResources();
-        String[] violations = res.getStringArray(org.foundation101.karatel.R.array.violationTypes);
-        for (String violation : violations){
-            int arrayId = res.getIdentifier(violation + "Requisites", "array", context.getPackageName());
-            String[] requisites = res.getStringArray(arrayId);
-            for (int i = 0; i < requisites.length; i += DB_TAG_STEP){
-                sb.append(requisites[i] + " TEXT,");
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        switch (oldVersion) {
+            case 1 : {
+                createTablesForComplains(db);
+                upgrade_locationFromMainTableToMediaTable(db, Violation.CATEGORY_PUBLIC);
+                break;
             }
-        }*/
+            case 2 : {
+                upgrade_locationFromMainTableToMediaTable(db, Violation.CATEGORY_BUSINESS);
+                upgrade_locationFromMainTableToMediaTable(db, Violation.CATEGORY_PUBLIC);
+                break;
+            }
+        }
+    }
 
+    private void createTablesForViolations(SQLiteDatabase db) {
         String dataTableStructure = getTableStructure(Violation.CATEGORY_PUBLIC);
         db.execSQL("CREATE TABLE "
                 + VIOLATIONS_TABLE
@@ -71,8 +83,8 @@ public class DBHelper extends SQLiteOpenHelper {
                 + TYPE              + " TEXT,"
                 + STATUS            + " INTEGER,"
                 + TIME_STAMP        + " TEXT,"
-                + LONGITUDE         + " REAL,"
-                + LATITUDE          + " REAL,"
+                /*+ LONGITUDE         + " REAL,"
+                + LATITUDE          + " REAL,"*/
                 + dataTableStructure
                 + ");");
         db.execSQL("CREATE TABLE "
@@ -80,15 +92,10 @@ public class DBHelper extends SQLiteOpenHelper {
                 + " ("
                 + _ID               + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + ID                + " INTEGER,"
-                + FILE_NAME         + " TEXT"
+                + FILE_NAME         + " TEXT,"
+                + LONGITUDE         + " REAL,"
+                + LATITUDE          + " REAL"
                 + ");");
-
-        createTablesForComplains(db);
-    }
-
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        createTablesForComplains(db);
     }
 
     private void createTablesForComplains(SQLiteDatabase db) {
@@ -100,8 +107,8 @@ public class DBHelper extends SQLiteOpenHelper {
                 + USER_ID       + " INTEGER,"
                 + TYPE          + " TEXT,"
                 + TIME_STAMP    + " TEXT,"
-                + LONGITUDE     + " REAL,"
-                + LATITUDE      + " REAL,"
+                /*+ LONGITUDE     + " REAL,"
+                + LATITUDE      + " REAL,"*/
                 + dataTableStructure
                 + ");");
         db.execSQL("CREATE TABLE "
@@ -109,8 +116,72 @@ public class DBHelper extends SQLiteOpenHelper {
                 + " ("
                 + _ID           + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + ID            + " INTEGER,"
-                + FILE_NAME     + " TEXT"
+                + FILE_NAME     + " TEXT,"
+                + LONGITUDE     + " REAL,"
+                + LATITUDE      + " REAL"
                 + ");");
+    }
+
+    private void upgrade_locationFromMainTableToMediaTable(SQLiteDatabase db, int category) {
+        String[] tableNames = tableNamesFromCategory(category);
+
+        db.beginTransaction();
+        try {
+            db.execSQL("CREATE TEMPORARY TABLE tmp("
+                    + _ID + ", " + ID + ", " + FILE_NAME + ", " + LATITUDE + ", " + LONGITUDE + ");");
+
+            db.execSQL("INSERT INTO tmp SELECT m." + _ID + ", m." + ID + ", m." + FILE_NAME + ", v." + LATITUDE + ", v." + LONGITUDE +
+                    " FROM " + tableNames[1] + " AS m INNER JOIN " + tableNames[0] + " AS v ON m." + ID + " = v." + _ID + ";");
+
+            db.execSQL("DROP TABLE " + tableNames[1] + ";");
+
+            db.execSQL("CREATE TABLE " + tableNames[1] + " (" + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + ID + " INTEGER, "
+                    + FILE_NAME + " TEXT, " +
+                    LATITUDE + " REAL DEFAULT 0, " + LONGITUDE + " REAL DEFAULT 0);");
+
+            db.execSQL("INSERT INTO " + tableNames[1] + " SELECT " + _ID + ", " + ID + ", "
+                    + FILE_NAME + ", " + LATITUDE + ", " + LONGITUDE + " FROM tmp;");
+
+            db.execSQL("DROP TABLE tmp;");
+
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            Log.e("DBHelper", e.toString());
+            Mint.logException(e);
+        } finally {
+            db.endTransaction();
+        }
+
+        /*db.execSQL("ALTER TABLE " + tableNames[1]
+                + " ADD COLUMN " + LONGITUDE + " REAL DEFAULT 0");
+        db.execSQL("ALTER TABLE " + tableNames[1]
+                + " ADD COLUMN " + LATITUDE  + " REAL DEFAULT 0");
+
+        String[] columns = {_ID, LONGITUDE, LATITUDE};
+        Cursor c = db.query(tableNames[0], columns, null, null, null, null, null);
+
+        while (c.moveToNext()) {
+            db.execSQL("UPDATE " + tableNames[1]
+                    + " SET "
+                    + LONGITUDE + " = " + c.getString(c.getColumnIndex(LONGITUDE)) + ", "
+                    + LATITUDE  + " = " + c.getString(c.getColumnIndex(LATITUDE))
+                    + " WHERE " + ID + " = " + c.getInt(c.getColumnIndex(_ID)));
+        }
+        c.close();*/
+
+        //we don't drop lat/lng column in violation table - let it stay there empty
+    }
+
+    private String[] tableNamesFromCategory(int category) {
+        switch (category) {
+            case (Violation.CATEGORY_BUSINESS) : {
+                return new String[]{COMPLAINS_TABLE, COMPLAINS_MEDIA_TABLE};
+            }
+            case (Violation.CATEGORY_PUBLIC) : {
+                return new String[]{VIOLATIONS_TABLE, MEDIA_TABLE};
+            }
+            default : return null;
+        }
     }
 
     private String getTableStructure(int category) {

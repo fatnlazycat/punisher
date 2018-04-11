@@ -110,7 +110,8 @@ public class StartActivity extends Activity {
         GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
         int resultCode = apiAvailability.isGooglePlayServicesAvailable(this);
         if (resultCode != ConnectionResult.SUCCESS) {
-            if (apiAvailability.isUserResolvableError(resultCode)) {
+            //SERVICE_INVALID leads to error dialog being shown with only one button ok that does nothing
+            if (apiAvailability.isUserResolvableError(resultCode) && resultCode != ConnectionResult.SERVICE_INVALID) {
                 settingsDialog = apiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST);
                 settingsDialog.setCancelable(false);
                 settingsDialog.show();

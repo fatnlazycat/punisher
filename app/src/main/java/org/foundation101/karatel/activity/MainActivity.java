@@ -347,7 +347,7 @@ public class MainActivity extends AppCompatActivity {
         }
         toolbar.setTitle(tag);
 
-        FacebookSdk.sdkInitialize(getApplicationContext());
+        //FacebookSdk.sdkInitialize(getApplicationContext());
 
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .registerReceiver(myBroadcastReceiver, new IntentFilter(BROADCAST_RECEIVER_TAG));

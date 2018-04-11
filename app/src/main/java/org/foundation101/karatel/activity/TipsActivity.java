@@ -53,7 +53,7 @@ public class TipsActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         // facebook part
-        FacebookSdk.sdkInitialize(getApplicationContext());
+        //FacebookSdk.sdkInitialize(getApplicationContext());
         fbCallbackManager = CallbackManager.Factory.create();
 
         setContentView(R.layout.activity_login);

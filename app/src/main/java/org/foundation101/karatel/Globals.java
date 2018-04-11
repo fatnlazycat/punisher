@@ -82,7 +82,7 @@ public class Globals {
     public static final String USER_AVATAR = "USER_AVATAR";
 
     //interaction with server api
-    public static final String SERVER_URL = "https://karatel-test.foundation101.org/api/v1/"; //-api -test
+    public static final String SERVER_URL = "https://karatel-api.foundation101.org/api/v1/"; //-api -test
     public static final int MAX_SERVER_REQUEST_SIZE = 100 * 1024 * 1024; //100 mb
     public static final String SERVER_SUCCESS = "success";
     public static final String SERVER_ERROR = "error";
