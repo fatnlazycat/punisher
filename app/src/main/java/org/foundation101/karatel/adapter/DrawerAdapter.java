@@ -50,18 +50,18 @@ public class DrawerAdapter extends BaseAdapter {
         }
 
         //set menu item text
-        TextView menuItemText=(TextView)convertView.findViewById(R.id.menuItemText);
+        TextView menuItemText = convertView.findViewById(R.id.menuItemText);
         menuItemText.setText(content[position]);
 
         switch (position) {
             case 0:
-            case 9:
+            case 10:
                 setDivider(menuItemText);
                 break;
-                /*case 2:*/
-                case 3:
-                    disableItem(menuItemText);
-                    break;
+            /*case 2:*/
+            case 3:
+                disableItem(menuItemText);
+                break;
             case 4:
                 setDonateItem(menuItemText);
                 break;

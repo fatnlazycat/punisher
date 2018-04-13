@@ -4,16 +4,16 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.content.Intent;
-import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -37,17 +37,13 @@ import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.splunk.mint.Mint;
 import com.splunk.mint.MintLogLevel;
 
-import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.DrawerAdapter;
 import org.foundation101.karatel.fragment.AboutFragment;
@@ -59,7 +55,11 @@ import org.foundation101.karatel.fragment.NewsFragment;
 import org.foundation101.karatel.fragment.PartnersFragment;
 import org.foundation101.karatel.fragment.ProfileFragment;
 import org.foundation101.karatel.fragment.RequestListFragment;
+import org.foundation101.karatel.fragment.SponsorsFragment;
 import org.foundation101.karatel.fragment.VideoListFragment;
+import org.foundation101.karatel.manager.CameraManager;
+import org.foundation101.karatel.manager.HttpHelper;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.retrofit.RetrofitSignOutSender;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -124,26 +124,26 @@ public class MainActivity extends AppCompatActivity {
 
         fManager = getSupportFragmentManager();
 
-        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
+        progressBar = findViewById(R.id.frameLayoutProgress);
 
         KaratelPreferences.restoreUser();
 
-        toolbar = (Toolbar)findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         //init navigation drawer
-        ListView drawerListView = (ListView)findViewById(R.id.drawerListView);
+        ListView drawerListView = findViewById(R.id.drawerListView);
         //first line where we need avatar icon
         View drawerHeader = LayoutInflater.from(this).inflate(R.layout.drawer_header, drawerListView, false);
         drawerListView.addHeaderView(drawerHeader, null, false);
 
-        avatarImageView = (ImageView) findViewById(R.id.avatarImageView);
-        avatarTextView = (TextView)findViewById(R.id.avatarTextView);
+        avatarImageView = findViewById(R.id.avatarImageView);
+        avatarTextView = findViewById(R.id.avatarTextView);
         avatarTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 19);
         initDrawerHeader();
 
-        final DrawerLayout drawerLayout = (DrawerLayout)findViewById(R.id.drawerLayoutMainActivity);
+        final DrawerLayout drawerLayout = findViewById(R.id.drawerLayoutMainActivity);
         final DrawerAdapter drawerAdapter = new DrawerAdapter();
         DrawerAdapter.content = makeDrawerList();
         drawerListView.setAdapter(drawerAdapter);
@@ -202,6 +202,11 @@ public class MainActivity extends AppCompatActivity {
                     }
                     case Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new AboutFragment(), tag)
+                                .addToBackStack(tag).commit();
+                        break;
+                    }
+                    case Globals.MAIN_ACTIVITY_SPONSORS_FRAGMENT: {
+                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new SponsorsFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
                     }
@@ -272,6 +277,10 @@ public class MainActivity extends AppCompatActivity {
                                 fragmentInstance = new AboutFragment();
                                 break;
                             }
+                            case Globals.MAIN_ACTIVITY_SPONSORS_FRAGMENT: {
+                                fragmentInstance = new SponsorsFragment();
+                                break;
+                            }
                             case Globals.MAIN_ACTIVITY_PARTNERS_FRAGMENT: {
                                 fragmentInstance = new PartnersFragment();
                                 break;
@@ -294,50 +303,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     }
-                    ft.replace(R.id.frameLayoutMain, fragmentInstance, tag)/*.addToBackStack(tag)*/.commit();
-
-                    /*switch (currentFragment) {
-                        case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
-                            ft.replace(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
-                            break;
-                        }
-                        case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT: {
-                            ft.replace(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();
-                            break;
-                        }
-                        case Globals.MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT: {
-                            ft.replace(R.id.frameLayoutMain, new ComplainsBookFragment(), tag).addToBackStack(tag).commit();
-                            break;
-                        }
-                        case Globals.MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT: {
-                            ft.replace(R.id.frameLayoutMain, new VideoListFragment(), tag).addToBackStack(tag).commit();
-                            break;
-                        }
-                        case Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT: {
-                            ft.replace(R.id.frameLayoutMain, new AboutFragment(), tag).addToBackStack(tag).commit();
-                            break;
-                        }
-                        case Globals.MAIN_ACTIVITY_PARTNERS_FRAGMENT: {
-                            ft.replace(R.id.frameLayoutMain, new PartnersFragment(), tag).addToBackStack(tag).commit();
-                            break;
-                        }
-                        case Globals.MAIN_ACTIVITY_NEWS_FRAGMENT: {
-                            ft.replace(R.id.frameLayoutMain, new NewsFragment(), tag).addToBackStack(tag).commit();
-                            break;
-                        }
-                        case Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT: {
-                            ft.replace(R.id.frameLayoutMain, new ContactsFragment(), tag).addToBackStack(tag).commit();
-                            break;
-                        }
-                        case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT: {
-                            ft.replace(R.id.frameLayoutMain, new ProfileFragment(), tag).addToBackStack(tag).commit();
-                            break;
-                        }
-                        case Globals.MAIN_ACTIVITY_COMPLAIN_DRAFTS: {
-                            ft.replace(R.id.frameLayoutMain, new ComplainDraftsFragment(), tag).addToBackStack(tag).commit();
-                            break;
-                        }
-                    }*/
+                    ft.replace(R.id.frameLayoutMain, fragmentInstance, tag).commit();
                 } else {
                     currentFragment = Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT;
                     tag = fragmentTags.get(currentFragment);
@@ -426,6 +392,7 @@ public class MainActivity extends AppCompatActivity {
         result.put(Globals.MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT,       getResources().getString(R.string.video_tutorial));
         result.put(Globals.MAIN_ACTIVITY_DONATE,                    "");
         result.put(Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT,            getResources().getString(R.string.about_header));
+        result.put(Globals.MAIN_ACTIVITY_SPONSORS_FRAGMENT,         getResources().getString(R.string.sponsors_header));
         result.put(Globals.MAIN_ACTIVITY_PARTNERS_FRAGMENT,         getResources().getString(R.string.partners_header));
         result.put(Globals.MAIN_ACTIVITY_NEWS_FRAGMENT,             getResources().getString(R.string.news_header));
         result.put(Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT,         getResources().getString(R.string.contacts_header));
@@ -486,10 +453,10 @@ public class MainActivity extends AppCompatActivity {
         startActivity(browserIntent);
     }
 
-    public void openPeoplesProject(View view) {
+    /*public void openPeoplesProject(View view) {
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getResources().getString(R.string.url_peoples_project)));
         startActivity(browserIntent);
-    }
+    }*/
 
     public void changeEmail(View view) {
         startActivity(new Intent(this, ChangeEmailActivity.class));

@@ -41,7 +41,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="12dp"
-            android:id="@+id/buttonTelegram"
+            android:id="@+id/btnTelegramBot"
             android:tag="https://t.me/KaratelBot"
             android:src="@drawable/ic_telegram"
             android:background="@drawable/selector_common_button"
@@ -51,7 +51,6 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="12dp"
             android:id="@+id/buttonEmail"
-
             android:src="@drawable/ic_em"
             android:background="@drawable/selector_common_button"
             android:onClick="sendEmail"/>
@@ -176,15 +175,15 @@
                     android:src="@mipmap/icg"
                     android:background="@drawable/selector_common_button"
                     android:onClick="openSocialLink"/>-->
-                <!--<ImageButton
+                <ImageButton
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="8dp"
                     android:id="@+id/buttonTelegram"
-                    android:tag="http://telegram.me/fund101"
+                    android:tag="https://t.me/KARATEL_informs"
                     android:src="@mipmap/ic_tg"
                     android:background="@drawable/selector_common_button"
-                    android:onClick="openSocialLink"/>-->
+                    android:onClick="openSocialLink"/>
             </LinearLayout>
         </HorizontalScrollView>
     </RelativeLayout>

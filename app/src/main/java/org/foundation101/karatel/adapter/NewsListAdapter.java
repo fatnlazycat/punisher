@@ -28,7 +28,7 @@ public class NewsListAdapter extends BaseAdapter {
         this.content = content;
     }
 
-    ArrayList<NewsItem> content = new ArrayList<>();
+    ArrayList<NewsItem> content;
 
     @Override
     public int getCount() {
@@ -53,19 +53,19 @@ public class NewsListAdapter extends BaseAdapter {
         }
 
         NewsItem thisNews = content.get(position);
-        TextView textViewNewsHeader = (TextView)convertView.findViewById(R.id.textViewNewsHeader);
+        TextView textViewNewsHeader = convertView.findViewById(R.id.textViewNewsHeader);
         textViewNewsHeader.setText(thisNews.title);
-        TextView textViewNewsDate = (TextView)convertView.findViewById(R.id.textViewNewsDate);
+        TextView textViewNewsDate = convertView.findViewById(R.id.textViewNewsDate);
 
         String dateString = Globals.translateDate(INPUT_DATE_FORMAT, OUTPUT_DATE_FORMAT, thisNews.pubDate);
         textViewNewsDate.setText(dateString);
 
-        final ImageView imageViewNews = (ImageView)convertView.findViewById(R.id.imageViewNews);
-        final FrameLayout progressBar = (FrameLayout) convertView.findViewById(R.id.frameLayoutProgress);
+        final ImageView imageViewNews = convertView.findViewById(R.id.imageViewNews);
+        final FrameLayout progressBar = convertView.findViewById(R.id.frameLayoutProgress);
         imageViewNews.setVisibility(View.INVISIBLE);
         progressBar.setVisibility(View.VISIBLE);
 
-        Picasso.with(parent.getContext())
+        Picasso.get()
                 .load(thisNews.imageLink)
                 .fit().into(imageViewNews, new Callback() {
                     @Override
@@ -74,7 +74,7 @@ public class NewsListAdapter extends BaseAdapter {
                         progressBar.setVisibility(View.GONE);
                     }
                     @Override
-                    public void onError() {
+                    public void onError(Exception e) {
                         imageViewNews.setVisibility(View.VISIBLE);
                         progressBar.setVisibility(View.GONE);
                     }

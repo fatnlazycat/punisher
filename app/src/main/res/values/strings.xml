@@ -34,8 +34,8 @@
 
     <!--texts-->
     <string name="violation_header">Успіх розгляду вашого звернення залежить від точності наданої інформації</string>
-    <string name="about_1">За допомогою цього додатку Ви можете легко притягнути до відповідальності чиновників чи інших посадових осіб, які неналежно виконують свої службові обов’язки. Просто зафіксуйте цей факт, а ми зробимо все інше.</string>
-    <string name="about_2">Проект реалізує громадська організація «Фундація.101» за підтримки People’s Project.</string>
+    <string name="about_1">КАРАТЄЛЬ — це безкоштовний мобільний додаток, за допомогою якого можна в кілька дотиків на смартфоні поскаржитися на правопорушення у різних сферах.\nОтриману інформацію опрацьовують юристи громадської організації «Фундація.101» та вживають заходів для вирішення цих проблем, звертаючись до відповідних органів влади та приватних структур.\nПісля отримання відповіді ви зможете переглянути її у додатку на своєму смартфоні.</string>
+    <!--<string name="about_2">Проект реалізує громадська організація «Фундація.101» за підтримки People’s Project.</string>-->
     <string name="personal_data_agree">Даю згоду на обробку та зберігання моїх персональних даних</string>
 
     <!-- violation disclaimers, should be present even if empty do avoid NullPointException-->
@@ -68,6 +68,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="profile_header">Профіль</string>
     <string name="partners_header">Наші партнери</string>
+    <string name="sponsors_header">Офіційні спонсори</string>
     <string name="tap_to_enter">Натисніть на екран, щоб продовжити</string>
     <string name="user_created">Обліковий запис створено. Перевірте email.</string>
     <string name="you_have_made_no_requests_yet">Ви ще не створили жодної  заявки</string>
@@ -76,7 +77,7 @@
     <string name="contacts_header">Зворотній зв’язок</string>
     <string name="contacts"><b>Якщо у вас є питання чи пропозиції — зв’яжіться з нами</b></string>
     <string name="office_phone">+38 (044) 209-69-33</string>
-    <string name="office_mail">karatel@foundation101.org</string>
+    <string name="office_mail">mail@karatel.ua</string>
     <string name="office_address">04215, м. Київ, пр. Георгія Гонгадзе, 32-Б.\nГО «Фундація.101»</string>
     <string name="url_foundation101">https://www.foundation101.org</string>
     <string name="url_peoples_project">http://www.peoplesproject.com</string>
