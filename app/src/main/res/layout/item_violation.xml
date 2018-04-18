@@ -15,21 +15,21 @@
         android:layout_marginTop="15dp" />
 
     <ImageView
+        android:id="@+id/cameraIcon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:id="@+id/cameraIcon"
+        android:layout_alignParentRight="true"
         android:src="@mipmap/ic_record"/>
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:paddingLeft="5dp"
-        android:paddingRight="5dp"
-        android:textAppearance="?android:attr/textAppearanceLarge"
         android:id="@+id/violationName"
-        android:layout_below="@+id/violationImage"
-        android:layout_centerHorizontal="true"
-        android:gravity="center"/>
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:textSize="14sp"
+        android:textColor="@color/violationName"
+        android:lineSpacingExtra="4sp"
+        android:gravity="center"
+        android:layout_below="@+id/violationImage"/>
 </RelativeLayout>

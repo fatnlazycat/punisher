@@ -74,6 +74,7 @@ import org.foundation101.karatel.retrofit.RetrofitDownloader;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
 import org.foundation101.karatel.utils.DBUtils;
 import org.foundation101.karatel.utils.Formular;
+import org.foundation101.karatel.utils.MapUtils;
 import org.foundation101.karatel.utils.MediaUtils;
 import org.foundation101.karatel.view.ExpandedGridView;
 import org.foundation101.karatel.view.MyScrollView;
@@ -138,7 +139,6 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
     public void setMode(int mode) {
         this.mode = mode;
-        //if (lManager != null) lManager.initFields(getLocationServicesArray(false));
     }
 
     ArrayList<EvidenceEntity> savedInstanceStateEvidenceFileNames = new ArrayList<>();
@@ -150,7 +150,6 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     public double latitude = 0, longitude = 0;
     boolean statusTabFirstShow = true;
     boolean saveInstanceStateCalled = false;
-    //boolean needReclaimFullLocation = false;
 
     boolean changesMade = false;
     @Override
@@ -180,7 +179,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     protected void onStart() {
         super.onStart();
         if (mode <= MODE_EDIT) {
-            lManager.onStart(/*getLocationServicesArray(needReclaimFullLocation)*/);
+            lManager.onStart();
             googleApiManager.onStart();
         }
 
@@ -232,8 +231,6 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 mode = savedInstanceState.getInt(Globals.VIOLATION_ACTIVITY_MODE);
             }
 
-            //needReclaimFullLocation = savedInstanceState.getBoolean(Globals.VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION, false);
-
             //init evidences after activity recreation otherwise they will be lost
             if (savedInstanceState.containsKey(Globals.EVIDENCES)) { //this will be true only in MODE_CREATE | MODE_EDIT
                 savedInstanceStateEvidenceFileNames = (ArrayList<EvidenceEntity>) savedInstanceState.getSerializable(Globals.EVIDENCES);
@@ -250,7 +247,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         saveButton                          = findViewById(R.id.saveButton);
 
         if (mode <= MODE_EDIT) {
-            lManager = new KaratelLocationManager(this/*, getLocationServicesArray(false)*/);
+            lManager = new KaratelLocationManager(this);
             googleApiManager = new GoogleApiManager(this);
             googleApiManager.init(lManager, lManager);
             lManager.onCreate();
@@ -259,7 +256,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         KaratelPreferences.restoreUser();
 
         //initializing tab view with only one tab - the second will be initialized later
-        tabs=(TabHost)findViewById(android.R.id.tabhost);
+        tabs = findViewById(android.R.id.tabhost);
         tabs.setup();
         setupTab(R.id.tabInfo, getString(R.string.information));
         tabs.setCurrentTab(0);
@@ -267,8 +264,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             @Override
             public void onTabChanged(String tabId) {
                 if (statusTabFirstShow) {
-                    tabStatus = (RelativeLayout)findViewById((R.id.tabStatus));
-                    historyListView = (ListView)findViewById(R.id.historyListView);
+                    tabStatus = findViewById((R.id.tabStatus));
+                    historyListView = findViewById(R.id.historyListView);
                     FrameLayout.LayoutParams mParam = new FrameLayout.LayoutParams(
                             FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT);
                     tabStatus.setLayoutParams(mParam);
@@ -303,7 +300,6 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 id = intent.getIntExtra(Globals.ITEM_ID, 0);
             }
             idInDbString = id.toString();
-            //blockButtons = false;
 
             if (mode == MODE_EDIT) {
                 SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -360,14 +356,14 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             }
         }
 
-        ExpandedGridView evidenceGridView = (ExpandedGridView) findViewById(R.id.evidenceGridView);
+        ExpandedGridView evidenceGridView = findViewById(R.id.evidenceGridView);
         //evidenceGridView.setHorizontalSpacing(DrawerAdapter.dpToPx(getApplicationContext(), 10));
         makeEvidenceAdapterContent(mode, savedInstanceStateEvidenceFileNames, request);
         evidenceGridView.setAdapter(evidenceAdapter);
         evidenceGridView.setEmptyView(findViewById(R.id.emptyView));
         evidenceGridView.setFocusable(false);
 
-        final Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -386,14 +382,15 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             }
 
             evidenceAdapter.setEditTrigger(false);
-            ImageButton imageButtonAddEvidence = (ImageButton)findViewById(R.id.imageButtonAddEvidence);
+            ImageButton imageButtonAddEvidence = findViewById(R.id.imageButtonAddEvidence);
             imageButtonAddEvidence.setVisibility(View.GONE);
             addedPhotoVideoTextView.setText(getString(R.string.addedPhotoVideo));
+            findViewById(R.id.llAddEvidence).setClickable(false);
 
             toolbar.setSubtitle("Заявка № " + id_number_server);
 
             setupTab(R.id.tabStatus, getString(R.string.request_status));
-            TabWidget tabWidget = (TabWidget)findViewById(android.R.id.tabs);
+            TabWidget tabWidget = findViewById(android.R.id.tabs);
             tabWidget.setVisibility(View.VISIBLE);
             tabs.setCurrentTab(0);
 
@@ -401,7 +398,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             findViewById(R.id.textViewViolationDisclaimer).setVisibility(View.GONE);
         } else {
             int disclaimerId = getResources().getIdentifier(violation.type + "_disclaimer", "string", getPackageName());
-            TextView textViewViolationDisclaimer = (TextView) findViewById(R.id.textViewViolationDisclaimer);
+            TextView textViewViolationDisclaimer = findViewById(R.id.textViewViolationDisclaimer);
             if (getResources().getString(disclaimerId).isEmpty()) textViewViolationDisclaimer.setVisibility(View.GONE);
             else textViewViolationDisclaimer.setText(disclaimerId);
 
@@ -423,10 +420,10 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
             ViolationRequisite thisRequisite = requisitesAdapter.content.get(i);
 
-            holder.textViewRequisiteHeader=(TextView)v.findViewById(R.id.textViewRequisiteHeader);
-            holder.textViewRequisiteDescription=(TextView)v.findViewById(R.id.textViewRequisiteDescription);
-            holder.mapContainer = (FrameLayout) v.findViewById(R.id.mapContainer);
-            holder.editTextRequisite = (AutoCompleteTextView)v.findViewById(R.id.editTextRequisite);
+            holder.textViewRequisiteHeader = v.findViewById(R.id.textViewRequisiteHeader);
+            holder.textViewRequisiteDescription = v.findViewById(R.id.textViewRequisiteDescription);
+            holder.mapContainer = v.findViewById(R.id.mapContainer);
+            holder.editTextRequisite = v.findViewById(R.id.editTextRequisite);
 
             holder.textViewRequisiteHeader.setText(thisRequisite.name);
 
@@ -449,19 +446,17 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 holder.editTextRequisite.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        if (requisitesAdapter.mMap != null) {
-                            requisitesAdapter.mMap.clear();
-                            RequisitesListAdapter.PlaceLikelihoodHolder placeHolder =
-                                    (RequisitesListAdapter.PlaceLikelihoodHolder) parent.getAdapter().getItem(position);
-                            LatLng place = placeHolder.field.getPlace().getLatLng();
-                            MarkerOptions marker = new MarkerOptions().position(place);
-                            requisitesAdapter.mMap.addMarker(marker);
-                            requisitesAdapter.hasMarker = true;
-                            requisitesAdapter.mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place, RequisitesListAdapter.DEFAULT_ZOOM));
-                        }
+                        RequisitesListAdapter.PlaceLikelihoodHolder placeHolder =
+                                (RequisitesListAdapter.PlaceLikelihoodHolder) parent.getAdapter().getItem(position);
+                        LatLng place = placeHolder.field.getPlace().getLatLng();
+                        requisitesAdapter.updateMap(place, place, RequisitesListAdapter.DEFAULT_ZOOM);
                     }
                 });
                 requisitesAdapter.addressEditText = holder.editTextRequisite;
+
+                if (mode == MODE_EDIT && thisRequisite.value != null) { //we set the marker according to the address string set by the user
+                    MapUtils.fetchAddressFromString(thisRequisite.value, requisitesAdapter);
+                }
             } else { //it's not autocomplete - ordinary EditText, hence - no map
                 holder.mapContainer.setVisibility(View.GONE);
             }
@@ -509,17 +504,6 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         }*/
         return result;
     }
-
-    /*int[] getLocationServicesArray(boolean forceFull) {
-        if (forceFull) return new int[] { LOCATION_SERVICE_MAIN, LOCATION_SERVICE_ADDRESS };
-
-        int[] locationServicesArray = {LOCATION_SERVICE_NONE, LOCATION_SERVICE_NONE};
-        switch (mode) {
-            case MODE_CREATE: locationServicesArray[0] = LOCATION_SERVICE_MAIN;
-            case MODE_EDIT  : locationServicesArray[1] = LOCATION_SERVICE_ADDRESS;
-        }
-        return locationServicesArray;
-    }*/
 
     void makeEvidenceAdapterContent(int mode, ArrayList<EvidenceEntity> savedEvidences, Request request){
         if (!savedEvidences.isEmpty()) { //this can be true only in MODE_CREATE | MODE_EDIT
@@ -695,7 +679,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         return super.dispatchTouchEvent( event );
     }
 
-    public void showChangesLostDialog(/*final DialogInterface.OnClickListener exitAction*/) {
+    public void showChangesLostDialog() {
         changesLostDialog = new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.attention))
                 .setMessage(getString(R.string.allChangesWillBeLost))
@@ -1300,7 +1284,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         @Override
         protected String doInBackground(Integer... params) {
             String result;
-            if (HttpHelper.internetConnected(/*ViolationActivity.this*/)) {
+            if (HttpHelper.internetConnected()) {
                 try {
                     result = HttpHelper.proceedRequest("complains/" + params[0], "GET", "", true);
                 } catch (final IOException e) {

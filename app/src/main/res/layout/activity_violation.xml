@@ -82,6 +82,7 @@
                         </LinearLayout>
 
                         <LinearLayout
+                            android:id="@+id/llAddEvidence"
                             android:layout_width="match_parent"
                             android:layout_height="76dp"
                             android:layout_marginTop="16dp"

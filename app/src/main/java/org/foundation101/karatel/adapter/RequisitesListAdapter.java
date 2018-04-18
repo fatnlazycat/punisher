@@ -1,43 +1,28 @@
 package org.foundation101.karatel.adapter;
 
 import android.content.Context;
-import android.content.res.Resources;
-import android.location.Geocoder;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMapOptions;
-import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.PunishButtonValidator;
-import org.foundation101.karatel.entity.ViolationRequisite;
 import org.foundation101.karatel.activity.ViolationActivity;
+import org.foundation101.karatel.entity.ViolationRequisite;
 import org.foundation101.karatel.utils.MapUtils;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 /**
  * Created by Dima on 08.05.2016.
@@ -47,10 +32,9 @@ public class RequisitesListAdapter implements OnMapReadyCallback {
     public RequisitesListAdapter(Context context){
         this.context=context;
         addressAdapter = new ArrayAdapter<>(context, android.R.layout.simple_dropdown_item_1line);
-        geoCoder = new Geocoder(context, Locale.getDefault());
 
-        mapView = new MapView(context, new GoogleMapOptions().liteMode(true));
-        mapView.getMapAsync(this);
+        /*MapView mapView = new MapView(context, new GoogleMapOptions().liteMode(true));
+        mapView.getMapAsync(this);*/
 
         PunishButtonValidator.init();
     }
@@ -59,24 +43,22 @@ public class RequisitesListAdapter implements OnMapReadyCallback {
     //tags for save instance state
     private static final String MAP_CENTER = "MAP_CENTER";
     private static final String MAP_ZOOM = "MAP_ZOOM";
-    private static final String MAP_HAS_MARKER = "MAP_HAS_MARKER";
+    private static final String MAP_MARKER = "MAP_MARKER";
 
     public ArrayList<ViewHolder> holders = new ArrayList<>();
 
     private LatLng savedLatLng;
     private float savedZoom;
-    private boolean savedHasMarker;
+    //private boolean savedHasMarker;
 
     public Context context;
     public ArrayList<ViolationRequisite> content;
 
     public boolean editTrigger = true;
-    public boolean hasMarker = false;
+    private LatLng markerLatLng = null;
 
     public EditText addressEditText;
-    private Geocoder geoCoder;
-    private MapView mapView;
-    public GoogleMap mMap;
+    private GoogleMap mMap;
     private PlaceLikelihoodBuffer likelyPlaces;
     public ArrayAdapter<PlaceLikelihoodHolder> addressAdapter;
 
@@ -105,83 +87,44 @@ public class RequisitesListAdapter implements OnMapReadyCallback {
         LatLng here = ((ViolationActivity) context).getLocationForMap();
 
         if (((ViolationActivity) context).getMode() > ViolationActivity.MODE_EDIT){
-
-
-            /*//after defining coordinates we check if it's not in edit mode & text field address is filled in
-            // then try to display address from that text field
-            if (editTrigger && (!userEnteredAddress.equals(userEnteredAddressOldValue))) {
-                //userEnteredAddressOldValue = userEnteredAddress;
-                List<Address> addresses;
-                int i = 0;
-                try {
-                    do {
-                        addresses = geoCoder.getFromLocationName(addressEditText.getText().toString(), 1);
-                        i++;
-                    } while (addresses.size() == 0 && i < 10);
-                    Address address = addresses.get(0);
-                    markerOptions = new MarkerOptions().position(new LatLng(address.getLongitude(), address.getLatitude()));
-                } catch (NullPointerException | IOException | IndexOutOfBoundsException e) {
-                    markerOptions = new MarkerOptions().position(here);
-                    e.printStackTrace();
-                }
-            } else {
-                markerOptions = new MarkerOptions().position(here);
-            }*/
-            if (((ViolationActivity) context).getMode() != ViolationActivity.MODE_EDIT) {
-                MarkerOptions markerOptions = new MarkerOptions().position(here);
-                Marker marker = mMap.addMarker(markerOptions);
-                hasMarker = true;
-            }
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, DEFAULT_ZOOM));
+            markerLatLng = here;
+            /*MarkerOptions markerOptions = new MarkerOptions().position(here);
+            Marker marker = mMap.addMarker(markerOptions);
+            hasMarker = true;
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, DEFAULT_ZOOM));*/
         } else {
             mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
                 @Override
                 public void onMapClick(LatLng latLng) {
-                    mMap.clear();
-                    MarkerOptions marker = new MarkerOptions().position(new LatLng(latLng.latitude, latLng.longitude));
-                    mMap.addMarker(marker);
-                    hasMarker = true;
-
+                    setMarker(new LatLng(latLng.latitude, latLng.longitude));
                     MapUtils.fetchAddressInto(latLng, addressEditText);
-
-                    //reverse geocoding
-                    /*try {
-                        List<Address> addresses = geoCoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
-                        if (addresses.size() > 0) {
-                            StringBuilder sb = new StringBuilder("");
-                            for (int i=0; i < addresses.get(0).getMaxAddressLineIndex(); i++){
-                                sb.append(addresses.get(0).getAddressLine(i) + " ");
-                            }
-                            setAddressText(sb.toString());
-                        }
-                    } catch (IOException e) {
-                        Globals.showError("can't find address", e);
-                    }*/
                 }
             });
             mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
                 @Override
                 public void onMapLongClick(LatLng latLng) {
                     mMap.clear();
-                    hasMarker = false;
+                    markerLatLng = null;
                 }
             });
             mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
                 @Override
                 public void onCameraChange(CameraPosition cameraPosition) {
-                    if (mMap.getCameraPosition().target.latitude > 0) {
-                        savedLatLng = mMap.getCameraPosition().target;
-                        savedZoom = mMap.getCameraPosition().zoom;
-                        savedHasMarker = hasMarker;
+                    if (cameraPosition.target.latitude > 0) {
+                        savedLatLng = cameraPosition.target;
+                        savedZoom = cameraPosition.zoom;
                     }
                 }
             });
+
+            if (savedLatLng != null) {
+                here = savedLatLng;
+                zoom = savedZoom;
+            }
         }
-        if (savedLatLng != null) {
-            here = savedLatLng;
-            zoom = savedZoom;
-        }
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, zoom));
+
+        updateMap(here, markerLatLng, zoom);
+
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
     }
 
@@ -215,22 +158,32 @@ public class RequisitesListAdapter implements OnMapReadyCallback {
     }
 
     public void getMapDataFromBundle(Bundle savedState) {
-        if (mMap != null){
-            LatLng latLng = savedState.getParcelable(MAP_CENTER);
-            float zoom = savedState.getFloat(MAP_ZOOM);
-            boolean marker = savedState.getBoolean(MAP_HAS_MARKER);
-            if (latLng != null) {
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
-                if (marker) mMap.addMarker(new MarkerOptions().position(latLng));
-            }
-        }
+        savedLatLng = savedState.getParcelable(MAP_CENTER);
+        savedZoom = savedState.getFloat(MAP_ZOOM);
+        markerLatLng = savedState.getParcelable(MAP_MARKER);
     }
 
     public void putMapDataToBundle(Bundle outState) {
         if (mMap != null){
             outState.putParcelable(MAP_CENTER, mMap.getCameraPosition().target);
             outState.putFloat(MAP_ZOOM, mMap.getCameraPosition().zoom);
-            outState.putBoolean(MAP_HAS_MARKER, hasMarker);
+            outState.putParcelable(MAP_MARKER, markerLatLng);
+        }
+    }
+
+    public void updateMap(LatLng latLng, LatLng markerLatLng, float zoom) {
+        if (mMap != null) {
+            if (markerLatLng != null) setMarker(markerLatLng);
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+        }
+    }
+
+    public void setMarker(LatLng latLng) {
+        if (mMap != null) {
+            mMap.clear();
+            MarkerOptions marker = new MarkerOptions().position(latLng);
+            mMap.addMarker(marker);
+            markerLatLng = latLng;
         }
     }
 
