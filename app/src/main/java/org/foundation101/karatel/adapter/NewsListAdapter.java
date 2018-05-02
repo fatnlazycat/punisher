@@ -61,7 +61,7 @@ public class NewsListAdapter extends BaseAdapter {
         textViewNewsDate.setText(dateString);
 
         final ImageView imageViewNews = convertView.findViewById(R.id.imageViewNews);
-        final FrameLayout progressBar = convertView.findViewById(R.id.frameLayoutProgress);
+        final View progressBar = convertView.findViewById(R.id.rlProgress);
         imageViewNews.setVisibility(View.INVISIBLE);
         progressBar.setVisibility(View.VISIBLE);
 

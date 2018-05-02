@@ -4,27 +4,21 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Location;
-import android.location.LocationManager;
 import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -36,23 +30,11 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
-import com.google.android.gms.location.places.Places;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.entity.EvidenceEntity;
@@ -73,12 +55,16 @@ import org.foundation101.karatel.entity.ComplainRequest;
 import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.entity.ViolationRequisite;
 import org.foundation101.karatel.manager.PermissionManager;
+import org.foundation101.karatel.retrofit.ProgressEvent;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
 import org.foundation101.karatel.utils.DBUtils;
 import org.foundation101.karatel.utils.DescriptionFormatter;
 import org.foundation101.karatel.utils.Formular;
 import org.foundation101.karatel.utils.MediaUtils;
 import org.foundation101.karatel.view.ExpandedGridView;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,6 +76,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import io.github.lizhangqu.coreprogress.ProgressHelper;
+import io.github.lizhangqu.coreprogress.ProgressListener;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -97,7 +85,6 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
 
-import static org.foundation101.karatel.manager.KaratelLocationManager.*;
 import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY;
 import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_NORMAL;
 import static org.foundation101.karatel.manager.PermissionManager.LOCATION_PERMISSIONS;
@@ -140,7 +127,8 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
 
     AlertDialog changesLostDialog;
 
-    public FrameLayout progressBar;
+    public RelativeLayout progressBar;
+    TextView tvProgress;
     Button punishButton, saveButton;
 
     GoogleApiManager googleApiManager;
@@ -189,6 +177,14 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     protected void onResume() {
         super.onResume();
         saveInstanceStateCalled = false;
+        EventBus.getDefault().register(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void postProgress(ProgressEvent progressEvent) {
+        boolean isLoading = (progressEvent.getProgress() > 0 && progressEvent.getProgress() < 100);
+        tvProgress.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        if (isLoading) tvProgress.setText(progressEvent.getProgress() + "%");
     }
 
     @Override
@@ -211,13 +207,14 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
             }
         }
 
-        requisitesList = (LinearLayout) findViewById(R.id.requisitesList);
-        llAddEvidence = (LinearLayout) findViewById(R.id.llAddEvidence);
+        requisitesList = findViewById(R.id.requisitesList);
+        llAddEvidence  = findViewById(R.id.llAddEvidence);
 
-        TextView addedPhotoVideoTextView = (TextView)findViewById(R.id.addedPhotoVideoTextView);
-        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
-        punishButton = (Button) findViewById(R.id.punishButton);
-        saveButton = (Button) findViewById(R.id.saveButton);
+        TextView addedPhotoVideoTextView = findViewById(R.id.addedPhotoVideoTextView);
+        progressBar  = findViewById(R.id.rlProgress);
+        tvProgress   = findViewById(R.id.tvProgress);
+        punishButton = findViewById(R.id.punishButton);
+        saveButton   = findViewById(R.id.saveButton);
 
         if (mode <= MODE_EDIT) {
             lManager = new KaratelLocationManager(this);
@@ -277,29 +274,25 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
             } else {/*if neither create nor edit mode then it's loaded from server*/}
         }
 
-        ExpandedGridView evidenceGridView = (ExpandedGridView) findViewById(R.id.evidenceGridView);
+        ExpandedGridView evidenceGridView = findViewById(R.id.evidenceGridView);
         makeEvidenceAdapterContent(savedInstanceStateEvidenceFileNames);
         evidenceGridView.setAdapter(evidenceAdapter);
         evidenceGridView.setEmptyView(findViewById(R.id.emptyView));
         evidenceGridView.setFocusable(false);
 
-        final Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
 
-        ImageView violationImage = (ImageView) findViewById(R.id.ivComplainLogo);
+        ImageView violationImage = findViewById(R.id.ivComplainLogo);
         violationImage.setImageResource(violation.drawableId);
 
-        if (videoOnly) addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
+        TextView tvHeader = findViewById(R.id.textViewViolationHeader);
+        if (violation.header != null) tvHeader.setText(violation.header);
 
-        /*llAddEvidence.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                photoVideoPopupMenu(v);
-            }
-        });*/
+        if (videoOnly) addedPhotoVideoTextView.setText(getString(R.string.takeVideo));
 
         makeRequisitesViews();
 
@@ -312,9 +305,9 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
 
             View v = LayoutInflater.from(this).inflate(R.layout.item_violation_requisite, requisitesList, false);
 
-            holder.textViewRequisiteHeader      = (TextView)            v.findViewById(R.id.textViewRequisiteHeader);
-            holder.textViewRequisiteDescription = (TextView)            v.findViewById(R.id.textViewRequisiteDescription);
-            holder.editTextRequisite            = (AutoCompleteTextView)v.findViewById(R.id.editTextRequisite);
+            holder.textViewRequisiteHeader      = v.findViewById(R.id.textViewRequisiteHeader);
+            holder.textViewRequisiteDescription = v.findViewById(R.id.textViewRequisiteDescription);
+            holder.editTextRequisite            = v.findViewById(R.id.editTextRequisite);
 
             holder.textViewRequisiteHeader.setText(thisRequisite.name);
 
@@ -684,7 +677,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
 
     //@Override
     public void validateSaveButton(){
-        //saveButton.setEnabled(!evidenceAdapter.isEmpty());
+        saveButton.setEnabled(!violation.locationRequired || !evidenceAdapter.isEmpty());
     }
 
     //@Override
@@ -693,8 +686,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     }
 
     public boolean allDataEntered(){
-        //boolean result = !evidenceAdapter.isEmpty();
-        boolean result = true;
+        boolean result = !violation.locationRequired || !evidenceAdapter.isEmpty();
 
         int i=0;
         while (i < requisiteViews.size() && result){
@@ -743,7 +735,13 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         super.onSaveInstanceState(outState);
     }
 
-    @Override //Activity method
+    @Override
+    protected void onPause() {
+        EventBus.getDefault().unregister(this);
+        super.onPause();
+    }
+
+    @Override
     protected void onStop() {
         lManager.onStop();
         googleApiManager.onStop();
@@ -879,9 +877,16 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                             RequestBody.create(MediaType.parse(mimeType), new File(evidenceEntity.fileName)));
                 }
 
+                RequestBody rb = ProgressHelper.withProgress(requestBodyBuilder.build(), new ProgressListener() {
+                    @Override
+                    public void onProgressChanged(long numBytes, long totalBytes, float percent, float speed) {
+                        EventBus.getDefault().post(new ProgressEvent("no id", (int) (percent * 100)));
+                    }
+                });
+
                 RetrofitMultipartUploader api = KaratelApplication.getClient(2).create(RetrofitMultipartUploader.class);
                 Call<ComplainCreationResponse> call = api.uploadGrievance(Globals.sessionToken,
-                        typeServerSuffix, requestBodyBuilder.build());
+                        typeServerSuffix, rb);
                 Response<ComplainCreationResponse> json = call.execute();
                 if (json.isSuccessful()) {
                     result = json.body();

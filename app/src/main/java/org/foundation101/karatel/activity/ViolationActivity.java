@@ -9,7 +9,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Location;
 import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -29,7 +28,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -43,10 +41,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.Globals;
@@ -70,6 +66,7 @@ import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.manager.KaratelLocationManager;
 import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.manager.PermissionManager;
+import org.foundation101.karatel.retrofit.ProgressEvent;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
 import org.foundation101.karatel.utils.DBUtils;
@@ -78,6 +75,9 @@ import org.foundation101.karatel.utils.MapUtils;
 import org.foundation101.karatel.utils.MediaUtils;
 import org.foundation101.karatel.view.ExpandedGridView;
 import org.foundation101.karatel.view.MyScrollView;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -94,6 +94,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import io.github.lizhangqu.coreprogress.ProgressHelper;
+import io.github.lizhangqu.coreprogress.ProgressListener;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -102,7 +104,6 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-import static org.foundation101.karatel.manager.KaratelLocationManager.*;
 import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_IMMEDIATELY;
 import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_PERMISSIONS_START_NORMAL;
 import static org.foundation101.karatel.manager.PermissionManager.LOCATION_PERMISSIONS;
@@ -157,7 +158,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     @Override
     public void setChangesMade(boolean value) { changesMade = value; }
 
-    public FrameLayout progressBar;
+    public View progressBar;
+    TextView tvProgress;
     TabHost tabs;
     TabHost.OnTabChangeListener tabChangeListener;
     Button punishButton, saveButton;
@@ -211,11 +213,19 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     protected void onResume() {
         super.onResume();
         saveInstanceStateCalled = false;
+        EventBus.getDefault().register(this);
 
         //location debug block
         /*String t = tv.getText().toString();
         String t2 = t.length() > 2 ? t.substring(0, t.length() / 2 - 1) : t;
         tv.setText(String.format(Locale.US, "lat: %1$10f\nlon: %2$10f\n%3$s", latitude, longitude, t2));*/
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void postProgress(ProgressEvent progressEvent) {
+        boolean isLoading = (progressEvent.getProgress() > 0 && progressEvent.getProgress() < 100);
+        tvProgress.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        if (isLoading) tvProgress.setText(progressEvent.getProgress() + "%");
     }
 
     @Override
@@ -242,7 +252,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
         requisitesList                      = findViewById(R.id.requisitesList);
         TextView addedPhotoVideoTextView    = findViewById(R.id.addedPhotoVideoTextView);
-        progressBar                         = findViewById(R.id.frameLayoutProgress);
+        progressBar                         = findViewById(R.id.rlProgress);
+        tvProgress                          = findViewById(R.id.tvProgress);
         punishButton                        = findViewById(R.id.punishButton);
         saveButton                          = findViewById(R.id.saveButton);
 
@@ -318,6 +329,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                     status = cursor.getInt(cursor.getColumnIndex("status"));
                     String type = cursor.getString(cursor.getColumnIndex("type"));
                     violation = Violation.getByType(type);
+                    videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
                     requisitesAdapter.content = violation.getRequisites();
                     for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                         requisitesAdapter.content.get(i).value =
@@ -951,6 +963,12 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         super.onSaveInstanceState(outState);
     }
 
+    @Override
+    protected void onPause() {
+        EventBus.getDefault().unregister(this);
+        super.onPause();
+    }
+
     @Override //Activity method
     protected void onStop() {
         if (mode <= MODE_EDIT) {
@@ -1120,8 +1138,15 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                                 RequestBody.create(MediaType.parse(mimeType), new File(evidenceEntity.fileName)));
                     }
 
+                    RequestBody rb = ProgressHelper.withProgress(requestBodyBuilder.build(), new ProgressListener() {
+                        @Override
+                        public void onProgressChanged(long numBytes, long totalBytes, float percent, float speed) {
+                            EventBus.getDefault().post(new ProgressEvent("no id", (int) (percent * 100)));
+                        }
+                    });
+
                     RetrofitMultipartUploader api = KaratelApplication.getClient().create(RetrofitMultipartUploader.class);
-                    Call<CreationResponse> call = api.uploadComplain(Globals.sessionToken, typeServerSuffix, requestBodyBuilder.build());
+                    Call<CreationResponse> call = api.uploadComplain(Globals.sessionToken, typeServerSuffix, rb);
                     Response<CreationResponse> json = call.execute();
                     if (json.isSuccessful()) {
                         result = json.body();
@@ -1223,7 +1248,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 Response<ResponseBody> response = call.execute();
                 if (response.isSuccessful()) {
                     Log.d(TAG, "server contacted and has file");
-                    boolean writtenToDisk = ShowMediaActivity.writeResponseBodyToDisk(response.body(), file);
+                    boolean writtenToDisk = ShowMediaActivity.writeResponseBodyToDisk("", response.body(), file);
                     Log.d(TAG, "file download was a success? " + writtenToDisk);
                 } else {
                     Log.d(TAG, "server contact failed");

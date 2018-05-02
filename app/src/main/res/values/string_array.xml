@@ -103,8 +103,8 @@
         <item>Партнери</item>
         <item>Новини</item>
         <item>Зворотній зв’язок</item>
-        <item>Редагувати профіль</item>
-        <item>Вийти</item>
+        <!--<item>Редагувати профіль</item>
+        <item>Вийти</item>-->
     </string-array>
 
     <!--<string-array name="BribeRequisites">

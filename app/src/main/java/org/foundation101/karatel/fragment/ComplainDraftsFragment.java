@@ -10,6 +10,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -44,8 +45,6 @@ public class ComplainDraftsFragment extends Fragment {
 
     SQLiteDatabase db;
 
-    public static boolean punishPerformed = false;
-
     public ComplainDraftsFragment(){
         //required empty constructor
     }
@@ -60,17 +59,17 @@ public class ComplainDraftsFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_complain_drafts, container, false);
         return v;
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         mainView = view;
 
-        recycler = (RecyclerView)view.findViewById(R.id.recyclerViewDrafts);
+        recycler = view.findViewById(R.id.recyclerViewDrafts);
         recycler.setHasFixedSize(true);
         recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
 
@@ -90,6 +89,12 @@ public class ComplainDraftsFragment extends Fragment {
         super.onResume();
     }
 
+    @Override
+    public void onPause() {
+        if (snackbar != null && snackbar.isShownOrQueued()) snackbar.dismiss();
+        super.onPause();
+    }
+
     void makeComplainsBookAdapterContent(){
         ArrayList<ComplainRequest> drafts = getDraftRequests();
         if (drafts.isEmpty()) {
@@ -102,8 +107,7 @@ public class ComplainDraftsFragment extends Fragment {
     ArrayList<ComplainRequest> getDraftRequests(){
         ArrayList<ComplainRequest> draftRequests = new ArrayList<>();
         String table = DBHelper.COMPLAINS_TABLE;
-        String[] columns = null /*{DBHelper._ID, DBHelper.ID_SERVER, DBHelper.TYPE, DBHelper.STATUS,
-                DBHelper.TIME_STAMP}*/;
+        String[] columns = null;
         String where = "user_id=?";
         String[] selectionArgs = {Integer.toString(Globals.user.id)};
         Cursor cursor = db.query(table, columns, where, selectionArgs, null, null, null);
@@ -205,7 +209,8 @@ public class ComplainDraftsFragment extends Fragment {
                             //if we didn't restore the position - delete it
                             if (event == DISMISS_EVENT_TIMEOUT
                                     || event == DISMISS_EVENT_SWIPE
-                                    || event == DISMISS_EVENT_CONSECUTIVE) {
+                                    || event == DISMISS_EVENT_CONSECUTIVE
+                                    || event == DISMISS_EVENT_MANUAL) {
                                 deleteDraftRequest(requestToDelete.id);
                                 if (DBUtils.getNumberOfComplains() == 0) returnToComplainsBook();
                             }

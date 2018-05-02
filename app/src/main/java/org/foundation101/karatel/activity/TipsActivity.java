@@ -13,13 +13,13 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 
@@ -42,7 +42,7 @@ import java.util.List;
 public class TipsActivity extends Activity {
     static final String TAG = "LoginActivity";
     EditText editTextLoginEmail, editTextLoginPassword;
-    FrameLayout progressBar;
+    RelativeLayout progressBar;
     SharedPreferences preferences;
 
     // facebook part
@@ -60,10 +60,10 @@ public class TipsActivity extends Activity {
 
         ((KaratelApplication)getApplication()).sendScreenName(TAG);
 
-        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
+        progressBar = findViewById(R.id.rlProgress);
 
-        editTextLoginEmail = (EditText)findViewById(R.id.editTextLoginEmail);
-        editTextLoginPassword = (EditText)findViewById(R.id.editTextLoginPassword);
+        editTextLoginEmail = findViewById(R.id.editTextLoginEmail);
+        editTextLoginPassword = findViewById(R.id.editTextLoginPassword);
 
         if (KaratelPreferences.loggedIn()){
             startActivity(new Intent(this, MainActivity.class));

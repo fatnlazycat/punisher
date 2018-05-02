@@ -38,7 +38,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
     String email, password, surname, name, secondName, phone;
     CheckBox checkBoxPersonalDataAgreement;
     Button signUpButton;
-    FrameLayout progressBar;
+    View progressBar;
     PunisherUser newUser;
 
     @Override
@@ -48,25 +48,25 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
 
         ((KaratelApplication)getApplication()).sendScreenName(TAG);
 
-        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
+        progressBar = findViewById(R.id.rlProgress);
 
-        Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
 
-        textViewSignUpErrorMessage = (TextView)findViewById(R.id.textViewSignUpErrorMessage);
+        textViewSignUpErrorMessage = findViewById(R.id.textViewSignUpErrorMessage);
 
-        signUpButton = (Button)findViewById(R.id.buttonRegister);
+        signUpButton = findViewById(R.id.buttonRegister);
 
-        editTextEmail = (EditText)findViewById(R.id.editTextSignUpEmail);
-        editTextPassword = (EditText)findViewById(R.id.editTextSignUpPassword);
-        editTextSurname = (EditText)findViewById(R.id.editTextSignUpSurname);
-        editTextName = (EditText)findViewById(R.id.editTextSignUpName);
-        editTextSecondName = (EditText)findViewById(R.id.editTextSignUpSecondName);
-        editTextPhone = (EditText)findViewById(R.id.editTextSignUpPhone);
-        checkBoxPersonalDataAgreement = (CheckBox)findViewById(R.id.checkBoxPersonalDataAgreement);
+        editTextEmail = findViewById(R.id.editTextSignUpEmail);
+        editTextPassword = findViewById(R.id.editTextSignUpPassword);
+        editTextSurname = findViewById(R.id.editTextSignUpSurname);
+        editTextName = findViewById(R.id.editTextSignUpName);
+        editTextSecondName = findViewById(R.id.editTextSignUpSecondName);
+        editTextPhone = findViewById(R.id.editTextSignUpPhone);
+        checkBoxPersonalDataAgreement = findViewById(R.id.checkBoxPersonalDataAgreement);
 
         SignUpTextWatcher textWatcher = new SignUpTextWatcher();
 

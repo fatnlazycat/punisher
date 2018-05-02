@@ -63,10 +63,10 @@ public class Globals {
     public static final int MAIN_ACTIVITY_PARTNERS_FRAGMENT = 8;
     public static final int MAIN_ACTIVITY_NEWS_FRAGMENT = 9;
     public static final int MAIN_ACTIVITY_CONTACTS_FRAGMENT = 10;
-    public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 11;
-    public static final int MAIN_ACTIVITY_EXIT = 12;
+    //public static final int MAIN_ACTIVITY_EXIT = 12;
     //now go fragments that won't be called from the drawer
-    public static final int MAIN_ACTIVITY_COMPLAIN_DRAFTS = 100;
+    public static final int MAIN_ACTIVITY_COMPLAIN_DRAFTS  = 100;
+    public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 101;
 
     public static final String PUSH_TOKEN = "PUSH_TOKEN";
 

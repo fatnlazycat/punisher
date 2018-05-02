@@ -1,6 +1,5 @@
 package org.foundation101.karatel.fragment;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -63,7 +62,7 @@ public class ProfileFragment extends Fragment {
     ImageView avatarView;
     ViewGroup memberEmail, memberPassword, memberSurname, memberName, memberSecondName, memberPhone;
     EditText surnameEditText, nameEditText, secondNameEditText, phoneEditText, emailEditText, passwordEditText;
-    FrameLayout progressBar;
+    View progressBar;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -96,9 +95,9 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        progressBar = (FrameLayout) v.findViewById(R.id.frameLayoutProgress);
+        progressBar = v.findViewById(R.id.rlProgress);
 
-        memberEmail = (ViewGroup) v.findViewById(R.id.profile_email);
+        memberEmail = v.findViewById(R.id.profile_email);
         ((TextView)memberEmail.getChildAt(0)).setText(R.string.email);
         memberEmail.getChildAt(1).setVisibility(View.GONE);
         emailEditText = (EditText) memberEmail.getChildAt(2);
@@ -113,7 +112,7 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-        memberPassword = (ViewGroup) v.findViewById(R.id.profile_password);
+        memberPassword = v.findViewById(R.id.profile_password);
         ((TextView)memberPassword.getChildAt(0)).setText(R.string.passw);
         memberPassword.getChildAt(1).setVisibility(View.GONE);
         passwordEditText = (EditText)memberPassword.getChildAt(2);
@@ -127,34 +126,34 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-        memberSurname = (ViewGroup) v.findViewById(R.id.profile_surname);
+        memberSurname = v.findViewById(R.id.profile_surname);
         ((TextView)memberSurname.getChildAt(0)).setText(R.string.surname);
         memberSurname.getChildAt(1).setVisibility(View.GONE);
         surnameEditText = (EditText)memberSurname.getChildAt(2);
         surnameEditText.setInputType(InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
 
-        memberName = (ViewGroup) v.findViewById(R.id.profile_name);
+        memberName = v.findViewById(R.id.profile_name);
         ((TextView)memberName.getChildAt(0)).setText(R.string.name);
         memberName.getChildAt(1).setVisibility(View.GONE);
         nameEditText = (EditText)memberName.getChildAt(2);
         nameEditText.setInputType(InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
 
-        memberSecondName = (ViewGroup) v.findViewById(R.id.profile_second_name);
+        memberSecondName = v.findViewById(R.id.profile_second_name);
         ((TextView)memberSecondName.getChildAt(0)).setText(R.string.second_name);
         memberSecondName.getChildAt(1).setVisibility(View.GONE);
         secondNameEditText = (EditText)memberSecondName.getChildAt(2);
         secondNameEditText.setInputType(InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
 
-        memberPhone = (ViewGroup) v.findViewById(R.id.profile_phone);
+        memberPhone = v.findViewById(R.id.profile_phone);
         ((TextView)memberPhone.getChildAt(0)).setText(R.string.phone);
         memberPhone.getChildAt(1).setVisibility(View.GONE);
         phoneEditText = (EditText)memberPhone.getChildAt(2);
         phoneEditText.setInputType(InputType.TYPE_CLASS_PHONE);
 
-        TextView userNameTextView = (TextView)v.findViewById(R.id.userNameTextView);
+        TextView userNameTextView = v.findViewById(R.id.userNameTextView);
         userNameTextView.setText(Globals.user.name + " " + Globals.user.surname);
 
-        avatarView = (ImageView)v.findViewById(R.id.avatarProfileImageView);
+        avatarView = v.findViewById(R.id.avatarProfileImageView);
         avatarView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

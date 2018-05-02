@@ -33,7 +33,7 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
 
     ArrayList<NewsItem> newsListContent;
     NewsListAdapter newsListAdapter;
-    FrameLayout progressBar;
+    View progressBar;
     private static final String rssURL = "https://www.foundation101.org/rss.xml";
 
     public NewsFragment(){
@@ -51,7 +51,7 @@ public class NewsFragment extends Fragment implements AdapterView.OnItemClickLis
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_news, container, false);
 
-        progressBar = (FrameLayout) v.findViewById(R.id.frameLayoutProgressNews);
+        progressBar = v.findViewById(R.id.frameLayoutProgressNews);
 
         newsListContent = new ArrayList<>();
         newsListAdapter = new NewsListAdapter(newsListContent);

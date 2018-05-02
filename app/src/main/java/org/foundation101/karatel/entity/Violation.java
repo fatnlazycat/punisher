@@ -31,10 +31,11 @@ public class Violation implements Serializable{
 
     public String name;
     public String type;
-    public String textInactive;
+    public String textInactive, header;
     public int id;
     public int drawableId;
     public boolean usesCamera, active;
+    public boolean locationRequired = true;
     public int mediaTypes, category;
     ArrayList<ViolationRequisite> requisites;
 

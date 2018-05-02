@@ -257,6 +257,7 @@
       "id": 2,
       "usesCamera": false,
       "active": true,
+      "locationRequired": false,
       "mediaTypes": 0,
       "requisites": [
         {
@@ -298,6 +299,7 @@
       "id": 1,
       "usesCamera": false,
       "active": true,
+      "locationRequired": false,
       "mediaTypes": 0,
       "requisites": [
         {
@@ -327,6 +329,29 @@
           "description": "Бортовий номер (дві, три або чотири цифри) можна знайти біля кабіни водія або ззовні транспортного засобу",
           "hint": "Вкажіть номер",
           "necessary": true
+        }
+      ]
+    },
+    {
+      "name": "Київблагоустрій",
+      "type": "blahoustrii",
+      "category": 1,
+      "id": 3,
+      "usesCamera": false,
+      "active": true,
+      "mediaTypes": 0,
+      "header": "Скарги приймаються виключно на проблеми з благоустроєм у парках міста Києва",
+      "requisites": [
+        {
+          "dbTag": "blahoustrii_description",
+          "name": "Що сталося?",
+          "hint": "Оберіть один з варіантів",
+          "necessary": true,
+          "possibleValues": [
+            "Сміття",
+            "Зламана лавка",
+            "Інше"
+          ]
         }
       ]
     }

@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.MediaController;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -24,11 +25,16 @@ import android.widget.VideoView;
 /*import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;*/
 
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.retrofit.ProgressEvent;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
 import org.foundation101.karatel.utils.MediaUtils;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,7 +42,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.util.List;
 
+import okhttp3.HttpUrl;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -44,16 +52,21 @@ import retrofit2.Retrofit;
 
 public class ShowMediaActivity extends AppCompatActivity {
     Bitmap picture;
-    FrameLayout progressBar;
+    View progressBar;
+    TextView tvProgress;
+    AsyncTask loadingTask;
+
+    String source;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_media);
 
-        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
+        progressBar = findViewById(R.id.rlProgress);
+        tvProgress  = findViewById(R.id.tvProgress);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
@@ -61,14 +74,14 @@ public class ShowMediaActivity extends AppCompatActivity {
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
 
         Intent intent = getIntent();
-        String source = intent.getStringExtra(Globals.MEDIA_FILE);
+        source = intent.getStringExtra(Globals.MEDIA_FILE);
         if (source.endsWith(CameraManager.JPG) || source.endsWith(CameraManager.PNG)) {
-            ImageView iView = (ImageView) findViewById(R.id.imageViewJustShow);
+            ImageView iView = findViewById(R.id.imageViewJustShow);
             iView.setVisibility(View.VISIBLE);
-            new BitmapWorkerTask(iView).execute(source);
+            loadingTask = new BitmapWorkerTask(iView).execute(source);
 
         } else if (source.endsWith(CameraManager.MP4)) {
-            VideoView vView = (VideoView) findViewById(R.id.videoViewJustShow);
+            VideoView vView = findViewById(R.id.videoViewJustShow);
             final MediaController mc = new MediaController(this);
             vView.setMediaController(mc);
             vView.setVideoPath(source);
@@ -112,14 +125,57 @@ public class ShowMediaActivity extends AppCompatActivity {
         return point;
     }
 
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void postProgress(ProgressEvent progressEvent) {
+        boolean isLoading = (thisDownload(progressEvent.getIdentifier())
+                && progressEvent.getProgress() > 0 && progressEvent.getProgress() < 100);
+
+        tvProgress.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        if (isLoading) tvProgress.setText(progressEvent.getProgress() + "%");
+    }
+
+    private boolean thisDownload(String downloadIdentifier) {
+        return downloadIdentifier != null
+                && loadingTask != null
+                && downloadIdentifier.equals(loadingTask.toString());
+
+        /*HttpUrl httpUrl = HttpUrl.parse(source);
+
+        if (httpUrl == null) return false;
+
+        List<String> path = httpUrl.pathSegments();
+        String fileName = (path.size() > 1) ? path.get(path.size() - 1) : "";
+
+        return fileName.equalsIgnoreCase(downloadIdentifier);*/
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        EventBus.getDefault().register(this);
+    }
+
     @Override
     public void onStart() {
         super.onStart();
     }
 
     @Override
+    protected void onPause() {
+        EventBus.getDefault().unregister(this);
+        super.onPause();
+    }
+
+    @Override
     public void onStop() {
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (loadingTask != null) loadingTask.cancel(true);
+        super.onDestroy();
     }
 
     /**
@@ -151,30 +207,36 @@ public class ShowMediaActivity extends AppCompatActivity {
         // Once complete, see if ImageView is still around and set bitmap.
         @Override
         protected void onPostExecute(Bitmap bitmap) {
-            if (imageViewReference != null && bitmap != null) {
+            if (bitmap != null) {
                 final ImageView imageView = imageViewReference.get();
                 if (imageView != null) {
                     imageView.setImageBitmap(bitmap);
                 }
             }
-            progressBar.setVisibility(View.GONE);
+            if (progressBar != null) progressBar.setVisibility(View.GONE);
         }
 
-        Bitmap decodeSampledBitmapFromFile(String fileName) {
+        Bitmap decodeSampledBitmapFromFile(String fileUrl) {
             BitmapFactory.Options options = new BitmapFactory.Options();
             Point point = MediaUtils.getDesiredSize(ShowMediaActivity.this);
             try {
-                if (fileName.matches("https?://.+")) {
+                if (fileUrl.matches("https?://.+")) {
                     String baseUrl = Globals.SERVER_URL.replace("/api/v1/", "");
 
-                    RetrofitDownloader downloader = new Retrofit.Builder()
+                    /*RetrofitDownloader downloader = new Retrofit.Builder()
                             .baseUrl(baseUrl)
-                            .build().create(RetrofitDownloader.class);
-                    Call<ResponseBody> call = downloader.downloadFileWithDynamicUrl(fileName.replace(baseUrl, ""));
+                            .build().create(RetrofitDownloader.class);*/
+
+                    RetrofitDownloader downloader = KaratelApplication.getClient().create(RetrofitDownloader.class);
+                    Call<ResponseBody> call = downloader.downloadFileWithDynamicUrl(fileUrl.replace(baseUrl, ""));
                     Response<ResponseBody> response = call.execute();
+
+                    //check if this AsyncTask is cancelled & quit if yes
+                    if (isCancelled()) return null;
+
                     if (response.isSuccessful()) {
                         Log.d(TAG, "server contacted and has file");
-                        boolean writtenToDisk = writeResponseBodyToDisk(response.body(), newFile);
+                        boolean writtenToDisk = writeResponseBodyToDisk(BitmapWorkerTask.this.toString(), response.body(), newFile);
                         Log.d(TAG, "file download was a success? " + writtenToDisk);
                     } else {
                         Log.d(TAG, "server contact failed");
@@ -197,7 +259,7 @@ public class ShowMediaActivity extends AppCompatActivity {
                 } else {
                     //first run to determine image size
                     options.inJustDecodeBounds = true;
-                    BitmapFactory.decodeFile(fileName, options);
+                    BitmapFactory.decodeFile(fileUrl, options);
 
                     //calculate sample size
                     options.inSampleSize = MediaUtils.calculateInSampleSize(options, point.x, point.y);
@@ -205,13 +267,13 @@ public class ShowMediaActivity extends AppCompatActivity {
                     //second run to get bitmap
                     options.inJustDecodeBounds = false;
 
-                    int orientation = MediaUtils.getOrientation(fileName);
+                    int orientation = MediaUtils.getOrientation(fileUrl);
                     try {
-                        picture = MediaUtils.rotateBitmap(BitmapFactory.decodeFile(fileName, options), orientation);
+                        picture = MediaUtils.rotateBitmap(BitmapFactory.decodeFile(fileUrl, options), orientation);
                     } catch (OutOfMemoryError err) {
                         Log.d(TAG, "reducing in sample size");
                         options.inSampleSize *= 4;
-                        picture = MediaUtils.rotateBitmap(BitmapFactory.decodeFile(fileName, options), orientation);
+                        picture = MediaUtils.rotateBitmap(BitmapFactory.decodeFile(fileUrl, options), orientation);
                     }
                 }
             } catch (final IOException e) {
@@ -227,7 +289,7 @@ public class ShowMediaActivity extends AppCompatActivity {
      * @param file
      * @return
      */
-    public static boolean writeResponseBodyToDisk(ResponseBody body, File file) {
+    public static boolean writeResponseBodyToDisk(String downloadId, ResponseBody body, File file) {
         try {
             InputStream inputStream = null;
             OutputStream outputStream = null;
@@ -252,6 +314,8 @@ public class ShowMediaActivity extends AppCompatActivity {
                     fileSizeDownloaded += read;
 
                     Log.d("writeResponseBodyToDisk", "file download: " + fileSizeDownloaded + " of " + fileSize);
+                    int progress = (int) ((float)fileSizeDownloaded / fileSize * 100);
+                    EventBus.getDefault().post(new ProgressEvent(downloadId, progress));
                 }
 
                 outputStream.flush();

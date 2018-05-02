@@ -18,8 +18,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,7 +36,7 @@ import java.io.IOException;
 public class ChangePasswordActivity extends AppCompatActivity {
     static final String TAG = "ChangePassword";
 
-    FrameLayout progressBar;
+    RelativeLayout progressBar;
     Toolbar toolbar;
     ViewGroup viewGroupPassword, viewGroupNewPassword;
     EditText oldPassword, newPassword;
@@ -52,9 +52,9 @@ public class ChangePasswordActivity extends AppCompatActivity {
         //Google Analytics part
         ((KaratelApplication)getApplication()).sendScreenName(TAG);
 
-        progressBar = (FrameLayout) findViewById(R.id.frameLayoutProgress);
+        progressBar = findViewById(R.id.rlProgress);
 
-        toolbar = (Toolbar)findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);

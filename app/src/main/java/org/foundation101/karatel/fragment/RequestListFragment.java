@@ -65,7 +65,7 @@ public class RequestListFragment extends Fragment {
 
     View mainView;
     RecyclerView recycler;
-    FrameLayout progressBar;
+    View progressBar;
     RequestListAdapter requestListAdapter;
     RelativeLayout sortMenu;
     SwipeRefreshLayout swipeRefreshLayout;
@@ -122,10 +122,10 @@ public class RequestListFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        progressBar = (FrameLayout) view.findViewById(R.id.frameLayoutProgress);
-        sortMenu = (RelativeLayout) view.findViewById(R.id.sortingLayout);
+        progressBar = view.findViewById(R.id.rlProgress);
+        sortMenu = view.findViewById(R.id.sortingLayout);
 
-        textViewByStatus = (TextView) view.findViewById(R.id.textViewByStatus);
+        textViewByStatus = view.findViewById(R.id.textViewByStatus);
         textViewByStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -139,7 +139,7 @@ public class RequestListFragment extends Fragment {
             }
         });
 
-        textViewByDate = (TextView)view.findViewById(R.id.textViewByDate);
+        textViewByDate = view.findViewById(R.id.textViewByDate);
         textViewByDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -155,7 +155,7 @@ public class RequestListFragment extends Fragment {
 
         mainView = view;
 
-        swipeRefreshLayout = (SwipeRefreshLayout)view.findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -171,7 +171,7 @@ public class RequestListFragment extends Fragment {
             }
         });
 
-        recycler = (RecyclerView)view.findViewById(R.id.recyclerViewRequests);
+        recycler = view.findViewById(R.id.recyclerViewRequests);
         recycler.setHasFixedSize(true);
         recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         requestListAdapter = new RequestListAdapter(getContext());
@@ -221,7 +221,7 @@ public class RequestListFragment extends Fragment {
     void showNoRequestsLayout(){
         //recycler.setVisibility(View.GONE);
         swipeRefreshLayout.setVisibility(View.GONE);
-        LinearLayout layoutNoRequests = (LinearLayout)mainView.findViewById(R.id.layoutNoRequests);
+        LinearLayout layoutNoRequests = mainView.findViewById(R.id.layoutNoRequests);
         layoutNoRequests.setVisibility(View.VISIBLE);
     }
 

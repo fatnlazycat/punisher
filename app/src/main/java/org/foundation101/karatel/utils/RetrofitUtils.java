@@ -5,6 +5,7 @@ import android.util.Log;
 import org.foundation101.karatel.BuildConfig;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.retrofit.DownloadProgressInterceptor;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -30,13 +31,14 @@ public class RetrofitUtils {
         if (needsRebuilding(retrofit, apiVersion)) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             HttpLoggingInterceptor.Level logLevel = BuildConfig.DEBUG ?
-                    HttpLoggingInterceptor.Level.BODY :
+                    HttpLoggingInterceptor.Level.BASIC :
                     HttpLoggingInterceptor.Level.NONE;
             logging.setLevel(logLevel);
 
             OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
             // add your other interceptors …
+            //httpClient.addInterceptor(new DownloadProgressInterceptor());
             // add logging as last interceptor
             httpClient.addInterceptor(logging);
 

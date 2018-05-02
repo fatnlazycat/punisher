@@ -128,6 +128,8 @@ public class StartActivity extends Activity {
     }
 
     public AlertDialog showGCMErrorDialog() {
+        if (isFinishing()) return null;
+
         final AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Помилка отримання токена")
                 .setMessage("Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.")

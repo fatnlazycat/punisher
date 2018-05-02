@@ -44,6 +44,7 @@ public class CameraManager {
     public static final String PNG = ".png";
     public static final String MP4 = ".mp4";
     public static final String MOV = ".mov";
+    public static final String[] SUPPORTED_EXTENSIONS = {JPG, PNG, MP4, MOV};
 
     public static final String FILENAME_PATTERN = "(" + FILE_NAME_PREFIX + ".+)"
             + "(\\" + JPG
@@ -122,7 +123,7 @@ public class CameraManager {
 
     private Uri getMediaFileUriWithoutExtension(){
         Uri mediaFileUri = null;
-        String fileName = "yet empty";
+        String fileName;
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             try {
                 File appPrivateDir = context.getExternalFilesDir(null);
@@ -139,7 +140,7 @@ public class CameraManager {
 
     private Uri getMediaFileUri(String mediaType){
         Uri mediaFileUri = null;
-        String fileName = "yet empty";
+        String fileName;
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             try {
                 File appPrivateDir = context.getExternalFilesDir(null);

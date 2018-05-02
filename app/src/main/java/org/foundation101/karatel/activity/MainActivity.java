@@ -30,6 +30,7 @@ import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -83,7 +84,8 @@ public class MainActivity extends AppCompatActivity {
     public Toolbar toolbar;
     ImageView avatarImageView;
     TextView avatarTextView;
-    FrameLayout progressBar;
+    RelativeLayout progressBar;
+    DrawerLayout drawerLayout;
     FragmentManager fManager;
     FragmentTransaction ft;
     int currentFragment;
@@ -124,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
 
         fManager = getSupportFragmentManager();
 
-        progressBar = findViewById(R.id.frameLayoutProgress);
+        progressBar = findViewById(R.id.rlProgress);
 
         KaratelPreferences.restoreUser();
 
@@ -143,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
         avatarTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 19);
         initDrawerHeader();
 
-        final DrawerLayout drawerLayout = findViewById(R.id.drawerLayoutMainActivity);
+        drawerLayout = findViewById(R.id.drawerLayoutMainActivity);
         final DrawerAdapter drawerAdapter = new DrawerAdapter();
         DrawerAdapter.content = makeDrawerList();
         drawerListView.setAdapter(drawerAdapter);
@@ -165,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
 
         drawerListView.setOnItemClickListener(new ListView.OnItemClickListener(){
             public void onItemClick(AdapterView parent, View view, int position, long id){
-                drawerLayout.closeDrawer(Gravity.LEFT);
+                drawerLayout.closeDrawer(Gravity.START);
                 if (currentFragment == position) {//do not create duplicates
                     return;
                 }
@@ -226,14 +228,14 @@ public class MainActivity extends AppCompatActivity {
                                 .addToBackStack(tag).commit();
                         break;
                     }
-                    case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT: {
+                    /*case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new ProfileFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
                     }
                     case Globals.MAIN_ACTIVITY_EXIT: {
                         new SignOutSender(MainActivity.this).execute();
-                    }
+                    }*/
                 }
             }
         });
@@ -293,12 +295,12 @@ public class MainActivity extends AppCompatActivity {
                                 fragmentInstance = new ContactsFragment();
                                 break;
                             }
-                            case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT: {
-                                fragmentInstance = new ProfileFragment();
-                                break;
-                            }
                             case Globals.MAIN_ACTIVITY_COMPLAIN_DRAFTS: {
                                 fragmentInstance = new ComplainDraftsFragment();
+                                break;
+                            }
+                            case Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT: {
+                                fragmentInstance = new ProfileFragment();
                                 break;
                             }
                         }
@@ -312,8 +314,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         toolbar.setTitle(tag);
-
-        //FacebookSdk.sdkInitialize(getApplicationContext());
 
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .registerReceiver(myBroadcastReceiver, new IntentFilter(BROADCAST_RECEIVER_TAG));
@@ -396,9 +396,9 @@ public class MainActivity extends AppCompatActivity {
         result.put(Globals.MAIN_ACTIVITY_PARTNERS_FRAGMENT,         getResources().getString(R.string.partners_header));
         result.put(Globals.MAIN_ACTIVITY_NEWS_FRAGMENT,             getResources().getString(R.string.news_header));
         result.put(Globals.MAIN_ACTIVITY_CONTACTS_FRAGMENT,         getResources().getString(R.string.contacts_header));
-        result.put(Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT,          getResources().getString(R.string.profile_header));
-        result.put(Globals.MAIN_ACTIVITY_EXIT,                      "");//exit - no tag
+        //result.put(Globals.MAIN_ACTIVITY_EXIT,                      "");//exit - no tag
         result.put(Globals.MAIN_ACTIVITY_COMPLAIN_DRAFTS,           getResources().getString(R.string.drafts));
+        result.put(Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT,          getResources().getString(R.string.profile_header));
 
         return result;
     }
@@ -439,6 +439,16 @@ public class MainActivity extends AppCompatActivity {
         String tag = fragmentTags.get(currentFragment);
         toolbar.setTitle(tag);
         fManager.beginTransaction().replace(R.id.frameLayoutMain, new ComplainDraftsFragment(), tag)
+                .addToBackStack(tag).commit();
+    }
+
+    public void openProfile(View view) {
+        drawerLayout.closeDrawer(Gravity.START);
+
+        currentFragment = Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT;
+        String tag = fragmentTags.get(currentFragment);
+        toolbar.setTitle(tag);
+        fManager.beginTransaction().replace(R.id.frameLayoutMain, new ProfileFragment(), tag)
                 .addToBackStack(tag).commit();
     }
 
@@ -567,6 +577,10 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
     }
 
+    public void exitApp(View view) {
+        drawerLayout.closeDrawer(Gravity.START);
+        new SignOutSender(this).execute();
+    }
 
 
     static class FacebookBinder extends AsyncTask<String, Void, String> {

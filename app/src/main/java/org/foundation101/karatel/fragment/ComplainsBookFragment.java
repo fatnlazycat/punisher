@@ -2,6 +2,8 @@ package org.foundation101.karatel.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -43,10 +45,10 @@ public class ComplainsBookFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_complains_book, container, false);
 
-        ListView lvComplain = (ListView) v.findViewById(R.id.lvComplainTypes);
+        ListView lvComplain = v.findViewById(R.id.lvComplainTypes);
 
         ComplainsBookAdapter adapter = new ComplainsBookAdapter(Violation.getViolationsList(Violation.CATEGORY_BUSINESS));
         lvComplain.setAdapter(adapter);
@@ -68,15 +70,24 @@ public class ComplainsBookFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        try {
-            showNumberOfComplains(((MainActivity) getActivity()).toolbar.getMenu());
-        } catch (NullPointerException ignored) { /*something's null - do nothing then*/ }
+        //delay showNumberOfComplains to wait until db deletion in ComplainDraftsFragment is completed
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    showNumberOfComplains(((MainActivity) getActivity()).toolbar.getMenu());
+                } catch (NullPointerException ignored) { /*something's null - do nothing then*/ }
+            }
+        }, 500);
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        ((MainActivity)getActivity()).toolbar.inflateMenu(R.menu.complains_book_menu);
-        showNumberOfComplains(menu);
+        MainActivity activity = (MainActivity)getActivity();
+        if (activity != null) {
+            activity.toolbar.inflateMenu(R.menu.complains_book_menu);
+            showNumberOfComplains(menu);
+        }
         super.onCreateOptionsMenu(menu, inflater);
     }
 

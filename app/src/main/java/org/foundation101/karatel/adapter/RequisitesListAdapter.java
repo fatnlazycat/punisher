@@ -36,7 +36,7 @@ public class RequisitesListAdapter implements OnMapReadyCallback {
         /*MapView mapView = new MapView(context, new GoogleMapOptions().liteMode(true));
         mapView.getMapAsync(this);*/
 
-        PunishButtonValidator.init();
+        //PunishButtonValidator.init();
     }
 
     public static final float DEFAULT_ZOOM = 17;//zoom values are floats from 2 to 21
