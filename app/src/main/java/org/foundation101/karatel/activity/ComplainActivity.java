@@ -706,7 +706,9 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     }
 
     @Override
-    public void onAddressesReady(PlaceLikelihoodBuffer places) { }
+    public void onAddressesReady(PlaceLikelihoodBuffer places) {
+        places.release(); //we don't need the addresses
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {

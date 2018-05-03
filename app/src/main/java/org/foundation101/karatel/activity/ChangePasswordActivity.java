@@ -61,11 +61,11 @@ public class ChangePasswordActivity extends AppCompatActivity {
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
         actionBar.setTitle(R.string.change_password);
 
-        button = (Button)findViewById(R.id.buttonChange);
+        button = findViewById(R.id.buttonChange);
 
         ChangePasswordTextWatcher textWatcher = new ChangePasswordTextWatcher();
 
-        viewGroupPassword = (ViewGroup)findViewById(R.id.old_password);
+        viewGroupPassword = findViewById(R.id.old_password);
         TextView textViewPassword = (TextView)viewGroupPassword.getChildAt(0);
         textViewPassword.setAllCaps(true);
         textViewPassword.setText(R.string.current_password);
@@ -75,7 +75,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
         oldPassword.addTextChangedListener(textWatcher);
         oldPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
 
-        viewGroupNewPassword = (ViewGroup)findViewById(R.id.new_password);
+        viewGroupNewPassword = findViewById(R.id.new_password);
         TextView textViewNewPassword = (TextView) viewGroupNewPassword.getChildAt(0);
         textViewNewPassword.setAllCaps(true);
         textViewNewPassword.setText(R.string.new_password);
@@ -85,9 +85,9 @@ public class ChangePasswordActivity extends AppCompatActivity {
         newPassword.addTextChangedListener(textWatcher);
         newPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
 
-        showOldPassword = (ImageButton)findViewById(R.id.showOldPasswordButton);
+        showOldPassword = findViewById(R.id.showOldPasswordButton);
         showOldPassword.setOnTouchListener(new ShowPasswordOnTouchListener(oldPassword));
-        showNewPassword = (ImageButton)findViewById(R.id.showNewPasswordButton);
+        showNewPassword = findViewById(R.id.showNewPasswordButton);
         showNewPassword.setOnTouchListener(new ShowPasswordOnTouchListener(newPassword));
     }
 
@@ -175,7 +175,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             break;
             }
-            return true;
+            return false;
         }
     }
     private class PasswordChanger extends AsyncTask<String, Void, String> {

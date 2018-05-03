@@ -3,6 +3,7 @@ package org.foundation101.karatel.manager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -13,6 +14,8 @@ import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.entity.ViolationRequisite;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Dima on 08.05.2016.
@@ -22,7 +25,7 @@ public class DBHelper extends SQLiteOpenHelper {
     //look at this - maybe we don't need it?
     Context context;
 
-    public static final int DB_VERSION = 3;
+    public static final int DB_VERSION = 4;
     public static final String DATABASE = "violations_db";
     public static final String VIOLATIONS_TABLE = "violations_table";
     public static final String MEDIA_TABLE = "media_table";
@@ -69,6 +72,8 @@ public class DBHelper extends SQLiteOpenHelper {
                 break;
             }
         }
+        checkViolationsAndAddColumns(db, Violation.CATEGORY_BUSINESS);
+        checkViolationsAndAddColumns(db, Violation.CATEGORY_PUBLIC);
     }
 
     private void createTablesForViolations(SQLiteDatabase db) {
@@ -151,24 +156,6 @@ public class DBHelper extends SQLiteOpenHelper {
         } finally {
             db.endTransaction();
         }
-
-        /*db.execSQL("ALTER TABLE " + tableNames[1]
-                + " ADD COLUMN " + LONGITUDE + " REAL DEFAULT 0");
-        db.execSQL("ALTER TABLE " + tableNames[1]
-                + " ADD COLUMN " + LATITUDE  + " REAL DEFAULT 0");
-
-        String[] columns = {_ID, LONGITUDE, LATITUDE};
-        Cursor c = db.query(tableNames[0], columns, null, null, null, null, null);
-
-        while (c.moveToNext()) {
-            db.execSQL("UPDATE " + tableNames[1]
-                    + " SET "
-                    + LONGITUDE + " = " + c.getString(c.getColumnIndex(LONGITUDE)) + ", "
-                    + LATITUDE  + " = " + c.getString(c.getColumnIndex(LATITUDE))
-                    + " WHERE " + ID + " = " + c.getInt(c.getColumnIndex(_ID)));
-        }
-        c.close();*/
-
         //we don't drop lat/lng column in violation table - let it stay there empty
     }
 
@@ -186,14 +173,47 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private String getTableStructure(int category) {
         StringBuilder sb = new StringBuilder();
-        ArrayList<Violation> violations = Violation.getViolationsList(category);
-        for (Violation v : violations) {
-            for (ViolationRequisite violationRequisite : v.getRequisites()) {
-                sb.append(violationRequisite.dbTag + " TEXT,");
-            }
+        List<String> requisites = getTableStructureList(category);
+        for (String requisiteName : requisites) {
+            sb.append(requisiteName).append(" TEXT,");
         }
 
         return new String(sb).substring(0,sb.length()-1); //remove trailing ','
+    }
+
+    private List<String> getTableStructureList(int category) {
+        List<String> result = new ArrayList<>();
+        ArrayList<Violation> violations = Violation.getViolationsList(category);
+        for (Violation v : violations) {
+            for (ViolationRequisite violationRequisite : v.getRequisites()) {
+                result.add(violationRequisite.dbTag);
+            }
+        }
+        return result;
+    }
+
+    private void checkViolationsAndAddColumns(SQLiteDatabase db, int category) {
+        String table = tableNamesFromCategory(category)[0];
+        Cursor dbCursor = db.query(table, null, null, null, null, null, null);
+        String[] currentStructure = dbCursor.getColumnNames();
+        dbCursor.close();
+
+        List<String> requiredStructure = getTableStructureList(category);
+        requiredStructure.removeAll(Arrays.asList(currentStructure));
+        if (requiredStructure.isEmpty()) return;
+
+        db.beginTransaction();
+        try {
+            for (String columnToAdd : requiredStructure) {
+                db.execSQL("ALTER TABLE " + table + " ADD " + columnToAdd + " TEXT;");
+            }
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            Log.e("DBHelper", e.toString());
+            Mint.logException(e);
+        } finally {
+            db.endTransaction();
+        }
     }
 
     public static ContentValues getRowAsContentValues(Cursor c) {

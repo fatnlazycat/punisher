@@ -334,7 +334,7 @@
     },
     {
       "name": "Київблагоустрій",
-      "type": "blahoustrii",
+      "type": "KyivBlagoUstriy",
       "category": 1,
       "id": 3,
       "usesCamera": false,
@@ -343,7 +343,7 @@
       "header": "Скарги приймаються виключно на проблеми з благоустроєм у парках міста Києва",
       "requisites": [
         {
-          "dbTag": "blahoustrii_description",
+          "dbTag": "KyivBlagoUstriy_description",
           "name": "Що сталося?",
           "hint": "Оберіть один з варіантів",
           "necessary": true,
