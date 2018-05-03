@@ -1,88 +1,58 @@
 {
   "violations": [
     {
-      "name": "Вимагання хабара",
-      "type": "Bribe",
+      "name": "Яма на дорозі",
+      "type": "PitRoad",
       "category": 2,
-      "usesCamera": true,
+      "usesCamera": false,
       "active": true,
-      "mediaTypes": 1,
+      "mediaTypes": 0,
       "requisites": [
         {
-          "dbTag": "Bribe_address",
+          "dbTag": "PitRoad_address",
           "name": "АДРЕСА",
           "description": "Якомога точніше: область, район, населений пункт, вулиця, будинок тощо",
           "hint": "Вкажіть місце інциденту",
           "necessary": true
         }, {
-          "dbTag": "Bribe_all_name",
-          "name": "П.І.Б. ХАБАРНИКА",
-          "description": "Не обов’язково, але бажано заповнити",
-          "hint": "П.І.Б.",
-          "necessary": false
-        }, {
-          "dbTag": "Bribe_position",
-          "name": "ПОСАДА ХАБАРНИКА",
-          "description": "Не обов’язково, але бажано заповнити",
-          "hint": "Вкажіть посаду",
-          "necessary": false
-        }, {
-          "dbTag": "Bribe_name_of_authority",
-          "name": "НАЗВА ОРГАНУ ВЛАДИ",
-          "description": "Напис на вивісці",
-          "hint": "Вкажіть напис на вивісці",
+          "dbTag": "PitRoad_the_closest_landmark",
+          "name": "НАЙБЛИЖЧИЙ ОРІЄНТИР",
+          "description": "Заклад, зупинка, будинок, кіоск тощо",
+          "hint": "Вкажіть найближчий орієнтир",
           "necessary": true
         }, {
-          "dbTag": "Bribe_description",
-          "name": "ЩО СТАЛОСЯ?",
-          "description": "Коротко описати обставини, за яких стався інцидент",
-          "hint": "Детально вкажіть обставини",
+          "dbTag": "PitRoad_description",
+          "name": "ОПИС ЯМИ",
+          "description": "Якомога детальніше: розмір, де знаходиться, чим саме заважає тощо",
+          "hint": "Детально вкажіть характеристики",
           "necessary": true
         }
       ]
     },
     {
-      "name": "Хамство",
-      "type": "Insult",
+      "name": "Порушення благоустрою",
+      "type": "Damage",
       "category": 2,
-      "usesCamera": true,
+      "usesCamera": false,
       "active": true,
-      "mediaTypes": 1,
+      "mediaTypes": 0,
       "requisites": [
         {
-          "dbTag": "Insult_address",
+          "dbTag": "Damage_address",
           "name": "АДРЕСА",
           "description": "Якомога точніше: область, район, населений пункт, вулиця, будинок тощо",
           "hint": "Вкажіть місце інциденту",
           "necessary": true
         }, {
-          "dbTag": "Insult_all_name",
-          "name": "П.І.Б. ТОГО, ХТО ВАС ОБРАЗИВ",
-          "description": "Не обов’язково, але бажано заповнити",
-          "hint": "Вкажіть П.І.Б. образника",
-          "necessary": false
-        }, {
-          "dbTag": "Insult_position",
-          "name": "ПОСАДА ТОГО, ХТО ВАС ОБРАЗИВ",
-          "description": "Не обов’язково, але бажано заповнити",
-          "hint": "Вкажіть посаду",
-          "necessary": false
-        }, {
-          "dbTag": "Insult_name_of_authority",
-          "name": "НАЗВА ОРГАНУ ВЛАДИ АБО ПРИВАТНОГО ЗАКЛАДУ",
-          "description": "Напис на вивісці",
-          "hint": "Вкажіть напис на вивісці",
+          "dbTag": "Damage_the_closest_landmark",
+          "name": "НАЙБЛИЖЧИЙ ОРІЄНТИР",
+          "description": "Заклад, зупинка, будинок, кіоск тощо",
+          "hint": "Вкажіть найближчий орієнтир",
           "necessary": true
         }, {
-          "dbTag": "Insult_name_of_institution",
-          "name": "НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ",
-          "description": "Виключно для приватних закладів; подивитись в кутку споживача",
-          "hint": "Виключно для приватних закладів",
-          "necessary": false
-        }, {
-          "dbTag": "Insult_description",
-          "name": "ЩО СТАЛОСЯ?",
-          "description": "Коротко описати обставини, за яких стався інцидент",
+          "dbTag": "Damage_description",
+          "name": "ОПИС ПОРУШЕННЯ",
+          "description": "Якомога детальніше: сміття на вулиці, відсутність урни біля кіоску тощо",
           "hint": "Детально вкажіть обставини",
           "necessary": true
         }
@@ -164,58 +134,88 @@
       ]
     },
     {
-      "name": "Яма на дорозі",
-      "type": "PitRoad",
+      "name": "Хамство",
+      "type": "Insult",
       "category": 2,
-      "usesCamera": false,
+      "usesCamera": true,
       "active": true,
-      "mediaTypes": 0,
+      "mediaTypes": 1,
       "requisites": [
         {
-          "dbTag": "PitRoad_address",
+          "dbTag": "Insult_address",
           "name": "АДРЕСА",
           "description": "Якомога точніше: область, район, населений пункт, вулиця, будинок тощо",
           "hint": "Вкажіть місце інциденту",
           "necessary": true
         }, {
-          "dbTag": "PitRoad_the_closest_landmark",
-          "name": "НАЙБЛИЖЧИЙ ОРІЄНТИР",
-          "description": "Заклад, зупинка, будинок, кіоск тощо",
-          "hint": "Вкажіть найближчий орієнтир",
+          "dbTag": "Insult_all_name",
+          "name": "П.І.Б. ТОГО, ХТО ВАС ОБРАЗИВ",
+          "description": "Не обов’язково, але бажано заповнити",
+          "hint": "Вкажіть П.І.Б. образника",
+          "necessary": false
+        }, {
+          "dbTag": "Insult_position",
+          "name": "ПОСАДА ТОГО, ХТО ВАС ОБРАЗИВ",
+          "description": "Не обов’язково, але бажано заповнити",
+          "hint": "Вкажіть посаду",
+          "necessary": false
+        }, {
+          "dbTag": "Insult_name_of_authority",
+          "name": "НАЗВА ОРГАНУ ВЛАДИ АБО ПРИВАТНОГО ЗАКЛАДУ",
+          "description": "Напис на вивісці",
+          "hint": "Вкажіть напис на вивісці",
           "necessary": true
         }, {
-          "dbTag": "PitRoad_description",
-          "name": "ОПИС ЯМИ",
-          "description": "Якомога детальніше: розмір, де знаходиться, чим саме заважає тощо",
-          "hint": "Детально вкажіть характеристики",
+          "dbTag": "Insult_name_of_institution",
+          "name": "НАЗВА СУБ’ЄКТУ ГОСПОДАРЮВАННЯ",
+          "description": "Виключно для приватних закладів; подивитись в кутку споживача",
+          "hint": "Виключно для приватних закладів",
+          "necessary": false
+        }, {
+          "dbTag": "Insult_description",
+          "name": "ЩО СТАЛОСЯ?",
+          "description": "Коротко описати обставини, за яких стався інцидент",
+          "hint": "Детально вкажіть обставини",
           "necessary": true
         }
       ]
     },
     {
-      "name": "Порушення благоустрою",
-      "type": "Damage",
+      "name": "Вимагання хабара",
+      "type": "Bribe",
       "category": 2,
-      "usesCamera": false,
+      "usesCamera": true,
       "active": true,
-      "mediaTypes": 0,
+      "mediaTypes": 1,
       "requisites": [
         {
-          "dbTag": "Damage_address",
+          "dbTag": "Bribe_address",
           "name": "АДРЕСА",
           "description": "Якомога точніше: область, район, населений пункт, вулиця, будинок тощо",
           "hint": "Вкажіть місце інциденту",
           "necessary": true
         }, {
-          "dbTag": "Damage_the_closest_landmark",
-          "name": "НАЙБЛИЖЧИЙ ОРІЄНТИР",
-          "description": "Заклад, зупинка, будинок, кіоск тощо",
-          "hint": "Вкажіть найближчий орієнтир",
+          "dbTag": "Bribe_all_name",
+          "name": "П.І.Б. ХАБАРНИКА",
+          "description": "Не обов’язково, але бажано заповнити",
+          "hint": "П.І.Б.",
+          "necessary": false
+        }, {
+          "dbTag": "Bribe_position",
+          "name": "ПОСАДА ХАБАРНИКА",
+          "description": "Не обов’язково, але бажано заповнити",
+          "hint": "Вкажіть посаду",
+          "necessary": false
+        }, {
+          "dbTag": "Bribe_name_of_authority",
+          "name": "НАЗВА ОРГАНУ ВЛАДИ",
+          "description": "Напис на вивісці",
+          "hint": "Вкажіть напис на вивісці",
           "necessary": true
         }, {
-          "dbTag": "Damage_description",
-          "name": "ОПИС ПОРУШЕННЯ",
-          "description": "Якомога детальніше: сміття на вулиці, відсутність урни біля кіоску тощо",
+          "dbTag": "Bribe_description",
+          "name": "ЩО СТАЛОСЯ?",
+          "description": "Коротко описати обставини, за яких стався інцидент",
           "hint": "Детально вкажіть обставини",
           "necessary": true
         }
@@ -247,6 +247,29 @@
           "description": "Якомога точніше: паркування на газоні, тротуарі, пішохідному переході тощо",
           "hint": "Наприклад: Паркування на газоні",
           "necessary": true
+        }
+      ]
+    },
+    {
+      "name": "Київблагоустрій",
+      "type": "KyivBlagoUstriy",
+      "category": 1,
+      "id": 3,
+      "usesCamera": false,
+      "active": true,
+      "mediaTypes": 0,
+      "header": "Скарги приймаються виключно на проблеми з благоустроєм у парках міста Києва",
+      "requisites": [
+        {
+          "dbTag": "KyivBlagoUstriy_description",
+          "name": "Що сталося?",
+          "hint": "Оберіть один з варіантів",
+          "necessary": true,
+          "possibleValues": [
+            "Сміття",
+            "Зламана лавка",
+            "Інше"
+          ]
         }
       ]
     },
@@ -329,29 +352,6 @@
           "description": "Бортовий номер (дві, три або чотири цифри) можна знайти біля кабіни водія або ззовні транспортного засобу",
           "hint": "Вкажіть номер",
           "necessary": true
-        }
-      ]
-    },
-    {
-      "name": "Київблагоустрій",
-      "type": "KyivBlagoUstriy",
-      "category": 1,
-      "id": 3,
-      "usesCamera": false,
-      "active": true,
-      "mediaTypes": 0,
-      "header": "Скарги приймаються виключно на проблеми з благоустроєм у парках міста Києва",
-      "requisites": [
-        {
-          "dbTag": "KyivBlagoUstriy_description",
-          "name": "Що сталося?",
-          "hint": "Оберіть один з варіантів",
-          "necessary": true,
-          "possibleValues": [
-            "Сміття",
-            "Зламана лавка",
-            "Інше"
-          ]
         }
       ]
     }

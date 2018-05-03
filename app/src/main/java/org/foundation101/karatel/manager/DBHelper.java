@@ -3,7 +3,6 @@ package org.foundation101.karatel.manager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -21,10 +20,6 @@ import java.util.List;
  * Created by Dima on 08.05.2016.
  */
 public class DBHelper extends SQLiteOpenHelper {
-
-    //look at this - maybe we don't need it?
-    Context context;
-
     public static final int DB_VERSION = 4;
     public static final String DATABASE = "violations_db";
     public static final String VIOLATIONS_TABLE = "violations_table";
@@ -45,11 +40,8 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String LATITUDE = "latitude";
     public static final String FILE_NAME = "file_name";
 
-    public static final int DB_TAG_STEP = 5;
-
     public DBHelper(Context context, String name, int version) {
         super(context, name, null, version);
-        this.context = context;
     }
 
     @Override

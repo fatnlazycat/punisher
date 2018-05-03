@@ -109,6 +109,14 @@ public class Violation implements Serializable{
         return filteredList;
     }
 
+    public static ArrayList<Violation> getActiveViolationsList(int categoryFilter) {
+        ArrayList<Violation> filteredList = new ArrayList<>(getViolationsList());
+        for (Violation v : violationsList) {
+            if (v.getCategory() != categoryFilter || !v.isActive()) filteredList.remove(v);
+        }
+        return filteredList;
+    }
+
     public static ArrayList<Violation> getViolationsList() {
         if (violationsList == null) {
             try {

@@ -3,6 +3,7 @@ package org.foundation101.karatel.fragment;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -35,15 +36,15 @@ public class MainFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_main, container, false);
 
         //init  gridView with violations
-        GridView violationsGridView = (GridView) v.findViewById(R.id.gridViewMain);
+        GridView violationsGridView = v.findViewById(R.id.gridViewMain);
         ViolationsAdapter violationsAdapter = new ViolationsAdapter();
-        ViolationsAdapter.content = Violation.getViolationsList(Violation.CATEGORY_PUBLIC);
+        ViolationsAdapter.content = Violation.getActiveViolationsList(Violation.CATEGORY_PUBLIC);
         violationsGridView.setAdapter(violationsAdapter);
         violationsGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
