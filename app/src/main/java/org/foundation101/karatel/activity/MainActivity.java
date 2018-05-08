@@ -336,24 +336,27 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        int entryNumber = fManager.getBackStackEntryCount() - 2;
-        if (entryNumber >= 0) {
-            String tag = fManager.getBackStackEntryAt(entryNumber).getName();
-            if (tag.equals(getResources().getString(R.string.profile_header))) {//skip the profile page
-                tag = getResources().getString(R.string.do_punish);//& go to main page
-                currentFragment = Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT;
-            } else {
-                for (int i : fragmentTags.keySet()){
-                    if (tag.equals(fragmentTags.get(i))) {
-                        currentFragment = i;
-                        break;
+        if (drawerLayout.isDrawerOpen(Gravity.START)) drawerLayout.closeDrawer(Gravity.START);
+        else {
+            int entryNumber = fManager.getBackStackEntryCount() - 2;
+            if (entryNumber >= 0) {
+                String tag = fManager.getBackStackEntryAt(entryNumber).getName();
+                if (tag.equals(getResources().getString(R.string.profile_header))) {//skip the profile page
+                    tag = getResources().getString(R.string.do_punish);//& go to main page
+                    currentFragment = Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT;
+                } else {
+                    for (int i : fragmentTags.keySet()) {
+                        if (tag.equals(fragmentTags.get(i))) {
+                            currentFragment = i;
+                            break;
+                        }
                     }
                 }
+                toolbar.setTitle(tag);
+                fManager.popBackStackImmediate(tag, 0);
+            } else {
+                moveTaskToBack(true);
             }
-            toolbar.setTitle(tag);
-            fManager.popBackStackImmediate(tag, 0);
-        } else {
-            moveTaskToBack(true);
         }
     }
 

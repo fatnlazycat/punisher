@@ -47,7 +47,10 @@ public class ExpandedGridView extends GridView implements View.OnTouchListener, 
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int expandSpec = MeasureSpec.makeMeasureSpec(Integer.MAX_VALUE >> 2,
+                MeasureSpec.AT_MOST);
+        super.onMeasure(widthMeasureSpec, expandSpec);
+/*        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
         int newHeight = 0;
         final int heightMode = MeasureSpec.getMode(heightMeasureSpec);
@@ -79,7 +82,7 @@ public class ExpandedGridView extends GridView implements View.OnTouchListener, 
         }
         int paddings = getPaddingTop() + getPaddingBottom();
         newHeight += paddings;
-        setMeasuredDimension(getMeasuredWidth(), newHeight);
+        setMeasuredDimension(getMeasuredWidth(), newHeight);*/
 
     }
 
