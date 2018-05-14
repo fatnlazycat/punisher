@@ -129,7 +129,7 @@ public class ShowMediaActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void postProgress(ProgressEvent progressEvent) {
         boolean isLoading = (thisDownload(progressEvent.getIdentifier())
-                && progressEvent.getProgress() > 0 && progressEvent.getProgress() < 100);
+                && progressEvent.getProgress() > 0 && progressEvent.getProgress() <= 100);
 
         tvProgress.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         if (isLoading) tvProgress.setText(progressEvent.getProgress() + "%");
@@ -196,6 +196,7 @@ public class ShowMediaActivity extends AppCompatActivity {
         protected void onPreExecute() {
             super.onPreExecute();
             progressBar.setVisibility(View.VISIBLE);
+            EventBus.getDefault().post(new ProgressEvent(BitmapWorkerTask.this.toString(), 1));
         }
 
         // Decode image in background.

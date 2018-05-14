@@ -34,7 +34,7 @@ public class KaratelPreferences {
     }
 
 
-    private static final String KEY_STARTED_FROM_PUSH = "KEY_STARTED_FROM_PUSH";
+    /*private static final String KEY_STARTED_FROM_PUSH = "KEY_STARTED_FROM_PUSH";
     public static boolean startedFromPush() {
         boolean result = preferences().getBoolean(KEY_STARTED_FROM_PUSH, false);
         Log.d(TAG, "startedFromPush=" + result);
@@ -45,7 +45,7 @@ public class KaratelPreferences {
         SharedPreferences.Editor editor = preferences().edit();
         editor.putBoolean(KEY_STARTED_FROM_PUSH, value);
         editor.commit();
-    }
+    }*/
 
 
     public static void saveUserWithAvatar(String surname,

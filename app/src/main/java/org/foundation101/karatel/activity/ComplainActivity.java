@@ -182,7 +182,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void postProgress(ProgressEvent progressEvent) {
-        boolean isLoading = (progressEvent.getProgress() > 0 && progressEvent.getProgress() < 100);
+        boolean isLoading = (progressEvent.getProgress() > 0 && progressEvent.getProgress() <= 100);
         tvProgress.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         if (isLoading) tvProgress.setText(progressEvent.getProgress() + "%");
     }
@@ -784,6 +784,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
             punishButton.setEnabled(false);
             progressBar.setVisibility(View.VISIBLE);
             Globals.hideSoftKeyboard(ComplainActivity.this);
+            EventBus.getDefault().post(new ProgressEvent("no id", 1));
         }
 
         @Override

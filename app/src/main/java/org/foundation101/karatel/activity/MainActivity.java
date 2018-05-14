@@ -62,6 +62,7 @@ import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.retrofit.RetrofitSignOutSender;
+import org.foundation101.karatel.service.MyGcmListenerService;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -246,8 +247,9 @@ public class MainActivity extends AppCompatActivity {
         if (!loggedIn()){ //this happens when we tap push notification icon after logging out - we are not signed in so close the app
             finish();
         } else {
-            if (KaratelPreferences.startedFromPush()) {
-                KaratelPreferences.setStartedFromPush(false);
+            Intent intent = getIntent();
+            if (intent != null && intent.hasExtra(MyGcmListenerService.REQUEST_NUMBER)) {
+                //KaratelPreferences.setStartedFromPush(false);
                 currentFragment = Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT;
                 tag = fragmentTags.get(currentFragment);
                 ft.add(R.id.frameLayoutMain, new RequestListFragment(), tag).addToBackStack(tag).commit();

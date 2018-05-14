@@ -73,7 +73,7 @@ public class MyGcmListenerService extends GcmListenerService {
         Class activityClass;
         if (loggedIn()){
             activityClass = MainActivity.class;
-            KaratelPreferences.setStartedFromPush(true);
+            //KaratelPreferences.setStartedFromPush(true);
         } else {
             activityClass = TipsActivity.class;
         }
