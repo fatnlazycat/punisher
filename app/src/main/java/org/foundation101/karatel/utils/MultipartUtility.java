@@ -2,8 +2,6 @@ package org.foundation101.karatel.utils;
 
 import android.util.Log;
 
-import org.foundation101.karatel.Globals;
-
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,6 +16,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.foundation101.karatel.manager.KaratelPreferences;
 
 public class MultipartUtility {
     private final String boundary;
@@ -54,7 +54,7 @@ public class MultipartUtility {
         httpConn.setDoInput(true);
         httpConn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
         httpConn.setRequestProperty( "Accept-Encoding", "" );
-        httpConn.setRequestProperty("Authorization", Globals.sessionToken);
+        httpConn.setRequestProperty("Authorization", KaratelPreferences.sessionToken());
         outputStream = httpConn.getOutputStream();
         bos = new BufferedOutputStream(outputStream, 4096);
         writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);

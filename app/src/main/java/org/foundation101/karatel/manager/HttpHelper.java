@@ -87,7 +87,7 @@ public class HttpHelper {
                     break;
                 }//default is GET
             }
-            if (authorizationRequired) urlConnection.setRequestProperty("Authorization", Globals.sessionToken);
+            if (authorizationRequired) urlConnection.setRequestProperty("Authorization", KaratelPreferences.sessionToken());
 
             if  (!request.isEmpty() && !method.equals("DELETE")) {
                 OutputStream os = urlConnection.getOutputStream();

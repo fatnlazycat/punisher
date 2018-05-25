@@ -27,13 +27,13 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.evernote.android.job.JobManager;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -41,7 +41,6 @@ import com.facebook.FacebookException;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.splunk.mint.Mint;
-import com.splunk.mint.MintLogLevel;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
@@ -62,7 +61,9 @@ import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.retrofit.RetrofitSignOutSender;
+import org.foundation101.karatel.scheduler.TokenExchangeJob;
 import org.foundation101.karatel.service.MyGcmListenerService;
+import org.foundation101.karatel.utils.JobUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -488,7 +489,7 @@ public class MainActivity extends AppCompatActivity {
             if (loggedIn) {
                 sendBindRequest(fbToken);
             } else {
-                List<String> permissionNeeds = Arrays.asList("user_photos", "email", "user_birthday", "user_friends");
+                List<String> permissionNeeds = Arrays.asList(/*"user_photos", */"email"/*, "user_birthday", "user_friends"*/);
                 fbCallbackManager = CallbackManager.Factory.create();
                 LoginManager.getInstance().logInWithReadPermissions(this, permissionNeeds);
                 LoginManager.getInstance().registerCallback(fbCallbackManager, new FacebookCallback<LoginResult>() {
@@ -625,9 +626,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    static class SignOutSender extends AsyncTask<Void, Void, String>{
+    public static class SignOutSender extends AsyncTask<Void, Void, String>{
         static final String TAG = "Logout";
-        final String BANNED = "banned";
+        static final String BANNED = "banned";
 
         SignOutSender(Activity activity) {
             this.activity = activity;
@@ -639,48 +640,40 @@ public class MainActivity extends AppCompatActivity {
         View progressBar;
         String resultData = null;
 
+        public static Response<String> performSignOutRequest(String sessionToken, String gcmToken)
+                throws IOException {
+            RetrofitSignOutSender api = KaratelApplication.getClient().create(RetrofitSignOutSender.class);
+            Call<String> call = api.signOut(sessionToken, gcmToken);
+            return call.execute();
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
             if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
             if (HttpHelper.internetConnected()) {
-                Toast.makeText(KaratelApplication.getInstance(), R.string.loggingOut, Toast.LENGTH_LONG).show();
+                Globals.showMessage(R.string.loggingOut);
             }
         }
 
         @Override
         protected String doInBackground(Void... params) {
-            String result;
-            try {
-                if (HttpHelper.internetConnected()){
-                    String gcmToken = KaratelPreferences.pushToken();
+            JobManager.instance().cancelAll();
+            synchronized (KaratelPreferences.TAG) {
+                String result;
+                try {
+                    if (HttpHelper.internetConnected()) {
+                        Response<String> json = performSignOutRequest(
+                                KaratelPreferences.sessionToken(), KaratelPreferences.pushToken());
+                        result = buildResponseString(json);
+                    } else return HttpHelper.ERROR_JSON;
 
-
-                    RetrofitSignOutSender api = KaratelApplication.getClient().create(RetrofitSignOutSender.class);
-                    Call<String> call = api.signOut(Globals.sessionToken, gcmToken);
-                    Response<String> json = call.execute();
-                    if (json.isSuccessful()) {
-                        result = json.body();
-                    } else {
-                        if (json.code() == 403) {//this code will be returned is the user is banned - agreed with Nazar
-                            return BANNED; //& check this in postExecute()
-                        }
-                        ResponseBody errorBody = json.errorBody();
-                        result = json.errorBody().string();
-                        errorBody.close();
-                    }
-
-                    /* old code with HttpHelper
-String request = new HttpHelper("session").makeRequestString(new String[]{"token", gcmToken});
-                        result = HttpHelper.proceedRequest("signout", "DELETE", request, true);
-                    */
-                } else return HttpHelper.ERROR_JSON;
-
-            } catch (final IOException e){
-                Globals.showError(R.string.cannot_connect_server, e);
-                return HttpHelper.ERROR_JSON;
+                } catch (final IOException e) {
+                    Globals.showError(R.string.cannot_connect_server, e);
+                    return HttpHelper.ERROR_JSON;
+                }
+                return result;
             }
-            return result == null ? "" : result;
         }
 
         @Override
@@ -689,33 +682,38 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
             resultData = s;
 
             if (progressBar != null) progressBar.setVisibility(View.GONE);
-            if (!s.isEmpty() && !s.equals(BANNED)) {
-                try {
-                    JSONObject json = new JSONObject(s);
-                    String status = json.optString("status");
-                    if (Globals.SERVER_ERROR.equals(status)) {
-                        String error =  json.getString("error");
-                        if (!"Bad Request".equalsIgnoreCase(error)) {
-                            logAndMint(error);
-                            return;
-                        }
-                        //I faced these error codes when we don't need the user to stay signed in
-                    } else if (!"500".equals(status) && !"404".equals(status)) {
-                        logAndMint(status);
-                        return;
-                    }
-                } catch (JSONException e) {
-                    Globals.showError(R.string.error, e);
+
+            try {
+                if (!logoutPossible(s)) {
+                    logAndMint(s);
+                    JobUtils.INSTANCE.schedule(JobUtils.INSTANCE.pendingJobTag());
+                    return;
                 }
+            } catch (JSONException e) {
+                Globals.showError(R.string.error, e);
             }
-            boolean appClosed = KaratelPreferences.appClosed();
-            KaratelPreferences.clearAll();
-            if (appClosed){
-                KaratelPreferences.setAppClosed();
+
+            //all the jobs were cancelled in the beginning of signout - reschedule if necessary
+            String jobTag = JobUtils.INSTANCE.pendingJobTag();
+            if (doNotCancel(jobTag)) JobUtils.INSTANCE.schedule(jobTag);
+
+            //saving required sharedPreferences for later use
+            synchronized (KaratelPreferences.TAG) {
+                String oldSessionToken = KaratelPreferences.oldSessionToken();
+                String oldPushToken = KaratelPreferences.oldPushToken();
+                boolean appClosed = KaratelPreferences.appClosed();
+                KaratelPreferences.clearAll();
+                if (appClosed) {
+                    KaratelPreferences.setAppClosed();
+                }
+                if (!oldSessionToken.isEmpty())
+                    KaratelPreferences.setOldSessionToken(oldSessionToken);
+                if (!oldPushToken.isEmpty()) KaratelPreferences.setOldPushToken(oldPushToken);
             }
 
             //Google Analytics part
             KaratelApplication.getInstance().sendScreenName(TAG);
+
             try { activity.finishAffinity(); } catch (NullPointerException ignored) {
                 /*two reasons for NPE:
                 * 1 - activity can be null
@@ -723,14 +721,49 @@ String request = new HttpHelper("session").makeRequestString(new String[]{"token
             }
         }
 
+        public static String buildResponseString(Response<String> response) throws IOException {
+            String result;
+            if (response.isSuccessful()) {
+                result = response.body();
+            } else {
+                if (response.code() == 403) {//this code will be returned is the user is banned - agreed with Nazar
+                    return BANNED; //& check this in postExecute()
+                }
+                ResponseBody errorBody = response.errorBody();
+                result = response.errorBody().string();
+                errorBody.close();
+            }
+            return result == null ? "" : result;
+        }
+
+        public static boolean logoutPossible(String serverResponse) throws JSONException {
+            if (serverResponse.isEmpty() || serverResponse.equals(BANNED)) return true;
+            JSONObject json = new JSONObject(serverResponse);
+            String status = json.optString("status");
+            if (Globals.SERVER_ERROR.equals(status)) {
+                String error =  json.getString("error");
+                if (!"Bad Request".equalsIgnoreCase(error)) {
+                    return false;
+                }
+                //I faced these error codes when we don't need the user to stay signed in
+            } else if (!"500".equals(status) && !"404".equals(status)) {
+                return false;
+            }
+            return true;
+        }
+
+        private static boolean doNotCancel(String jobTag) {
+            return TokenExchangeJob.TAG.equals(jobTag) && KaratelPreferences.newPushToken().isEmpty();
+        }
+
         private void logAndMint(String message) {
             Toast.makeText(KaratelApplication.getInstance(), message, Toast.LENGTH_LONG).show();
 
             HashMap<String, Object> logData = new HashMap<>();
             logData.put("result", resultData);
-            logData.put("sessionToken",  Globals.sessionToken);
+            logData.put("sessionToken",  KaratelPreferences.sessionToken());
             logData.put("gcmToken", KaratelPreferences.pushToken());
-            Mint.logEvent("signoffFailed", MintLogLevel.Error, logData);
+            Mint.logException(logData, new Exception("signoffFailed"));
         }
     }
 }

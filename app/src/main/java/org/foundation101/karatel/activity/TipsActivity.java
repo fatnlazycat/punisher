@@ -1,9 +1,7 @@
 package org.foundation101.karatel.activity;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -11,10 +9,8 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
@@ -23,13 +19,13 @@ import com.facebook.FacebookException;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 
-import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.manager.KaratelPreferences;
-import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.entity.PunisherUser;
+import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.manager.HttpHelper;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -43,7 +39,6 @@ public class TipsActivity extends Activity {
     static final String TAG = "LoginActivity";
     EditText editTextLoginEmail, editTextLoginPassword;
     RelativeLayout progressBar;
-    SharedPreferences preferences;
 
     // facebook part
     private CallbackManager fbCallbackManager;
@@ -69,9 +64,9 @@ public class TipsActivity extends Activity {
             startActivity(new Intent(this, MainActivity.class));
         }
 
-        preferences = getPreferences(MODE_PRIVATE);
-        if (preferences.contains(Globals.LAST_LOGIN_EMAIL)) {
-            editTextLoginEmail.setText(preferences.getString(Globals.LAST_LOGIN_EMAIL, ""));
+        String lastLoginEmail = KaratelPreferences.lastLoginEmail();
+        if (!lastLoginEmail.isEmpty()) {
+            editTextLoginEmail.setText(lastLoginEmail);
             editTextLoginPassword.requestFocus();
         }
     }
@@ -80,13 +75,8 @@ public class TipsActivity extends Activity {
         String email = editTextLoginEmail.getText().toString();
         String passw = editTextLoginPassword.getText().toString();
         String gcmToken = KaratelPreferences.pushToken();
-        String request = new HttpHelper("session").makeRequestString(new String[] {
-                "email", email,
-                "password", passw,
-                "token", gcmToken,
-                "platform", "android"
-        });
-        new LoginSender(this, false).execute(request);
+
+        new LoginSender(this, email, passw, gcmToken).execute();
     }
 
     public void signUp(View view) {
@@ -116,8 +106,8 @@ public class TipsActivity extends Activity {
     }
 
     public void facebookLogin(View view) {
-        if (HttpHelper.internetConnected(/*this*/)) {
-            List<String> permissionNeeds = Arrays.asList("user_photos", "email", "user_birthday", "user_friends");
+        if (HttpHelper.internetConnected()) {
+            List<String> permissionNeeds = Arrays.asList(/*"user_photos", */"email"/*, "user_birthday", "user_friends"*/);
             //fbCallbackManager = CallbackManager.Factory.create();
             LoginManager.getInstance().logInWithReadPermissions(this, permissionNeeds);
             LoginManager.getInstance().registerCallback(fbCallbackManager, new FacebookCallback<LoginResult>() {
@@ -126,12 +116,8 @@ public class TipsActivity extends Activity {
                     final AccessToken accessToken = loginResult.getAccessToken();
                     String gcmToken = KaratelPreferences.pushToken();
                     String uid = accessToken.getUserId();
-                    String request = new HttpHelper("session").makeRequestString(new String[]{
-                            "uid", uid,
-                            "token", gcmToken,
-                            "platform", "android"
-                    });
-                    new LoginSender(TipsActivity.this, true).execute(request);
+
+                    new LoginSender(TipsActivity.this, uid, gcmToken).execute();
                 }
 
                 @Override
@@ -145,20 +131,40 @@ public class TipsActivity extends Activity {
                 }
             });
         } else {
-            Toast.makeText(this, R.string.no_internet_connection, Toast.LENGTH_LONG).show();
+            Globals.showMessage(R.string.no_internet_connection);
         }
     }
 
-    class LoginSender extends AsyncTask<String, Void, String> {
-
-        //private static final String RESPONSE_INVALID_PASSWORD = "Invalid pasword";
-        //private static final String MESSAGE_INVALID_PASSWORD = "Неправільний email та/або пароль";
-        Context context;
+    public static class LoginSender extends AsyncTask<Void, Void, String> {
+        Activity activity;
+        View progressBar;
         boolean viaFacebook;
+        String email = null;
+        String password = null;
+        String gcmToken;
+        String uid = null;
 
-        public LoginSender(Context context, boolean facebookFlag){
-            this.context = context;
-            viaFacebook = facebookFlag;
+        //email+password version
+        public LoginSender(Activity activity, String email, String password, String gcmToken){
+            this.activity = activity;
+            viaFacebook   = false;
+            this.email    = email;
+            this.password = password;
+            this.gcmToken = gcmToken;
+
+            if (activity != null && activity instanceof TipsActivity)
+                this.progressBar = ((TipsActivity) activity).progressBar;
+        }
+
+        //facebook version
+        public LoginSender(Activity activity, String uid, String gcmToken){
+            this.activity = activity;
+            viaFacebook   = true;
+            this.gcmToken = gcmToken;
+            this.uid      = uid;
+
+            if (activity != null && activity instanceof TipsActivity)
+                this.progressBar = ((TipsActivity) activity).progressBar;
         }
 
         @Override
@@ -168,11 +174,10 @@ public class TipsActivity extends Activity {
         }
 
         @Override
-        protected String doInBackground(String... params) {
-            if (HttpHelper.internetConnected(/*context*/)) {
-                String api = viaFacebook ? "signin?provider=facebook" : "signin";
+        protected String doInBackground(Void... params) {
+            if (HttpHelper.internetConnected()) {
                 try {
-                    return HttpHelper.proceedRequest(api, params[0], false);
+                    return performLoginRequest(this);
                 } catch (final IOException e) {
                     Globals.showError(R.string.cannot_connect_server, e);
                     return "";
@@ -187,9 +192,14 @@ public class TipsActivity extends Activity {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals("success")) {
                     JSONObject dataJSON = json.getJSONObject("data");
-                    Globals.sessionToken = dataJSON.getString("token");
                     //if we've got token without catching an exception -> login successful!
-                    preferences.edit().putString(Globals.LAST_LOGIN_EMAIL, editTextLoginEmail.getText().toString()).apply();
+                    if (viaFacebook) {
+                        KaratelPreferences.setPassword(uid);
+                        KaratelPreferences.setLastLoginEmail(null);
+                    } else {
+                        KaratelPreferences.setPassword(password);
+                        KaratelPreferences.setLastLoginEmail(email);
+                    }
 
                     //get user data
                     JSONObject userJSON = dataJSON.getJSONObject("user");
@@ -213,9 +223,9 @@ public class TipsActivity extends Activity {
 
                     String avatarUrl = userJSON.getJSONObject("avatar").getString("url");
                     if (avatarUrl != null && !avatarUrl.equals("null")) {
-                        new AvatarGetter(TipsActivity.this).execute(avatarUrl);
+                        new AvatarGetter(activity).execute(avatarUrl);
                     }
-                    startActivity(new Intent(context, MainActivity.class));
+                    activity.startActivity(new Intent(activity, MainActivity.class));
                 } else {
                     String errorMessage;
                     if (json.getString("status").equals("error")){
@@ -223,13 +233,32 @@ public class TipsActivity extends Activity {
                     } else {
                         errorMessage = s;
                     }
-                    Toast.makeText(TipsActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                    Globals.showMessage(errorMessage);
                 }
             } catch (JSONException e) {
                 Globals.showError(R.string.error, e);
             }
             progressBar.setVisibility(View.GONE);
             //Toast.makeText(TipsActivity.this, "end of LoginSender", Toast.LENGTH_SHORT).show();
+        }
+
+        public static String performLoginRequest(TipsActivity.LoginSender loginSender) throws IOException {
+            String request = loginSender.viaFacebook ?
+                    new HttpHelper("session").makeRequestString(new String[]{
+                            "uid", loginSender.uid,
+                            "token", loginSender.gcmToken,
+                            "platform", "android"
+                    }) :
+                    new HttpHelper("session").makeRequestString(new String[] {
+                            "email", loginSender.email,
+                            "password", loginSender.password,
+                            "token", loginSender.gcmToken,
+                            "platform", "android"
+                    });
+
+            String api = loginSender.viaFacebook ? "signin?provider=facebook" : "signin";
+
+            return HttpHelper.proceedRequest(api, request, false);
         }
     }
 

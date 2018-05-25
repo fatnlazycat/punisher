@@ -2,18 +2,18 @@ package org.foundation101.karatel.manager;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.entity.PunisherUser;
+import org.foundation101.karatel.utils.TextUtils;
 
 /**
  * Created by Dima on 03.11.2017.
  */
 
 public class KaratelPreferences {
-    private static final String TAG = "KARATEL_PREFERENCES";
+    public static final String TAG = "KARATEL_PREFERENCES";
 
     private static SharedPreferences instance;
     private static SharedPreferences preferences() {
@@ -26,6 +26,11 @@ public class KaratelPreferences {
 
     public static void clearAll() {
         preferences().edit().clear().apply();
+    }
+
+
+    public static void remove(String key) {
+        preferences().edit().remove(key).apply();
     }
 
 
@@ -103,9 +108,6 @@ public class KaratelPreferences {
                     preferences.getString(Globals.USER_PHONE, ""));
             Globals.user.id = preferences.getInt(Globals.USER_ID, 0);
             Globals.user.avatarFileName = preferences.getString(Globals.USER_AVATAR, "");
-            if (Globals.sessionToken == null) {
-                Globals.sessionToken = preferences.getString(Globals.SESSION_TOKEN, "");
-            }
         }
     }
 
@@ -118,11 +120,43 @@ public class KaratelPreferences {
     }
 
 
+    public static String oldSessionToken() {
+        return preferences().getString(Globals.OLD_SESSION_TOKEN, "");
+    }
+    public static void setOldSessionToken(String token) {
+        preferences().edit().putString(Globals.OLD_SESSION_TOKEN, token).apply();
+    }
+
+
+    public static String sessionToken() {
+        return preferences().getString(Globals.SESSION_TOKEN, "");
+    }
+    public static void setSessionToken(String token) {
+        preferences().edit().putString(Globals.SESSION_TOKEN, token).apply();
+    }
+
+
     public static String pushToken() {
         return preferences().getString(Globals.PUSH_TOKEN, "");
     }
     public static void setPushToken(String token) {
         preferences().edit().putString(Globals.PUSH_TOKEN, token).apply();
+    }
+
+
+    public static String newPushToken() {
+        return preferences().getString(Globals.NEW_PUSH_TOKEN, "");
+    }
+    public static void setNewPushToken(String token) {
+        preferences().edit().putString(Globals.NEW_PUSH_TOKEN, token).apply();
+    }
+
+
+    public static String oldPushToken() {
+        return preferences().getString(Globals.OLD_PUSH_TOKEN, "");
+    }
+    public static void setOldPushToken(String token) {
+        preferences().edit().putString(Globals.OLD_PUSH_TOKEN, token).apply();
     }
 
 
@@ -133,5 +167,30 @@ public class KaratelPreferences {
     }
     public static void setAppClosed() {
         preferences().edit().putBoolean(Globals.APP_CLOSED, true).apply();
+    }
+
+
+    public static String lastLoginEmail() {
+        return preferences().getString(Globals.LAST_LOGIN_EMAIL, "");
+    }
+    public static void setLastLoginEmail(String lastLoginEmail) {
+        preferences().edit().putString(Globals.LAST_LOGIN_EMAIL, lastLoginEmail).apply();
+    }
+
+
+    public static String password() {
+        String data = preferences().getString(Globals.USER_PASSWORD, "");
+        return TextUtils.INSTANCE.decodeString(data);
+    }
+    public static void setPassword(String password) {
+        String data = TextUtils.INSTANCE.encodeStringWithSHA(password);
+        preferences().edit().putString(Globals.USER_PASSWORD, data).apply();
+    }
+
+    public static String pendingJob() {
+        return preferences().getString(Globals.PENDING_JOB, "");
+    }
+    public static void setPendingJob(String jobData) {
+        preferences().edit().putString(Globals.PENDING_JOB, jobData).apply();
     }
 }

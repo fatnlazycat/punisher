@@ -11,6 +11,7 @@ import android.util.TypedValue;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.evernote.android.job.JobManager;
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
@@ -18,6 +19,7 @@ import com.splunk.mint.Mint;
 
 import org.foundation101.karatel.dagger.DaggerComponent;
 import org.foundation101.karatel.dagger.DaggerDaggerComponent;
+import org.foundation101.karatel.scheduler.MyJobCreator;
 import org.foundation101.karatel.utils.RetrofitUtils;
 
 import java.io.File;
@@ -65,6 +67,7 @@ public class KaratelApplication extends MultiDexApplication {
         super.onCreate();
         instance = this;
         initACRA();
+        JobManager.create(getApplicationContext()).addJobCreator(new MyJobCreator());
         //ACRA.init(this);
     }
 

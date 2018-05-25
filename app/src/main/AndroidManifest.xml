@@ -96,6 +96,19 @@
         <service
             android:name=".service.RegistrationIntentService"
             android:exported="false" />
+
+        <!-- Patch fixing issue of evernote SDK with new gcm as of 12.0.1 on Android 4.4.2-->
+        <service
+            android:name="com.evernote.android.job.gcm.PlatformGcmService"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE"
+            tools:replace="android:enabled" >
+            <intent-filter>
+                <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY" />
+            </intent-filter>
+        </service>
+
         <!--
             service
             android:name=".service.AlwaysHereService"

@@ -5,23 +5,20 @@ import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.google.android.gms.gcm.GcmPubSub;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 import com.splunk.mint.Mint;
-import com.splunk.mint.MintLogLevel;
 
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.manager.KaratelPreferences;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
-
-import java.io.IOException;
+import org.foundation101.karatel.manager.KaratelPreferences;
+import org.foundation101.karatel.scheduler.TokenExchangeJob;
+import org.foundation101.karatel.utils.JobUtils;
 
 public class RegistrationIntentService extends IntentService {
-
     private static final String TAG = "RegIntentService";
-    private static final String[] TOPICS = {"global"};
 
     public RegistrationIntentService() {
         super(TAG);
@@ -31,100 +28,60 @@ public class RegistrationIntentService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         Log.d(TAG, "onHandleIntent");
 
-        String oldToken = KaratelPreferences.pushToken();
+        synchronized (KaratelPreferences.TAG) {
 
-        try {
-            // [START register_for_gcm]
-            // Initially this call goes out to the network to retrieve the token, subsequent calls
-            // are local.
-            // R.string.gcm_defaultSenderId (the Sender ID) is typically derived from google-services.json.
-            // See https://developers.google.com/cloud-messaging/android/start for details on this file.
-            // [START get_token]
-            InstanceID instanceID = InstanceID.getInstance(this);
-            String token = instanceID.getToken(getString(R.string.gcm_defaultSenderId),
-                    GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-            Log.i(TAG, "GCM Registration Token: " + token);
+            String oldToken = KaratelPreferences.pushToken();
+            try {
+                String token = obtainGCMToken();
 
-            if (!oldToken.equals("") && !oldToken.equals(token)) {
-                Mint.logEvent("logoutToChangeToken", MintLogLevel.Error, oldToken, token);
-                logoutToChangeToken();
-            } else {
-                KaratelPreferences.setPushToken(token);
-                // [END get_token]
+                if (/*!oldToken.equals("") && */!oldToken.equals(token) && KaratelPreferences.loggedIn()) {
+                    Mint.logException(oldToken, token, new Exception("logoutToChangeToken"));
 
-                // TODO: Implement this method to send any registration to your app's servers.
-                //sendRegistrationToServer(token);
-
-                // Subscribe to topic channels
-                //subscribeTopics(token);
-
-                // You should store a boolean that indicates whether the generated token has been
-                // sent to your server. If the boolean is false, send the token to your server,
-                // otherwise your server should have already received the token.
-                //globalPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, true).apply();
-                // [END register_for_gcm]
-
-                // Notify UI that registration has completed, so the progress indicator can be hidden.
-                Intent registrationComplete = new Intent(Globals.REGISTRATION_COMPLETE);
-                LocalBroadcastManager.getInstance(this).sendBroadcast(registrationComplete);
-            }
-        } catch (Exception e) {
-            Log.d(TAG, "Failed to complete token refresh", e);
-            Mint.logException(e);
-            Intent tokenFailed = new Intent(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG);
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(tokenFailed);
-
-            // If an exception happens while fetching the new token or updating our registration data
-            // on a third-party server, this ensures that we'll attempt the update at a later time.
-           // globalPreferences.edit().putBoolean(Globals.SENT_TOKEN_TO_SERVER, false).apply();
-        }
-
-    }
-
-    /**
-     * Persist registration to third-party servers.
-     *
-     * Modify this method to associate the user's GCM registration token with any server-side account
-     * maintained by your application.
-     *
-     * @param token The new token.
-     */
-    private void sendRegistrationToServer(String token) {
-        // Add custom implementation, as needed.
-    }
-
-    /**
-     * Subscribe to any GCM topics of interest, as defined by the TOPICS constant.
-     *
-     * @param token GCM token
-     * @throws IOException if unable to reach the GCM PubSub service
-     */
-    // [START subscribe_topics]
-    private void subscribeTopics(String token) throws IOException {
-        GcmPubSub pubSub = GcmPubSub.getInstance(this);
-        for (String topic : TOPICS) {
-            pubSub.subscribe(token, "/topics/"+ topic, null);
-        }
-    }
-    // [END subscribe_topics]
-
-    public void logoutToChangeToken(){
-        Intent logoutIntent = new Intent(MainActivity.BROADCAST_RECEIVER_TAG);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(logoutIntent);
-        /*
-        ((KaratelApplication)getApplication()).showOneButtonDialogFromService(
-                "Увага! Змінився токен Google Cloud Messaging.",
-                "Вийдіть з програми та зайдіть знову, щоб отримувати сповіщення.",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(MainActivity.BROADCAST_RECEIVER_TAG));
+                    if (KaratelPreferences.password().isEmpty()) {
+                        Intent logoutIntent = new Intent(MainActivity.BROADCAST_RECEIVER_TAG);
+                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(logoutIntent);
+                        return;
+                    } else {
+                        //JobManager.instance().cancelAll();
+                        KaratelPreferences.setNewPushToken(token);
+                        JobUtils.INSTANCE.schedule(TokenExchangeJob.TAG);
                     }
+
+                } else {
+                    KaratelPreferences.setPushToken(token);
+
+                /*Intent registrationComplete = new Intent(Globals.REGISTRATION_COMPLETE);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(registrationComplete);*/
                 }
-        );*/
+            } catch (Exception e) { //just ignored
+                Log.d(TAG, "Failed to complete token refresh", e);
+                Mint.logException(e);
+
+                /*Intent tokenFailed = new Intent(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG);
+                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(tokenFailed);*/
+
+                /*JobManager.instance().cancelAll();
+                JobUtils.INSTANCE.schedule(RegistrationRetryJob.TAG);*/
+            }
+
+            Intent registrationComplete = new Intent(Globals.REGISTRATION_COMPLETE);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(registrationComplete);
+        }
     }
 
+    public static String obtainGCMToken() throws Exception {
+        // Initially this call goes out to the network to retrieve the token, subsequent calls
+        // are local.
+        // R.string.gcm_defaultSenderId (the Sender ID) is typically derived from google-services.json.
+        // See https://developers.google.com/cloud-messaging/android/start for details on this file.
+        InstanceID instanceID = InstanceID.getInstance(KaratelApplication.getInstance());
+        String token = instanceID.getToken(
+                KaratelApplication.getInstance().getString(R.string.gcm_defaultSenderId),
+                GoogleCloudMessaging.INSTANCE_ID_SCOPE, null
+        );
+        Log.i(TAG, "GCM Registration Token: " + token);
+        return token;
+    }
 }
 
 

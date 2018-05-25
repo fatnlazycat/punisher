@@ -54,8 +54,9 @@ import retrofit2.Response;
 /**
  * Created by Dima on 15.06.2016.
  */
-public class HistoryAdapter extends BaseAdapter {
+public class HistoryAdapter extends BaseAdapter implements View.OnClickListener {
     public static final String TAG = "HistoryAdapter";
+    private AlertDialog dialog;
 
     public HistoryAdapter(Context context){
         this.context = context;
@@ -102,27 +103,27 @@ public class HistoryAdapter extends BaseAdapter {
             convertView = inflater.inflate(R.layout.item_history, parent, false);
 
             holder = new ViewHolder();
-            holder.imageViewStatus          = (ImageView)       convertView.findViewById(R.id.imageViewStatus);
-            holder.textViewRequestStatus    = (TextView)        convertView.findViewById(R.id.textViewRequestStatus);
-            holder.textViewRequestTimeStamp = (TextView)        convertView.findViewById(R.id.textViewRequestTimeStamp);
-            holder.textViewDetailsAction    = (TextView)        convertView.findViewById(R.id.textViewDetailsAction);
-            holder.collapsableLayout        = (RelativeLayout)  convertView.findViewById(R.id.collapsableLayout);
+            holder.imageViewStatus          = convertView.findViewById(R.id.imageViewStatus);
+            holder.textViewRequestStatus    = convertView.findViewById(R.id.textViewRequestStatus);
+            holder.textViewRequestTimeStamp = convertView.findViewById(R.id.textViewRequestTimeStamp);
+            holder.textViewDetailsAction    = convertView.findViewById(R.id.textViewDetailsAction);
+            holder.collapsableLayout        = convertView.findViewById(R.id.collapsableLayout);
 
            //collapsed views
-            holder.headerOperatorComment    = (TextView)        convertView.findViewById(R.id.headerOperatorComment);
-            holder.operatorComment          = (TextView)        convertView.findViewById(R.id.operatorComment);
-            holder.headerAnswer             = (TextView)        convertView.findViewById(R.id.headerAnswer);
-            holder.answerLayout             = (RelativeLayout)  convertView.findViewById(R.id.answerLayout);
+            holder.headerOperatorComment    = convertView.findViewById(R.id.headerOperatorComment);
+            holder.operatorComment          = convertView.findViewById(R.id.operatorComment);
+            holder.headerAnswer             = convertView.findViewById(R.id.headerAnswer);
+            holder.answerLayout             = convertView.findViewById(R.id.answerLayout);
             //holder.imageAnswer            = (WebView)         convertView.findViewById(R.id.imageAnswer);
-            holder.flWebView                = (FrameLayout)     convertView.findViewById(R.id.flWebView);
-            holder.ic_zoom                  =                   convertView.findViewById(R.id.ic_zoom);
-            holder.tvPressHere              = (TextView)        convertView.findViewById(R.id.tvPressHere);
-            holder.headerAnswerBy           = (TextView)        convertView.findViewById(R.id.headerAnswerBy);
-            holder.textAnswerBy             = (TextView)        convertView.findViewById(R.id.textAnswerBy);
-            holder.rateLayout               = (LinearLayout)    convertView.findViewById(R.id.rateLayout);
-            holder.textRate                 = (TextView)        convertView.findViewById(R.id.textRate);
-            holder.buttonLike               = (ImageButton)     convertView.findViewById(R.id.buttonLike);
-            holder.buttonDislike            = (ImageButton)     convertView.findViewById(R.id.buttonDislike);
+            holder.flWebView                = convertView.findViewById(R.id.flWebView);
+            holder.ic_zoom                  = convertView.findViewById(R.id.ic_zoom);
+            holder.tvPressHere              = convertView.findViewById(R.id.tvPressHere);
+            holder.headerAnswerBy           = convertView.findViewById(R.id.headerAnswerBy);
+            holder.textAnswerBy             = convertView.findViewById(R.id.textAnswerBy);
+            holder.rateLayout               = convertView.findViewById(R.id.rateLayout);
+            holder.textRate                 = convertView.findViewById(R.id.textRate);
+            holder.buttonLike               = convertView.findViewById(R.id.buttonLike);
+            holder.buttonDislike            = convertView.findViewById(R.id.buttonDislike);
 
             convertView.setTag(holder);
         } else {
@@ -251,8 +252,11 @@ public class HistoryAdapter extends BaseAdapter {
                         }
                         default: { //not rated yet
                             holder.textRate.setText(R.string.estimateGivenAnswer);
-                            holder.buttonLike.setOnClickListener(new LikeDislike(thisUpdate.complain_id, true));
-                            holder.buttonDislike.setOnClickListener(new LikeDislike(thisUpdate.complain_id, false));
+
+                            holder.buttonLike   .setOnClickListener(this);
+                            holder.buttonLike   .setTag(thisUpdate.complain_id);
+                            holder.buttonDislike.setOnClickListener(this);
+                            holder.buttonDislike.setTag(thisUpdate.complain_id);
                         }
                     }
                 } else {
@@ -333,6 +337,27 @@ public class HistoryAdapter extends BaseAdapter {
         }
     }
 
+    @Override
+    public void onClick(View v) {
+        final boolean like = (v.getId() == R.id.buttonLike);
+        final int requestId = (Integer) v.getTag();
+
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(HistoryAdapter.this.context);
+        dialog = dialogBuilder.setMessage(R.string.are_you_sure)
+                .setNegativeButton(R.string.no, null)
+                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        new LikeDislike(requestId, like).execute();
+                    }
+                }).create();
+        dialog.show();
+    }
+
+    public void onDestroy() {
+        if (dialog != null) dialog.dismiss();
+    }
+
     public static class ViewHolder{
         FrameLayout flWebView;
         ImageView imageViewStatus;
@@ -345,28 +370,13 @@ public class HistoryAdapter extends BaseAdapter {
         RelativeLayout collapsableLayout, answerLayout;
     }
 
-    class LikeDislike extends AsyncTask<Void, Void, String> implements View.OnClickListener{
+    class LikeDislike extends AsyncTask<Void, Void, String> {
         int requestId;
         Integer rate;
 
         LikeDislike(int requestId, boolean like){
             this.requestId = requestId;
             rate = like ? 1 : -1;
-        }
-
-        @Override
-        public void onClick(View v) {
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(HistoryAdapter.this.context);
-            AlertDialog dialog = dialogBuilder.setMessage(R.string.are_you_sure)
-                    .setNegativeButton(R.string.no, null)
-                    .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            execute();
-                        }
-                    }).create();
-            dialog.show();
-
         }
 
         @Override

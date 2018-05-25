@@ -69,12 +69,17 @@ public class Globals {
     public static final int MAIN_ACTIVITY_PROFILE_FRAGMENT = 101;
 
     public static final String PUSH_TOKEN = "PUSH_TOKEN";
+    public static final String NEW_PUSH_TOKEN = "NEW_PUSH_TOKEN";
+    public static final String OLD_PUSH_TOKEN = "OLD_PUSH_TOKEN";
+
+    public static final String PENDING_JOB = "PENDING_JOB";
 
     //user data tags
     public static final String LAST_LOGIN_EMAIL = "LAST_LOGIN_EMAIL";
     public static final String SESSION_TOKEN = "SESSION_TOKEN";
+    public static final String OLD_SESSION_TOKEN = "OLD_SESSION_TOKEN";
     public static final String USER_EMAIL = "USER_EMAIL";
-    public static final String USER_PASSWORD = "USER_PASSWORD";
+    public static final String USER_PASSWORD = "USER_USER";
     public static final String USER_SURNAME = "USER_SURNAME";
     public static final String USER_NAME = "USER_NAME";
     public static final String USER_SECOND_NAME = "USER_SECOND_NAME";
@@ -92,7 +97,7 @@ public class Globals {
         So need to close them in onResume() using this tag
         */
 
-    public static String sessionToken;
+    //public static String sessionToken;
     public static PunisherUser user;
 
     //map of complain statuses: key-indexes on server, value-index in array in apk resources

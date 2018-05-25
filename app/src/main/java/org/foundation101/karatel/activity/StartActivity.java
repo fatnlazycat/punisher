@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.util.TimeUtils;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -21,6 +22,8 @@ import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.service.RegistrationIntentService;
+
+import java.util.concurrent.TimeUnit;
 
 public class StartActivity extends Activity {
     private static final String PREFERENCE_FIRST_RUN_FLAG = "firstRun";
@@ -35,11 +38,11 @@ public class StartActivity extends Activity {
             Log.d(TAG, "onReceive " + action);
             switch (action) {
                 case Globals.REGISTRATION_COMPLETE : {
-                    leaveStartPage(/*null*/);
+                    leaveStartPage();
                     break;
                 }
-                case MainActivity.BROADCAST_RECEIVER_TAG : //fallthrough - these two behave the same
-                case Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG : {
+                //case Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG :
+                case MainActivity.BROADCAST_RECEIVER_TAG : {//fallthrough - these two behave the same
                     alertDialog = showGCMErrorDialog();
                     break;
                 }
@@ -52,6 +55,12 @@ public class StartActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
         //Toast.makeText(this, R.string.tap_to_enter, Toast.LENGTH_LONG).show();
+
+        /*try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(3));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }*/
 
         //register receiver before starting the service (what if the service returns faster than the receiver is registered?)
         registerReceiver();
@@ -74,7 +83,7 @@ public class StartActivity extends Activity {
     private void registerReceiver() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Globals.REGISTRATION_COMPLETE);
-        intentFilter.addAction(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG);
+        /*intentFilter.addAction(Globals.GCM_ERROR_BROADCAST_RECEIVER_TAG);*/
         intentFilter.addAction(MainActivity.BROADCAST_RECEIVER_TAG);
         LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(myBroadcastReceiver, intentFilter);
     }
@@ -87,7 +96,7 @@ public class StartActivity extends Activity {
         super.onDestroy();
     }
 
-    public void leaveStartPage(/*View view*/) {
+    public void leaveStartPage() {
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         Intent intent = new Intent();
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

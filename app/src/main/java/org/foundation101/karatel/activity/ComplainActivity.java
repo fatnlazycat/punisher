@@ -888,7 +888,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                 });
 
                 RetrofitMultipartUploader api = KaratelApplication.getClient(2).create(RetrofitMultipartUploader.class);
-                Call<ComplainCreationResponse> call = api.uploadGrievance(Globals.sessionToken,
+                Call<ComplainCreationResponse> call = api.uploadGrievance(KaratelPreferences.sessionToken(),
                         typeServerSuffix, rb);
                 Response<ComplainCreationResponse> json = call.execute();
                 if (json.isSuccessful()) {

@@ -993,6 +993,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
         requisitesAdapter.releaseMap();
 
+        if (historyAdapter != null) historyAdapter.onDestroy();
+
         super.onDestroy();
     }
 
@@ -1147,7 +1149,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                     });
 
                     RetrofitMultipartUploader api = KaratelApplication.getClient().create(RetrofitMultipartUploader.class);
-                    Call<CreationResponse> call = api.uploadComplain(Globals.sessionToken, typeServerSuffix, rb);
+                    Call<CreationResponse> call = api.uploadComplain(
+                            KaratelPreferences.sessionToken(), typeServerSuffix, rb);
                     Response<CreationResponse> json = call.execute();
                     if (json.isSuccessful()) {
                         result = json.body();
