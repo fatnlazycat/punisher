@@ -1,7 +1,6 @@
 package org.foundation101.karatel.utils
 
 import android.util.Log
-import com.evernote.android.job.JobManager
 import com.evernote.android.job.JobRequest
 import org.foundation101.karatel.manager.KaratelPreferences
 import java.util.concurrent.TimeUnit
@@ -11,9 +10,9 @@ object JobUtils {
 
     fun schedule(tag: String) {
         val jobRequest = JobRequest.Builder(tag)
-                //TODO - start in 5 min (do not start immediately - race conditions with other code!),
-                //end after 10 days
-                .setExecutionWindow(TimeUnit.MINUTES.toMillis(1), TimeUnit.MINUTES.toMillis(5))
+                //start in 5 min (do not start immediately - race conditions with other code!),
+                //end after 10 min
+                .setExecutionWindow(TimeUnit.MINUTES.toMillis(5), TimeUnit.MINUTES.toMillis(10))
                 .setRequiredNetworkType(JobRequest.NetworkType.CONNECTED)
                 .setRequirementsEnforced(true)
                 .setUpdateCurrent(true)
