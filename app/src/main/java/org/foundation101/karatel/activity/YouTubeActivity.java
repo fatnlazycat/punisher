@@ -2,7 +2,6 @@ package org.foundation101.karatel.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatCallback;
@@ -12,7 +11,6 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,10 +18,11 @@ import android.widget.Toast;
 import com.google.android.youtube.player.YouTubeBaseActivity;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
-import com.google.android.youtube.player.YouTubeThumbnailLoader;
 import com.google.android.youtube.player.YouTubePlayerView;
 
+import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.entity.VideoTutorialItem;
 import org.foundation101.karatel.utils.ApplicableToView;
 import org.foundation101.karatel.utils.ViewUtils;
 
@@ -36,33 +35,39 @@ public class YouTubeActivity extends YouTubeBaseActivity implements AppCompatCal
     private static final String TAG = "YouTubeActivity";
     private static final String YOU_TUBE_APP_BUTTON_CONTENT_DESCRIPTION = "Watch this video in YouTube";
 
-    private AppCompatDelegate delegate;
     YouTubePlayerView youTubeView;
     String youTubeKey;
+
+    VideoTutorialItem videoTutorialItem;
 
     private static final int RECOVERY_DIALOG_REQUEST = 1;
 
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        delegate = AppCompatDelegate.create(this, this);
+        AppCompatDelegate delegate = AppCompatDelegate.create(this, this);
         delegate.setContentView(R.layout.activity_youtube);
 
-        Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         delegate.setSupportActionBar(toolbar);
         ActionBar actionBar = delegate.getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
         actionBar.setTitle(R.string.video_tutorial);
 
-        ImageView ivLogo = (ImageView) findViewById(R.id.ivCoachLogo);
+        ImageView ivLogo = findViewById(R.id.ivCoachLogo);
 
         youTubeKey = getString(R.string.google_api_key);
-        youTubeView = (YouTubePlayerView) findViewById(R.id.youTubeView);
+        youTubeView = findViewById(R.id.youTubeView);
         initYouTubeView();
 
-        TextView tvTitle = (TextView) findViewById(R.id.tvTitle);
-        TextView tvDescription = (TextView) findViewById(R.id.tvDescription);
+        TextView tvTitle = findViewById(R.id.tvTitle);
+        TextView tvDescription = findViewById(R.id.tvDescription);
+
+        videoTutorialItem = (VideoTutorialItem) getIntent().getSerializableExtra(Globals.YOUTUBE_VIDEO_NAME);
+
+        tvTitle.setText(videoTutorialItem.title);
+        tvDescription.setText(videoTutorialItem.description);
     }
 
     void initYouTubeView() {
@@ -133,7 +138,7 @@ public class YouTubeActivity extends YouTubeBaseActivity implements AppCompatCal
                 Log.d(TAG, errorReason.toString());
             }
         });
-        player.loadVideo(/*getIntent().getStringExtra()*/"1af69S3B-OY");
+        player.loadVideo(videoTutorialItem.url/*"1af69S3B-OY"*/);
     }
 
     @Override

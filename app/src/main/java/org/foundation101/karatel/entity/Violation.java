@@ -5,6 +5,7 @@ import android.util.Log;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.foundation101.karatel.KaratelApplication;
+import org.foundation101.karatel.utils.AssetsUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -167,17 +168,7 @@ public class Violation implements Serializable{
     }
 
     private static String readViolationAssets() throws IOException, JSONException {
-        StringBuilder stringBuilder = new StringBuilder();
-
-        InputStream inputStream = KaratelApplication.getInstance().getAssets().open("violations.json");
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            stringBuilder.append(line);
-        }
-        reader.close();
-
-        return new JSONObject(stringBuilder.toString()).getJSONArray("violations").toString();
+        return new JSONObject(AssetsUtils.readAssets("violations.json")).getJSONArray("violations").toString();
     }
 
     public Violation clearValues() {

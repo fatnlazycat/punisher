@@ -55,12 +55,13 @@ public class DrawerAdapter extends BaseAdapter {
 
         switch (position) {
             case 0:
+            case 2:
+            case 3:
                 setDivider(menuItemText);
                 break;
-            /*case 2:*/
-            case 3:
+            /*
                 disableItem(menuItemText);
-                break;
+                break;*/
             case 4:
                 setDonateItem(menuItemText);
                 break;

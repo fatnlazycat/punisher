@@ -43,13 +43,12 @@ public class Globals {
     public static final String POSSIBLE_VALUES_HEADER = "PUNISHER_POSSIBLE_VALUES_HEADER";
     public static final String REQUISITE_NUMBER_FOR_POSSIBLE_VALUES = "PUNISHER_REQUISITE_NUMBER_FOR_POSSIBLE_VALUES";
     public static final String VIOLATION_TYPE = "PUNISHER_VIOLATION_TYPE";
+    public static final String YOUTUBE_VIDEO_NAME = "PUNISHER_YOUTUBE_VIDEO_NAME";
 
     //Bundle keys
     public static final String REQUISITES_VALUES = "REQUISITES_VALUES";
     public static final String EVIDENCES = "EVIDENCES";
-    public static final String DELETED_EVIDENCES = "DELETED_EVIDENCES";
     public static final String VIOLATION_ACTIVITY_MODE = "VIOLATION_ACTIVITY_MODE";
-    public static final String VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION = "VIOLATION_ACTIVITY_NEED_RECLAIM_LOCATION";
     public static final String VIOLATION_ACTIVITY_CHANGES_MADE = "VIOLATION_ACTIVITY_CHANGES_MADE";
 
     //fragment tags for MainActivity

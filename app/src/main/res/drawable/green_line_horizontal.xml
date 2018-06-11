@@ -3,7 +3,7 @@
     android:shape="line">
     <size
         android:width="47dp"
-        android:height="2dp"/>
+        android:height="3dp"/>
     <stroke
         android:color="@color/darkGreen"/>
 </shape>

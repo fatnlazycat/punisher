@@ -82,6 +82,8 @@ dependencies {
     implementation 'io.github.lizhangqu:coreprogress:1.0.2'
 
     implementation 'com.evernote:android-job:1.2.5'
+
+    implementation 'org.apache.commons:commons-collections4:4.1'
 }
 repositories {
     mavenCentral()
