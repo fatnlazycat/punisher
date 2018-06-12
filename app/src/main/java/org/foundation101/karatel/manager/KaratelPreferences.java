@@ -160,14 +160,14 @@ public class KaratelPreferences {
     }
 
 
-    public static boolean appClosed() {
+    /*public static boolean appClosed() {
         boolean result = preferences().contains(Globals.APP_CLOSED);
         if (result) preferences().edit().remove(Globals.APP_CLOSED).apply();
         return result;
     }
     public static void setAppClosed() {
         preferences().edit().putBoolean(Globals.APP_CLOSED, true).apply();
-    }
+    }*/
 
 
     public static String lastLoginEmail() {

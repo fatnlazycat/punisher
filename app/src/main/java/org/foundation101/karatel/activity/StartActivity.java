@@ -146,7 +146,7 @@ public class StartActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        KaratelPreferences.restoreUser(); //we need sessionToken to logout
+                        //KaratelPreferences.restoreUser(); //we need sessionToken to logout
                         new MainActivity.SignOutSender(StartActivity.this).execute();
                         finish();
                     }

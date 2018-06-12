@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
     public Toolbar toolbar;
     ImageView avatarImageView;
     TextView avatarTextView;
-    RelativeLayout progressBar;
+    RelativeLayout progressBar; //do not rename - used in reflection!
     DrawerLayout drawerLayout;
     FragmentManager fManager;
     FragmentTransaction ft;
@@ -632,12 +632,13 @@ public class MainActivity extends AppCompatActivity {
 
         SignOutSender(Activity activity) {
             this.activity = activity;
-            if (activity != null && activity instanceof MainActivity)
-                this.progressBar = ((MainActivity)activity).progressBar;
+            try {
+                this.progressBar = (View) activity.getClass().getDeclaredField("progressBar").get(activity);
+            } catch (Exception ignored) { /*progressBar not instantiated, it's null*/ }
         }
 
         Activity activity;
-        View progressBar;
+        View progressBar = null;
         String resultData = null;
 
         public static Response<String> performSignOutRequest(String sessionToken, String gcmToken)
@@ -701,11 +702,11 @@ public class MainActivity extends AppCompatActivity {
             synchronized (KaratelPreferences.TAG) {
                 String oldSessionToken = KaratelPreferences.oldSessionToken();
                 String oldPushToken = KaratelPreferences.oldPushToken();
-                boolean appClosed = KaratelPreferences.appClosed();
+                //boolean appClosed = KaratelPreferences.appClosed();
                 KaratelPreferences.clearAll();
-                if (appClosed) {
+                /*if (appClosed) {
                     KaratelPreferences.setAppClosed();
-                }
+                }*/
                 if (!oldSessionToken.isEmpty())
                     KaratelPreferences.setOldSessionToken(oldSessionToken);
                 if (!oldPushToken.isEmpty()) KaratelPreferences.setOldPushToken(oldPushToken);

@@ -1,13 +1,12 @@
 package org.foundation101.karatel.activity;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.app.Activity;
-import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 
-import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.manager.KaratelPreferences;
 
 public class ForgotPassword2Activity extends Activity {
 
@@ -25,13 +24,14 @@ public class ForgotPassword2Activity extends Activity {
         }
 
         if (KaratelPreferences.loggedIn()){
-            KaratelPreferences.setAppClosed();
+            new MainActivity.SignOutSender(ForgotPassword2Activity.this).execute();
+            /*KaratelPreferences.setAppClosed();
 
             Intent logoutIntent = new Intent(MainActivity.BROADCAST_RECEIVER_TAG);
             logoutIntent.putExtra(MainActivity.TAG_JUST_LOGOUT, true);
             LocalBroadcastManager.getInstance(getApplicationContext())
                     .sendBroadcast(logoutIntent);
-            finish();
+            finish();*/
         } else {
             finishAffinity();
         }

@@ -1,10 +1,8 @@
 package org.foundation101.karatel.activity;
 
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -24,9 +22,9 @@ import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.manager.HttpHelper;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -35,11 +33,14 @@ import java.io.IOException;
 
 public class ChangeEmailActivity extends AppCompatActivity {
     static final String TAG = "ChangeEmail";
+    static final String EMAIL_CHANGED = "EMAIL_CHANGED";
 
     Toolbar toolbar;
     ViewGroup viewGroup;
     Button button;
     EditText emailEditText;
+    AlertDialog promptDialog  = null;
+    AlertDialog successDialog = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +50,7 @@ public class ChangeEmailActivity extends AppCompatActivity {
         //Google Analytics part
         ((KaratelApplication)getApplication()).sendScreenName(TAG);
 
-        toolbar = (Toolbar)findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -57,13 +58,13 @@ public class ChangeEmailActivity extends AppCompatActivity {
         actionBar.setTitle(R.string.change_email);
 
 
-        viewGroup = (ViewGroup)findViewById(R.id.new_email);
+        viewGroup = findViewById(R.id.new_email);
 
         TextView textView = (TextView)viewGroup.getChildAt(0);
         textView.setAllCaps(true);
         textView.setText(R.string.new_email);
 
-        button = (Button)findViewById(R.id.buttonRegister);
+        button = findViewById(R.id.buttonRegister);
 
         emailEditText = (EditText)viewGroup.getChildAt(2);
         emailEditText.setHint(R.string.enter_new_email);
@@ -88,6 +89,8 @@ public class ChangeEmailActivity extends AppCompatActivity {
 
         viewGroup.getChildAt(1).setVisibility(View.GONE);
 
+        if (savedInstanceState != null && savedInstanceState.getBoolean(EMAIL_CHANGED, false))
+            showSuccessDialog();
     }
 
     @Override
@@ -113,10 +116,10 @@ public class ChangeEmailActivity extends AppCompatActivity {
 
     public void changeEmail(View view) {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        AlertDialog dialog = dialogBuilder.setMessage(R.string.are_you_sure)
+        promptDialog = dialogBuilder.setMessage(R.string.are_you_sure)
                 .setNegativeButton(R.string.no, simpleListener)
                 .setPositiveButton(R.string.yes, simpleListener).create();
-        dialog.show();
+        promptDialog.show();
     }
 
     DialogInterface.OnClickListener simpleListener = new DialogInterface.OnClickListener(){
@@ -129,6 +132,41 @@ public class ChangeEmailActivity extends AppCompatActivity {
         }
     };
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        boolean successDialogShown = successDialog != null && successDialog.isShowing();
+        outState.putBoolean(EMAIL_CHANGED, successDialogShown);
+
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (promptDialog  != null) promptDialog .dismiss();
+        if (successDialog != null) successDialog.dismiss();
+        super.onDestroy();
+    }
+
+    private void showSuccessDialog() {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ChangeEmailActivity.this);
+        successDialog = dialogBuilder.setTitle(R.string.email_changed)
+                .setMessage(R.string.check_email_to_approve)
+                .setCancelable(false)
+                .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        new MainActivity.SignOutSender(ChangeEmailActivity.this).execute();
+                        /*Intent logoutIntent = new Intent(MainActivity.BROADCAST_RECEIVER_TAG);
+                        logoutIntent.putExtra(MainActivity.TAG_JUST_LOGOUT, true);
+                        LocalBroadcastManager.getInstance(getApplicationContext())
+                                .sendBroadcast(logoutIntent);
+                        finish();*/
+                    }
+                }).create();
+        successDialog.show();
+    }
+
     private class EmailChanger extends AsyncTask<String, Void, String> {
         String email;
 
@@ -137,7 +175,7 @@ public class ChangeEmailActivity extends AppCompatActivity {
             email = params[0];
             String request = new HttpHelper("user").makeRequestString(new String[] {"email", email});
             try {
-                if (HttpHelper.internetConnected(/*ChangeEmailActivity.this*/)) {
+                if (HttpHelper.internetConnected()) {
                     return HttpHelper.proceedRequest("email", request, true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
@@ -155,30 +193,14 @@ public class ChangeEmailActivity extends AppCompatActivity {
                 if (json.getString("status").equals(Globals.SERVER_SUCCESS)){
                     Globals.user.email = email;
                     KaratelPreferences.setUserEmail(email);
-
-                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ChangeEmailActivity.this);
-                    AlertDialog dialog = dialogBuilder.setTitle(R.string.email_changed)
-                            .setMessage(R.string.check_email_to_approve)
-                            .setCancelable(false)
-                            .setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                    Intent logoutIntent = new Intent(MainActivity.BROADCAST_RECEIVER_TAG);
-                                    logoutIntent.putExtra(MainActivity.TAG_JUST_LOGOUT, true);
-                                    LocalBroadcastManager.getInstance(getApplicationContext())
-                                            .sendBroadcast(logoutIntent);
-                                    finish();
-                                }
-                            }).create();
-                    dialog.show();
+                    showSuccessDialog();
                 } else {
                     if (s.equals(HttpHelper.ERROR_JSON)) {
                         message = json.getString("error");
                     } else {
                         message = ChangeEmailActivity.this.getString(R.string.invalid_email);
                     }
-                    Toast.makeText(KaratelApplication.getInstance(), message, Toast.LENGTH_LONG).show();
+                    Globals.showMessage(message);
                 }
             } catch (JSONException e) {
                 Globals.showError(e.getMessage(), e);

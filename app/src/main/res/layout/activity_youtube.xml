@@ -33,12 +33,12 @@
         android:id="@+id/tvTitle" />
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="47dp"
+        android:layout_height="2dp"
         android:layout_marginTop="8dp"
         android:layout_marginLeft="24dp"
         android:layout_marginStart="24dp"
-        android:src="@drawable/green_line_horizontal"/>
+        android:src="@color/darkGreen"/>
 
     <TextView
         android:layout_width="match_parent"
