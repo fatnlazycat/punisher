@@ -21,6 +21,7 @@ import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerView;
 
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.entity.VideoTutorialItem;
 import org.foundation101.karatel.utils.ApplicableToView;
@@ -32,7 +33,7 @@ import org.foundation101.karatel.utils.ViewUtils;
 
 public class YouTubeActivity extends YouTubeBaseActivity implements AppCompatCallback,
         YouTubePlayer.OnInitializedListener {
-    private static final String TAG = "YouTubeActivity";
+    private static final String TAG = "VideoLesson";
     private static final String YOU_TUBE_APP_BUTTON_CONTENT_DESCRIPTION = "Watch this video in YouTube";
 
     YouTubePlayerView youTubeView;
@@ -68,6 +69,8 @@ public class YouTubeActivity extends YouTubeBaseActivity implements AppCompatCal
 
         tvTitle.setText(videoTutorialItem.title);
         tvDescription.setText(videoTutorialItem.description);
+
+        KaratelApplication.getInstance().sendScreenName(TAG + " " + videoTutorialItem.title);
     }
 
     void initYouTubeView() {

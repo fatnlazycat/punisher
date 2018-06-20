@@ -240,15 +240,19 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public static void deleteViolationRequest(SQLiteDatabase db, Integer id){
-        String idString = id.toString();
-        db.delete(DBHelper.VIOLATIONS_TABLE, "_id = ?", new String[]{idString});
-        db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idString});
+        if (db.isOpen()) {
+            String idString = id.toString();
+            db.delete(DBHelper.VIOLATIONS_TABLE, "_id = ?", new String[]{idString});
+            db.delete(DBHelper.MEDIA_TABLE, "id = ?", new String[]{idString});
+        }
     }
 
     public static void deleteComplainRequest(SQLiteDatabase db, Integer id){
-        String idString = id.toString();
-        db.delete(DBHelper.COMPLAINS_TABLE, "_id = ?", new String[]{idString});
-        db.delete(DBHelper.COMPLAINS_MEDIA_TABLE, "id = ?", new String[]{idString});
+        if (db.isOpen()) {
+            String idString = id.toString();
+            db.delete(DBHelper.COMPLAINS_TABLE, "_id = ?", new String[]{idString});
+            db.delete(DBHelper.COMPLAINS_MEDIA_TABLE, "id = ?", new String[]{idString});
+        }
     }
 
     public ArrayList<String> getMediaFiles(String tableTag) {

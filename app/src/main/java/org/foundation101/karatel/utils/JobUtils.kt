@@ -9,6 +9,8 @@ object JobUtils {
     const val TAG = "JobUtils"
 
     fun schedule(tag: String) {
+        if (tag.isEmpty()) return
+
         val jobRequest = JobRequest.Builder(tag)
                 //start in 5 min (do not start immediately - race conditions with other code!),
                 //end after 10 min

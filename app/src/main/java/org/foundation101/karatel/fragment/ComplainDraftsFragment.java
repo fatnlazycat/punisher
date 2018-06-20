@@ -95,6 +95,12 @@ public class ComplainDraftsFragment extends Fragment {
         super.onPause();
     }
 
+    @Override
+    public void onDestroy() {
+        db.close();
+        super.onDestroy();
+    }
+
     void makeComplainsBookAdapterContent(){
         ArrayList<ComplainRequest> drafts = getDraftRequests();
         if (drafts.isEmpty()) {

@@ -37,6 +37,8 @@ import java.util.Map;
  */
 
 public class VideoListFragment extends Fragment {
+    static final String TAG = "Videolessons";
+
     public VideoListFragment() { /*Required empty public constructor*/ }
 
     List<Map<String, String>> groupData = new ArrayList<>();
@@ -70,6 +72,13 @@ public class VideoListFragment extends Fragment {
                 return result;
             }
     };
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        KaratelApplication.getInstance().sendScreenName(TAG);
+    }
 
     @Nullable
     @Override

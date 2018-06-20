@@ -11,8 +11,8 @@ android {
         targetSdkVersion 27
         multiDexEnabled true
 
-        versionCode 52
-        versionName "2.1.1" //don't forget to remove -test in api endpoint!!!
+        versionCode 55
+        versionName "3.1" //don't forget to remove -test in api endpoint!!!
     }
     buildTypes {
         debug {
@@ -31,6 +31,9 @@ android {
     dexOptions {
         javaMaxHeapSize "4g"
     }
+    lintOptions {
+        abortOnError false
+    }
 }
 
 dependencies {
@@ -38,7 +41,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation project(':MyCustomCamera')
     //implementation 'com.github.glomadrian:MaterialAnimatedSwitch:1.1@aar'
-    implementation ('com.polyak:icon-switch:1.0.0') {transitive = false;} //added transitive = false because IconSwitch uses SDK25
+    implementation ('com.polyak:icon-switch:1.0.0') {transitive = false} //added transitive = false because IconSwitch uses SDK25
     implementation files('libs/YouTubeAndroidPlayerApi.jar')
     implementation('com.fasterxml:jackson-module-json-org:0.9.1') {
         exclude group: 'org.json', module: 'json'
