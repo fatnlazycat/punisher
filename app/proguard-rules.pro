@@ -19,6 +19,7 @@
 
 -dontwarn android.test.**
 -dontwarn okhttp3.**
+-keep class okhttp3.Headers { *; }
 
 #Retrofit
 -dontnote retrofit2.Platform

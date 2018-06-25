@@ -29,11 +29,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.ViolationActivity;
 import org.foundation101.karatel.entity.UpdateEntity;
+import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
 import org.foundation101.karatel.utils.DrawingUtils;
 import org.foundation101.karatel.utils.PDFUtils;
@@ -311,7 +311,7 @@ public class HistoryAdapter extends BaseAdapter implements View.OnClickListener 
         final String fileName = pathSegments[pathSegments.length - 1];
 
         final File file = new File(KaratelApplication.getInstance().getCacheDir(), fileName);
-        if (file.exists()) webViews.get(fileUrl).loadUrl(PDFUtils.contentForWebView(file));
+        if (file.exists()) webViews.get(fileUrl).loadData(PDFUtils.contentForWebView(file), "text/html", "utf-8");
         else {
             RetrofitDownloader downloader = KaratelApplication.getClient().create(RetrofitDownloader.class);
             Call<ResponseBody> call = downloader.downloadSmallFileWithDynamicUrl(fileUrl);
@@ -322,7 +322,7 @@ public class HistoryAdapter extends BaseAdapter implements View.OnClickListener 
                     if (response.isSuccessful()) {
                         boolean writtenToDisk = RetrofitUtils.writeResponseBodyToDisk(response.body(), file);
                         if (writtenToDisk) {
-                            webViews.get(fileUrl).loadUrl(PDFUtils.contentForWebView(file));
+                            webViews.get(fileUrl).loadData(PDFUtils.contentForWebView(file), "text/html", "utf-8");
                         }
                     } else {
                         Log.e(TAG, "response unsuccessfull, status= " + response.message());
@@ -387,7 +387,7 @@ public class HistoryAdapter extends BaseAdapter implements View.OnClickListener 
 
         @Override
         protected String doInBackground(Void... params) {
-            if (HttpHelper.internetConnected(/*context*/)) {
+            if (HttpHelper.internetConnected()) {
                 String request = new HttpHelper("complain").makeRequestString(new String[]{"rating", rate.toString()});
                 try {
                     return HttpHelper.proceedRequest("complains/" + requestId, "PUT", request, true);
