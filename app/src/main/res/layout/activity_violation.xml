@@ -10,7 +10,8 @@
         android:layout_height="54dp"
         android:theme="@style/AppToolBar"
         app:titleTextAppearance="@style/TextSize16sp"
-        android:layout_alignParentLeft="true"/>
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
     <TabHost
         android:id="@android:id/tabhost"
@@ -175,7 +176,7 @@
 
                     <ListView
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:divider="@color/colorBackground"
                         android:dividerHeight="16dp"
                         android:id="@+id/historyListView"/>

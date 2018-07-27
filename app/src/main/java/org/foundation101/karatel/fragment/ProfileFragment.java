@@ -22,23 +22,22 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.manager.KaratelPreferences;
-import org.foundation101.karatel.manager.PermissionManager;
-import org.foundation101.karatel.utils.MultipartUtility;
-import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.TipsActivity;
+import org.foundation101.karatel.entity.PunisherUser;
+import org.foundation101.karatel.manager.CameraManager;
+import org.foundation101.karatel.manager.HttpHelper;
+import org.foundation101.karatel.manager.KaratelPreferences;
+import org.foundation101.karatel.manager.PermissionManager;
 import org.foundation101.karatel.utils.MediaUtils;
+import org.foundation101.karatel.utils.MultipartUtility;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,25 +73,28 @@ public class ProfileFragment extends Fragment {
         setHasOptionsMenu(true);
 
         //Google Analytics part
-        ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
+        KaratelApplication.getInstance().sendScreenName(TAG);
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        Toolbar toolbar = ((MainActivity)getActivity()).toolbar;
-        toolbar.inflateMenu(R.menu.profile_fragment_menu);
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                new ProfileSaver(getActivity()).execute();
-                return false;
-            }
-        });
+        final Activity activity = getActivity();
+        if (activity != null && activity instanceof MainActivity) {
+            Toolbar toolbar = ((MainActivity) activity).toolbar;
+            toolbar.inflateMenu(R.menu.profile_fragment_menu);
+            toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    if (progressBar.getVisibility() != View.VISIBLE) new ProfileSaver(activity).execute();
+                    return false;
+                }
+            });
+        }
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_profile, container, false);
 
         progressBar = v.findViewById(R.id.rlProgress);
@@ -167,7 +169,7 @@ public class ProfileFragment extends Fragment {
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         if (HttpHelper.internetConnected(/*getActivity()*/)) {

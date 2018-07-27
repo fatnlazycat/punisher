@@ -29,7 +29,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -277,9 +276,9 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 if (statusTabFirstShow) {
                     tabStatus = findViewById((R.id.tabStatus));
                     historyListView = findViewById(R.id.historyListView);
-                    FrameLayout.LayoutParams mParam = new FrameLayout.LayoutParams(
-                            FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT);
-                    tabStatus.setLayoutParams(mParam);
+                    RelativeLayout.LayoutParams mParam = new RelativeLayout.LayoutParams(
+                            RelativeLayout.LayoutParams.MATCH_PARENT,RelativeLayout.LayoutParams.MATCH_PARENT);
+                    historyListView.setLayoutParams(mParam);
                     historyListView.setAdapter(historyAdapter);
                     historyListView.setEmptyView(findViewById(R.id.layoutNoRequests));
                     historyAdapter.notifyDataSetChanged();
