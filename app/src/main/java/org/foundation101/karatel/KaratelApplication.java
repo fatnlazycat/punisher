@@ -34,6 +34,9 @@ public class KaratelApplication extends MultiDexApplication {
     public static final String TAG = "KaratelApplication";
     private static Retrofit retrofit = null;
 
+    //google's Status.startResolutionForResult doesn't give any control over its dialog, so check ourselves
+    public boolean locationSettingsDialogShown = false;
+
     private static KaratelApplication instance;
     public static KaratelApplication getInstance() {
         return instance;

@@ -34,11 +34,10 @@ import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.ViolationActivity;
 import org.foundation101.karatel.utils.Formular;
 
-import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import static org.foundation101.karatel.activity.ViolationActivity.MODE_CREATE;
 import static org.foundation101.karatel.manager.PermissionManager.LOCATION_PERMISSIONS;
 
 /**
@@ -149,10 +148,11 @@ public class KaratelLocationManager implements
     private void obtainAndroidLocation(){
         if (locationPermitted && activity != null) {
             locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
-            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 locationListener = new MyOldAndroidLocationListener();
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-            }
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                        TimeUnit.MINUTES.toMillis(1),
+                        100, //100 meters
+                        locationListener);
         }
     }
 
@@ -193,13 +193,13 @@ public class KaratelLocationManager implements
                     }
                 }
             }
-            locationManager.removeUpdates(locationListener);
-            //locationListener = null; //don't do this! - since onLocationChanged is being fired several times which causes NPE
         }
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {}
         @Override
-        public void onProviderEnabled(String provider) {}
+        public void onProviderEnabled(String provider) {
+            onSettingsResult();
+        }
         @Override
         public void onProviderDisabled(String provider) {}
     }
@@ -221,10 +221,11 @@ public class KaratelLocationManager implements
                             break;
                         case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                             // Location settings are not satisfied. But could be fixed by showing the user a dialog.
-                            if (activity != null) try {
+                            if (activity != null && !KaratelApplication.getInstance().locationSettingsDialogShown) try {
                                 // Show the dialog by calling startResolutionForResult(),
                                 // and check the result in onActivityResult().
                                 status.startResolutionForResult(activity, ViolationActivity.REQUEST_CHECK_SETTINGS);
+                                KaratelApplication.getInstance().locationSettingsDialogShown = true;
                             } catch (IntentSender.SendIntentException e) {
                                 // Ignore the error.
                             }
@@ -248,7 +249,11 @@ public class KaratelLocationManager implements
         obtainGoogleLocation();
     }
 
+    //this method doesn't check for the result (ok or cancel).
+    //Because - user sees the location settings dialog, opens top-screen sliding menu & turns location on there.
+    // It just tries once more, knowing that something has changed
     public void onSettingsResult() {
+        KaratelApplication.getInstance().locationSettingsDialogShown = false;
         requestLocationFromFusedApi();
     }
 
@@ -294,7 +299,7 @@ public class KaratelLocationManager implements
     public void onDestroy() {
         if (locationListener != null) {
             locationManager.removeUpdates(locationListener);
-            //locationListener = null;
+            //locationListener = null; //don't do this! - since onLocationChanged is being fired several times which causes NPE
         }
 
         PermissionManager.clearPendingRequests();
