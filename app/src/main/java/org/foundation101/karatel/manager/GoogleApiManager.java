@@ -39,7 +39,7 @@ public class GoogleApiManager {
                 .addApi(Places.GEO_DATA_API)
                 .addApi(Places.PLACE_DETECTION_API)
                 .addApi(LocationServices.API).build();
-        client.connect();
+        //client.connect();
     }
 
     public void init(GoogleApiClient.ConnectionCallbacks connectionCallbacks,
