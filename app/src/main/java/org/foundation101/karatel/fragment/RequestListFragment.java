@@ -36,6 +36,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.foundation101.karatel.AsyncTasks.MyFunction;
+import org.foundation101.karatel.AsyncTasks.RequestListFetcher;
 import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.manager.HttpHelper;
@@ -52,6 +54,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -74,6 +77,9 @@ public class RequestListFragment extends Fragment {
 
     SQLiteDatabase db;
 
+    RequestFetcherCallback<Void> requestFetcherPre;
+    RequestFetcherCallback<ArrayList<Request>> requestFetcherPost;
+
     final int COLOR_GREY = Color.parseColor("#86888a");
     final int COLOR_GREEN = Color.parseColor("#6c8c39");
 
@@ -90,7 +96,46 @@ public class RequestListFragment extends Fragment {
         db = new DBHelper(getContext(), DBHelper.DATABASE, DBHelper.DB_VERSION).getReadableDatabase();
         setHasOptionsMenu(true);
 
-        ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
+        KaratelApplication.getInstance().sendScreenName(TAG);
+
+        requestFetcherPre = new RequestFetcherCallback<Void>(this) {
+            @Override public void proceed(Void arg) {
+                RequestListFragment requestListFragment = ref.get();
+                if (requestListFragment != null) {
+                    View progressBar = requestListFragment.progressBar;
+                    if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+                }
+            }
+        };
+        requestFetcherPost = new RequestFetcherCallback<ArrayList<Request>>(this) {
+            @Override public void proceed(ArrayList<Request> requests) {
+                RequestListFragment requestListFragment = ref.get();
+                if (requestListFragment != null) {
+                    View progressBar = requestListFragment.progressBar;
+                    progressBar.setVisibility(View.GONE);
+
+                    RequestListAdapter requestListAdapter = requestListFragment.requestListAdapter;
+                    if (requests != null && requests.size() > 0) {
+                        requestListAdapter.getContent().addAll(requests);
+                    }
+                    if (requestListAdapter.getItemCount() == 0) { //there are no requests
+                        showNoRequestsLayout();
+                    } else {
+                        Collections.sort(requestListAdapter.content, new RequestComparator(RequestComparator.SORT_FLAG_DATE));
+                        requestListAdapter.notifyDataSetChanged();
+                    }
+
+                    Activity activity = requestListFragment.getActivity();
+                    String requestFromPush = activity == null ?
+                            null : activity.getIntent().getStringExtra(MyGcmListenerService.REQUEST_NUMBER);
+                    if (requestFromPush != null) {
+                        activity.getIntent().removeExtra(MyGcmListenerService.REQUEST_NUMBER);
+                        int index = requestListAdapter.getRequestNumberFromTag(requestFromPush);
+                        if (index > -1) requestListAdapter.openRequest(index);
+                    }
+                }
+            }
+        };
     }
 
     @Override
@@ -195,7 +240,7 @@ public class RequestListFragment extends Fragment {
 
     void makeRequestListAdapterContent(){
         requestListAdapter.setContent(getDraftRequests());
-        new RequestListFetcher().execute();
+        new RequestListFetcher(requestFetcherPre, requestFetcherPost).execute();
     }
 
     ArrayList<Request> getDraftRequests(){
@@ -337,7 +382,7 @@ public class RequestListFragment extends Fragment {
         }
     }
 
-    private class RequestListFetcher extends AsyncTask<Void, Void, String>{
+    /*private class RequestListFetcher extends AsyncTask<Void, Void, String>{
 
         @Override
         protected void onPreExecute() {
@@ -348,7 +393,7 @@ public class RequestListFragment extends Fragment {
         @Override
         protected String doInBackground(Void... params) {
             try {
-                if (HttpHelper.internetConnected(/*getActivity()*/)) {
+                if (HttpHelper.internetConnected(*//*getActivity()*//*)) {
                     return HttpHelper.proceedRequest("complains", "GET", "", true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
@@ -404,7 +449,7 @@ public class RequestListFragment extends Fragment {
                 if (index > -1) requestListAdapter.openRequest(index);
             }
         }
-    }
+    }*/
 
     private class RequestEraser extends AsyncTask<Integer, Void, String>{
         @Override
@@ -492,6 +537,13 @@ public class RequestListFragment extends Fragment {
                     }).
                     setCancelable(true);
             return builder.create();
+        }
+    }
+
+    private abstract static class RequestFetcherCallback<T> implements MyFunction<T> {
+        WeakReference<RequestListFragment> ref;
+        public RequestFetcherCallback(RequestListFragment fragment) {
+            ref = new WeakReference<>(fragment);
         }
     }
 }
