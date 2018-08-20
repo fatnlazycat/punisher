@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -36,6 +37,7 @@ public class RetrofitUtils {
             logging.setLevel(logLevel);
 
             OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+            httpClient.readTimeout(15, TimeUnit.SECONDS);
 
             // add your other interceptors …
             //httpClient.addInterceptor(new DownloadProgressInterceptor());

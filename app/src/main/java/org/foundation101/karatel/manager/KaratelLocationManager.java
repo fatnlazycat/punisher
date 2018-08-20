@@ -67,6 +67,7 @@ public class KaratelLocationManager implements
 
     @Inject PermissionManager permissionManager;
 
+    private boolean resumedState = false;
     private boolean locationPermitted = false;
     public double latitude = 0, longitude = 0;
     private final Double REFRESH_ACCURACY = 0.001;
@@ -221,7 +222,9 @@ public class KaratelLocationManager implements
                             break;
                         case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                             // Location settings are not satisfied. But could be fixed by showing the user a dialog.
-                            if (activity != null && !KaratelApplication.getInstance().locationSettingsDialogShown) try {
+                            if (activity != null
+                                    && resumedState
+                                    && !KaratelApplication.getInstance().locationSettingsDialogShown) try {
                                 // Show the dialog by calling startResolutionForResult(),
                                 // and check the result in onActivityResult().
                                 status.startResolutionForResult(activity, ViolationActivity.REQUEST_CHECK_SETTINGS);
@@ -283,12 +286,19 @@ public class KaratelLocationManager implements
      */
 
     public void onCreate() {
-        if ((locationPermitted = checkLocationPermissions(true))
-        ) obtainAndroidLocation();
+        if (locationPermitted = checkLocationPermissions(true)) obtainAndroidLocation();
     }
 
     public void onStart(){
         locationPermitted = checkLocationPermissions(false);
+    }
+
+    public void onResume() {
+        resumedState = true;
+    }
+
+    public void onPause() {
+        resumedState = false;
     }
 
     public void onStop() {

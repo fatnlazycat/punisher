@@ -44,6 +44,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.foundation101.karatel.AsyncTasks.RequestListFetcher;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
@@ -214,12 +215,15 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         saveInstanceStateCalled = false;
         EventBus.getDefault().register(this);
 
+        if (lManager != null) lManager.onResume();
+
         //location debug block
         /*String t = tv.getText().toString();
         String t2 = t.length() > 2 ? t.substring(0, t.length() / 2 - 1) : t;
         tv.setText(String.format(Locale.US, "lat: %1$10f\nlon: %2$10f\n%3$s", latitude, longitude, t2));*/
     }
 
+    @SuppressWarnings("unused")
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void postProgress(ProgressEvent progressEvent) {
         boolean isLoading = (progressEvent.getProgress() > 0 && progressEvent.getProgress() <= 100);
@@ -328,6 +332,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                     status = cursor.getInt(cursor.getColumnIndex("status"));
                     String type = cursor.getString(cursor.getColumnIndex("type"));
                     violation = Violation.getByType(type);
+                    violation.wasSendAttempt = cursor.getInt(cursor.getColumnIndex(DBHelper.SEND_ATTEMPT)) > 0;
                     videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
                     requisitesAdapter.content = violation.getRequisites();
                     for (int i = 0; i < requisitesAdapter.getCount(); i++) {
@@ -719,6 +724,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     }
 
     public void saveToBase(View view) throws Exception {
+        boolean fromPunishButton = view == null;
         /*first check if location is available - show error dialog if not
         this is made to prevent saving request with zero LatLng -> leads to crash. */
         if (checkLocation() && !blockButtons /*&& !needReclaimFullLocation*/) {
@@ -732,8 +738,6 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             cv.put(DBHelper.ID_SERVER, idOnServer);
             cv.put(DBHelper.ID_NUMBER_SERVER, id_number_server);
             cv.put(DBHelper.USER_ID, Globals.user.id);
-            /*cv.put(DBHelper.LONGITUDE, longitude);
-            cv.put(DBHelper.LATITUDE, latitude);*/
 
             for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                 ViolationRequisite thisRequisite = (ViolationRequisite) requisitesAdapter.getItem(i);
@@ -753,6 +757,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 case MODE_EDIT :{
                     cv.put(DBHelper._ID, id);
                     cv.put(DBHelper.TIME_STAMP, time_stamp);
+                    cv.put(DBHelper.SEND_ATTEMPT, violation.wasSendAttempt);
                     rowID = db.replace(DBHelper.VIOLATIONS_TABLE, null, cv);
                     break;
                 }
@@ -787,7 +792,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             setChangesMade(false);
 
             //show toast only if the method is called by Save button
-            if (view != null ) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
+            if (!fromPunishButton) Toast.makeText(this, R.string.requestSaved, Toast.LENGTH_SHORT).show();
         } else {
             String message = /*needReclaimFullLocation ?
                     "Зачекайте поки пристрій визначить Ваше місцезнаходження та спробуйте ще раз" :*/
@@ -965,6 +970,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     @Override
     protected void onPause() {
         EventBus.getDefault().unregister(this);
+        if (lManager != null) lManager.onPause();
         super.onPause();
     }
 
@@ -1040,12 +1046,12 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
         @Override
         protected CreationResponse doInBackground(Violation... params) {
-            if (!HttpHelper.internetConnected(/*context*/)) return null;
+            if (!HttpHelper.internetConnected()) return null;
 
             Violation violation = params[0];
             CreationResponse result;
 
-            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
             //query to data table
             String table = DBHelper.VIOLATIONS_TABLE;
             String[] columns = null;
@@ -1054,10 +1060,28 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             String[] selectionArgs = {idInDbString};
             cursor = db.query(table, columns, where, selectionArgs, null, null, null);
             cursor.moveToFirst();
-            /*Double latitude = cursor.getDouble(cursor.getColumnIndex(DBHelper.LATITUDE));
-            Double longitude = cursor.getDouble(cursor.getColumnIndex(DBHelper.LONGITUDE));*/
+
+            //here we check if the request was sent earlier but for some reason the response didn't arrive
+            // & the app still considers the request to be draft one.
+            boolean wasSendAttempt = cursor.getInt(cursor.getColumnIndex(DBHelper.SEND_ATTEMPT)) > 0;
+
+            if (wasSendAttempt) {
+                ArrayList<Request> allRequests = RequestListFetcher.parseResponse(RequestListFetcher.getRequests());
+                for (Request r : allRequests) {
+                    if (time_stamp.equals(r.create_in_the_device))
+                        return new CreationResponse(null, Globals.SERVER_SUCCESS, null);
+                }
+            } else {
+                ContentValues cv = new ContentValues();
+                cv.put(DBHelper.SEND_ATTEMPT, 1);
+                db.update(table, cv, where, selectionArgs);
+                violation.wasSendAttempt = true;
+            }
+
+
             Double latitude  = evidenceAdapter.content.get(0).latitude;
             Double longitude = evidenceAdapter.content.get(0).longitude;
+
             Map<String, String> dbRowData = new HashMap<>();
             for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                 String columnName = requisitesAdapter.content.get(i).dbTag;
@@ -1068,7 +1092,6 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             db.close();
 
             try {
-                //get resources
                 Resources res = context.getResources();
                 int resId = res.getIdentifier(violation.getType() + "_server", "string", context.getPackageName());
                 String typeServerSuffix = res.getString(resId);

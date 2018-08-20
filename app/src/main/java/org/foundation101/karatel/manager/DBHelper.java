@@ -20,7 +20,7 @@ import java.util.List;
  * Created by Dima on 08.05.2016.
  */
 public class DBHelper extends SQLiteOpenHelper {
-    public static final int DB_VERSION = 4;
+    public static final int DB_VERSION = 5;
     public static final String DATABASE = "violations_db";
     public static final String VIOLATIONS_TABLE = "violations_table";
     public static final String MEDIA_TABLE = "media_table";
@@ -36,6 +36,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TYPE = "type";
     public static final String STATUS = "status";
     public static final String TIME_STAMP = "time_stamp";
+    public static final String SEND_ATTEMPT = "send_attempt";
     public static final String LONGITUDE = "longitude";
     public static final String LATITUDE = "latitude";
     public static final String FILE_NAME = "file_name";
@@ -63,6 +64,10 @@ public class DBHelper extends SQLiteOpenHelper {
                 upgrade_locationFromMainTableToMediaTable(db, Violation.CATEGORY_PUBLIC);
                 break;
             }
+            case 3 : //v.3 was changes in column names ("Kyivblagoustriy") - no special method here, everything's done by checkViolationsAndAddColumns()
+            case 4 : {
+                upgrade_addSendAttemptColumn(db);
+            }
         }
         checkViolationsAndAddColumns(db, Violation.CATEGORY_BUSINESS);
         checkViolationsAndAddColumns(db, Violation.CATEGORY_PUBLIC);
@@ -80,6 +85,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 + TYPE              + " TEXT,"
                 + STATUS            + " INTEGER,"
                 + TIME_STAMP        + " TEXT,"
+                + SEND_ATTEMPT      + " INTEGER DEFAULT 0," //in fact we use it as boolean (sqlite has no boolean)
                 /*+ LONGITUDE         + " REAL,"
                 + LATITUDE          + " REAL,"*/
                 + dataTableStructure
@@ -149,6 +155,19 @@ public class DBHelper extends SQLiteOpenHelper {
             db.endTransaction();
         }
         //we don't drop lat/lng column in violation table - let it stay there empty
+    }
+
+    private void upgrade_addSendAttemptColumn(SQLiteDatabase db) {
+        db.beginTransaction();
+        try {
+            db.execSQL("ALTER TABLE " + VIOLATIONS_TABLE + " ADD " + SEND_ATTEMPT + " INTEGER DEFAULT 0;");
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            Log.e("DBHelper", e.toString());
+            Mint.logException(e);
+        } finally {
+            db.endTransaction();
+        }
     }
 
     private String[] tableNamesFromCategory(int category) {

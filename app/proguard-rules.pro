@@ -17,6 +17,7 @@
 #}
 -dontobfuscate
 
+#-dontwarn sun.misc.Unsafe
 -dontwarn android.test.**
 -dontwarn okhttp3.**
 -keep class okhttp3.Headers { *; }
@@ -44,7 +45,7 @@
 -keepclassmembers public final enum org.codehaus.jackson.annotate.JsonAutoDetect$Visibility {
  public static final org.codehaus.jackson.annotate.JsonAutoDetect$Visibility *; }
 
- -keep class org.foundation101.karatel.entity.** { public protected private *; }
+ -keep class org.foundation101.karatel.entity.** { *; }
 
  #Dagger
  -dontwarn com.google.errorprone.annotations.*
@@ -54,3 +55,7 @@
      @org.greenrobot.eventbus.Subscribe <methods>;
  }
  -keep enum org.greenrobot.eventbus.ThreadMode { *; }
+
+ #tests
+ #-keep class javax.inject.Provider { *; }
+ #-keep class kotlin.collections.MapsKt { *; }

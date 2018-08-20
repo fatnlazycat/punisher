@@ -30,26 +30,23 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.foundation101.karatel.manager.DBHelper;
+import org.foundation101.karatel.AsyncTasks.AsyncTaskAction;
+import org.foundation101.karatel.AsyncTasks.RequestListFetcher;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.entity.Request;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.ViolationActivity;
 import org.foundation101.karatel.adapter.ItemTouchHelperAdapter;
 import org.foundation101.karatel.adapter.RequestListAdapter;
+import org.foundation101.karatel.entity.Request;
+import org.foundation101.karatel.manager.DBHelper;
+import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.service.MyGcmListenerService;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -74,6 +71,9 @@ public class RequestListFragment extends Fragment {
 
     SQLiteDatabase db;
 
+    //RequestFetcherCallback<Void> requestFetcherPre;
+    //RequestFetcherCallback<ArrayList<Request>> requestFetcherPost;
+
     final int COLOR_GREY = Color.parseColor("#86888a");
     final int COLOR_GREEN = Color.parseColor("#6c8c39");
 
@@ -90,7 +90,46 @@ public class RequestListFragment extends Fragment {
         db = new DBHelper(getContext(), DBHelper.DATABASE, DBHelper.DB_VERSION).getReadableDatabase();
         setHasOptionsMenu(true);
 
-        ((KaratelApplication)getActivity().getApplication()).sendScreenName(TAG);
+        KaratelApplication.getInstance().sendScreenName(TAG);
+
+        /*requestFetcherPre = new RequestFetcherCallback<Void>(this) {
+            @Override public void proceed(Void arg) {
+                RequestListFragment requestListFragment = ref.get();
+                if (requestListFragment != null) {
+                    View progressBar = requestListFragment.progressBar;
+                    if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+                }
+            }
+        };
+        requestFetcherPost = new RequestFetcherCallback<ArrayList<Request>>(this) {
+            @Override public void proceed(ArrayList<Request> requests) {
+                RequestListFragment requestListFragment = ref.get();
+                if (requestListFragment != null) {
+                    View progressBar = requestListFragment.progressBar;
+                    progressBar.setVisibility(View.GONE);
+
+                    RequestListAdapter requestListAdapter = requestListFragment.requestListAdapter;
+                    if (requests != null && requests.size() > 0) {
+                        requestListAdapter.getContent().addAll(requests);
+                    }
+                    if (requestListAdapter.getItemCount() == 0) { //there are no requests
+                        showNoRequestsLayout();
+                    } else {
+                        Collections.sort(requestListAdapter.content, new RequestComparator(RequestComparator.SORT_FLAG_DATE));
+                        requestListAdapter.notifyDataSetChanged();
+                    }
+
+                    Activity activity = requestListFragment.getActivity();
+                    String requestFromPush = activity == null ?
+                            null : activity.getIntent().getStringExtra(MyGcmListenerService.REQUEST_NUMBER);
+                    if (requestFromPush != null) {
+                        activity.getIntent().removeExtra(MyGcmListenerService.REQUEST_NUMBER);
+                        int index = requestListAdapter.getRequestNumberFromTag(requestFromPush);
+                        if (index > -1) requestListAdapter.openRequest(index);
+                    }
+                }
+            }
+        };*/
     }
 
     @Override
@@ -195,7 +234,7 @@ public class RequestListFragment extends Fragment {
 
     void makeRequestListAdapterContent(){
         requestListAdapter.setContent(getDraftRequests());
-        new RequestListFetcher().execute();
+        new RequestListFetcher(new RequestListFetcherActions(this)).execute();
     }
 
     ArrayList<Request> getDraftRequests(){
@@ -337,7 +376,7 @@ public class RequestListFragment extends Fragment {
         }
     }
 
-    private class RequestListFetcher extends AsyncTask<Void, Void, String>{
+    /*private class RequestListFetcher extends AsyncTask<Void, Void, String>{
 
         @Override
         protected void onPreExecute() {
@@ -348,7 +387,7 @@ public class RequestListFragment extends Fragment {
         @Override
         protected String doInBackground(Void... params) {
             try {
-                if (HttpHelper.internetConnected(/*getActivity()*/)) {
+                if (HttpHelper.internetConnected(*//*getActivity()*//*)) {
                     return HttpHelper.proceedRequest("complains", "GET", "", true);
                 } else return HttpHelper.ERROR_JSON;
             } catch (final IOException e){
@@ -404,7 +443,7 @@ public class RequestListFragment extends Fragment {
                 if (index > -1) requestListAdapter.openRequest(index);
             }
         }
-    }
+    }*/
 
     private class RequestEraser extends AsyncTask<Integer, Void, String>{
         @Override
@@ -430,7 +469,7 @@ public class RequestListFragment extends Fragment {
         }
     }
 
-    private class RequestComparator implements Comparator<Request>{
+    private static class RequestComparator implements Comparator<Request>{
         static final int SORT_FLAG_STATUS = 1;
         static final int SORT_FLAG_DATE = 2;
         int sortFlag;
@@ -492,6 +531,48 @@ public class RequestListFragment extends Fragment {
                     }).
                     setCancelable(true);
             return builder.create();
+        }
+    }
+
+    private static class RequestListFetcherActions extends AsyncTaskAction<Void, ArrayList<Request>, RequestListFragment> {
+        RequestListFetcherActions(RequestListFragment fragment) {
+            super(fragment);
+        }
+
+        @Override public void pre(Void arg) {
+            RequestListFragment requestListFragment = ref.get();
+            if (requestListFragment != null) {
+                View progressBar = requestListFragment.progressBar;
+                if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+            }
+        }
+
+        @Override public void post(ArrayList<Request> requests) {
+            RequestListFragment requestListFragment = ref.get();
+            if (requestListFragment != null) {
+                View progressBar = requestListFragment.progressBar;
+                progressBar.setVisibility(View.GONE);
+
+                RequestListAdapter requestListAdapter = requestListFragment.requestListAdapter;
+                if (requests != null && requests.size() > 0) {
+                    requestListAdapter.getContent().addAll(requests);
+                }
+                if (requestListAdapter.getItemCount() == 0) { //there are no requests
+                    requestListFragment.showNoRequestsLayout();
+                } else {
+                    Collections.sort(requestListAdapter.content, new RequestComparator(RequestComparator.SORT_FLAG_DATE));
+                    requestListAdapter.notifyDataSetChanged();
+                }
+
+                Activity activity = requestListFragment.getActivity();
+                String requestFromPush = activity == null ?
+                        null : activity.getIntent().getStringExtra(MyGcmListenerService.REQUEST_NUMBER);
+                if (requestFromPush != null) {
+                    activity.getIntent().removeExtra(MyGcmListenerService.REQUEST_NUMBER);
+                    int index = requestListAdapter.getRequestNumberFromTag(requestFromPush);
+                    if (index > -1) requestListAdapter.openRequest(index);
+                }
+            }
         }
     }
 }

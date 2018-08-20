@@ -33,11 +33,13 @@ public class Violation implements Serializable{
     public String name;
     public String type;
     public String textInactive, header;
-    public int id;
+    public int id; //on device
+    public int idOnServer;
     public int drawableId;
     public boolean usesCamera, active;
     public boolean locationRequired = true;
     public int mediaTypes, category;
+    public boolean wasSendAttempt = false;
     ArrayList<ViolationRequisite> requisites;
 
     public ArrayList<ViolationRequisite> getRequisites() {
