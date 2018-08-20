@@ -15,18 +15,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class RequestListFetcher extends AsyncTask<Void, Void, String> {
-    private MyFunction<Void> preExecute;
-    private MyFunction<ArrayList<Request>> postExecute;
+    private AsyncTaskAction<Void, ArrayList<Request>, ?> actions;
 
-    public RequestListFetcher(MyFunction<Void> preExecute, MyFunction<ArrayList<Request>> postExecute) {
-        this.preExecute = preExecute;
-        this.postExecute = postExecute;
+    public RequestListFetcher(AsyncTaskAction<Void, ArrayList<Request>, ?> actions) {
+        this.actions = actions;
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        preExecute.proceed(null);
+        actions.pre(null);
     }
 
     @Override
@@ -37,7 +35,7 @@ public class RequestListFetcher extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
-        postExecute.proceed(parseResponse(s));
+        actions.post(parseResponse(s));
     }
 
 

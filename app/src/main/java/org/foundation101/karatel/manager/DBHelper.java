@@ -110,7 +110,6 @@ public class DBHelper extends SQLiteOpenHelper {
                 + USER_ID       + " INTEGER,"
                 + TYPE          + " TEXT,"
                 + TIME_STAMP    + " TEXT,"
-                + SEND_ATTEMPT  + " INTEGER DEFAULT 0," //in fact we use it as boolean (sqlite has no boolean)
                 /*+ LONGITUDE     + " REAL,"
                 + LATITUDE      + " REAL,"*/
                 + dataTableStructure
@@ -161,7 +160,6 @@ public class DBHelper extends SQLiteOpenHelper {
     private void upgrade_addSendAttemptColumn(SQLiteDatabase db) {
         db.beginTransaction();
         try {
-            db.execSQL("ALTER TABLE " + COMPLAINS_TABLE  + " ADD " + SEND_ATTEMPT + " INTEGER DEFAULT 0;");
             db.execSQL("ALTER TABLE " + VIOLATIONS_TABLE + " ADD " + SEND_ATTEMPT + " INTEGER DEFAULT 0;");
             db.setTransactionSuccessful();
         } catch (Exception e) {

@@ -30,31 +30,25 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.foundation101.karatel.AsyncTasks.MyFunction;
+import org.foundation101.karatel.AsyncTasks.AsyncTaskAction;
 import org.foundation101.karatel.AsyncTasks.RequestListFetcher;
-import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
-import org.foundation101.karatel.entity.Request;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.ViolationActivity;
 import org.foundation101.karatel.adapter.ItemTouchHelperAdapter;
 import org.foundation101.karatel.adapter.RequestListAdapter;
+import org.foundation101.karatel.entity.Request;
+import org.foundation101.karatel.manager.DBHelper;
+import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.service.MyGcmListenerService;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -77,8 +71,8 @@ public class RequestListFragment extends Fragment {
 
     SQLiteDatabase db;
 
-    RequestFetcherCallback<Void> requestFetcherPre;
-    RequestFetcherCallback<ArrayList<Request>> requestFetcherPost;
+    //RequestFetcherCallback<Void> requestFetcherPre;
+    //RequestFetcherCallback<ArrayList<Request>> requestFetcherPost;
 
     final int COLOR_GREY = Color.parseColor("#86888a");
     final int COLOR_GREEN = Color.parseColor("#6c8c39");
@@ -98,7 +92,7 @@ public class RequestListFragment extends Fragment {
 
         KaratelApplication.getInstance().sendScreenName(TAG);
 
-        requestFetcherPre = new RequestFetcherCallback<Void>(this) {
+        /*requestFetcherPre = new RequestFetcherCallback<Void>(this) {
             @Override public void proceed(Void arg) {
                 RequestListFragment requestListFragment = ref.get();
                 if (requestListFragment != null) {
@@ -135,7 +129,7 @@ public class RequestListFragment extends Fragment {
                     }
                 }
             }
-        };
+        };*/
     }
 
     @Override
@@ -240,7 +234,7 @@ public class RequestListFragment extends Fragment {
 
     void makeRequestListAdapterContent(){
         requestListAdapter.setContent(getDraftRequests());
-        new RequestListFetcher(requestFetcherPre, requestFetcherPost).execute();
+        new RequestListFetcher(new RequestListFetcherActions(this)).execute();
     }
 
     ArrayList<Request> getDraftRequests(){
@@ -475,7 +469,7 @@ public class RequestListFragment extends Fragment {
         }
     }
 
-    private class RequestComparator implements Comparator<Request>{
+    private static class RequestComparator implements Comparator<Request>{
         static final int SORT_FLAG_STATUS = 1;
         static final int SORT_FLAG_DATE = 2;
         int sortFlag;
@@ -540,10 +534,45 @@ public class RequestListFragment extends Fragment {
         }
     }
 
-    private abstract static class RequestFetcherCallback<T> implements MyFunction<T> {
-        WeakReference<RequestListFragment> ref;
-        public RequestFetcherCallback(RequestListFragment fragment) {
-            ref = new WeakReference<>(fragment);
+    private static class RequestListFetcherActions extends AsyncTaskAction<Void, ArrayList<Request>, RequestListFragment> {
+        RequestListFetcherActions(RequestListFragment fragment) {
+            super(fragment);
+        }
+
+        @Override public void pre(Void arg) {
+            RequestListFragment requestListFragment = ref.get();
+            if (requestListFragment != null) {
+                View progressBar = requestListFragment.progressBar;
+                if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+            }
+        }
+
+        @Override public void post(ArrayList<Request> requests) {
+            RequestListFragment requestListFragment = ref.get();
+            if (requestListFragment != null) {
+                View progressBar = requestListFragment.progressBar;
+                progressBar.setVisibility(View.GONE);
+
+                RequestListAdapter requestListAdapter = requestListFragment.requestListAdapter;
+                if (requests != null && requests.size() > 0) {
+                    requestListAdapter.getContent().addAll(requests);
+                }
+                if (requestListAdapter.getItemCount() == 0) { //there are no requests
+                    requestListFragment.showNoRequestsLayout();
+                } else {
+                    Collections.sort(requestListAdapter.content, new RequestComparator(RequestComparator.SORT_FLAG_DATE));
+                    requestListAdapter.notifyDataSetChanged();
+                }
+
+                Activity activity = requestListFragment.getActivity();
+                String requestFromPush = activity == null ?
+                        null : activity.getIntent().getStringExtra(MyGcmListenerService.REQUEST_NUMBER);
+                if (requestFromPush != null) {
+                    activity.getIntent().removeExtra(MyGcmListenerService.REQUEST_NUMBER);
+                    int index = requestListAdapter.getRequestNumberFromTag(requestFromPush);
+                    if (index > -1) requestListAdapter.openRequest(index);
+                }
+            }
         }
     }
 }

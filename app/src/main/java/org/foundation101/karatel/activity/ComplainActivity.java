@@ -178,8 +178,11 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         super.onResume();
         saveInstanceStateCalled = false;
         EventBus.getDefault().register(this);
+
+        if (lManager != null) lManager.onResume();
     }
 
+    @SuppressWarnings("unused")
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void postProgress(ProgressEvent progressEvent) {
         boolean isLoading = (progressEvent.getProgress() > 0 && progressEvent.getProgress() <= 100);
@@ -526,9 +529,9 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     }
 
     public void saveToBase(View view) throws Exception {
-                /*first check if location is available - show error dialog if not
-        this is made to prevent saving request with zero LatLng -> leads to crash.
-         */
+        boolean fromPunishButton = view == null;
+        /*first check if location is available - show error dialog if not
+        this is made to prevent saving request with zero LatLng -> leads to crash.*/
         if (checkLocationIfRequired()) {
             //db actions
             SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -538,8 +541,6 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
             //cv.put("status", status);
             //cv.put(DBHelper.ID_SERVER,  violation.getId());
             cv.put(DBHelper.USER_ID,    Globals.user.id);
-            /*cv.put(DBHelper.LONGITUDE,  longitude == null ? EMPTY_LOCATION_STUB : longitude);
-            cv.put(DBHelper.LATITUDE,   latitude  == null ? EMPTY_LOCATION_STUB : latitude);*/
 
             for (int i = 0; i < requisites.size(); i++) {
                 ViolationRequisite thisRequisite = requisites.get(i);
@@ -590,7 +591,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
             setChangesMade(false);
 
             //show toast only if the method is called by Save button
-            if (view != null ) {
+            if (!fromPunishButton) {
                 Toast.makeText(this, R.string.complainSaved, Toast.LENGTH_SHORT).show();
                 finish();
             }
@@ -740,6 +741,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
     @Override
     protected void onPause() {
         EventBus.getDefault().unregister(this);
+        if (lManager != null) lManager.onPause();
         super.onPause();
     }
 
@@ -789,7 +791,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
 
         @Override
         protected ComplainCreationResponse doInBackground(Violation... params) {
-            if (!HttpHelper.internetConnected(/*context*/)) return null;
+            if (!HttpHelper.internetConnected()) return null;
 
             Violation violation = params[0];
             ComplainCreationResponse result;

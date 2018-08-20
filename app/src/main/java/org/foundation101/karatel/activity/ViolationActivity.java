@@ -96,7 +96,6 @@ import java.util.Map;
 
 import io.github.lizhangqu.coreprogress.ProgressHelper;
 import io.github.lizhangqu.coreprogress.ProgressListener;
-import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -333,6 +332,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                     status = cursor.getInt(cursor.getColumnIndex("status"));
                     String type = cursor.getString(cursor.getColumnIndex("type"));
                     violation = Violation.getByType(type);
+                    violation.wasSendAttempt = cursor.getInt(cursor.getColumnIndex(DBHelper.SEND_ATTEMPT)) > 0;
                     videoOnly = violation.getMediaTypes() == Violation.VIDEO_ONLY;
                     requisitesAdapter.content = violation.getRequisites();
                     for (int i = 0; i < requisitesAdapter.getCount(); i++) {
@@ -757,6 +757,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 case MODE_EDIT :{
                     cv.put(DBHelper._ID, id);
                     cv.put(DBHelper.TIME_STAMP, time_stamp);
+                    cv.put(DBHelper.SEND_ATTEMPT, violation.wasSendAttempt);
                     rowID = db.replace(DBHelper.VIOLATIONS_TABLE, null, cv);
                     break;
                 }
@@ -1074,6 +1075,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 ContentValues cv = new ContentValues();
                 cv.put(DBHelper.SEND_ATTEMPT, 1);
                 db.update(table, cv, where, selectionArgs);
+                violation.wasSendAttempt = true;
             }
 
 

@@ -39,7 +39,7 @@ public class Violation implements Serializable{
     public boolean usesCamera, active;
     public boolean locationRequired = true;
     public int mediaTypes, category;
-    boolean wasSendAttempt = false;
+    public boolean wasSendAttempt = false;
     ArrayList<ViolationRequisite> requisites;
 
     public ArrayList<ViolationRequisite> getRequisites() {
