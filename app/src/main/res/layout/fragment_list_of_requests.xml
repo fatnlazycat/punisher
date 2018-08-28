@@ -61,17 +61,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
             android:gravity="center"
             android:layout_below="@id/textViewDoSort">
-
-            <!--ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@mipmap/ic_sort_by_status"
-                android:id="@+id/sortByStatusButton"/-->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight=".5"
                 android:gravity="center_vertical"
                 android:drawableLeft="@mipmap/ic_sort_by_status"
                 android:drawableStart="@mipmap/ic_sort_by_status"
@@ -79,18 +76,20 @@
                 android:text="@string/byStatus"
                 android:textAllCaps="true"
                 android:textColor="@color/grey_button"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:focusable="true"
                 android:id="@+id/textViewByStatus"/>
 
-            <!--ImageView
-                android:layout_width="wrap_content"
+            <Space
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="47dp"
-                android:src="@mipmap/ic_sort_by_date"
-                android:id="@+id/sortByDateButton"/-->
+                android:layout_weight="1"/>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="47dp"
+                android:layout_weight=".5"
                 android:gravity="center_vertical"
                 android:drawableLeft="@mipmap/ic_sort_by_date_selected"
                 android:drawableStart="@mipmap/ic_sort_by_date_selected"
@@ -98,7 +97,12 @@
                 android:text="@string/byDate"
                 android:textAllCaps="true"
                 android:textColor="@color/darkGreen"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:focusable="true"
+                android:focusableInTouchMode="false"
                 android:id="@+id/textViewByDate"/>
+            <!--android:layout_marginLeft="47dp"-->
         </LinearLayout>
 
     </RelativeLayout>

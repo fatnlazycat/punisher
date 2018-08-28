@@ -39,20 +39,6 @@ public class KaratelPreferences {
     }
 
 
-    /*private static final String KEY_STARTED_FROM_PUSH = "KEY_STARTED_FROM_PUSH";
-    public static boolean startedFromPush() {
-        boolean result = preferences().getBoolean(KEY_STARTED_FROM_PUSH, false);
-        Log.d(TAG, "startedFromPush=" + result);
-        return result;
-    }
-    public static void setStartedFromPush(boolean value) {
-        Log.d(TAG, "settingStartedFromPush=" + value);
-        SharedPreferences.Editor editor = preferences().edit();
-        editor.putBoolean(KEY_STARTED_FROM_PUSH, value);
-        editor.commit();
-    }*/
-
-
     public static void saveUserWithAvatar(String surname,
                                           String firstname,
                                           String secondname,
@@ -96,18 +82,23 @@ public class KaratelPreferences {
                 .putInt(Globals.USER_ID, id).apply();
     }
 
+    public static PunisherUser getUser() {
+        SharedPreferences preferences = preferences();
+        PunisherUser user = new PunisherUser(
+                preferences.getString(Globals.USER_EMAIL, ""),
+                "", //for password
+                preferences.getString(Globals.USER_SURNAME, ""),
+                preferences.getString(Globals.USER_NAME, ""),
+                preferences.getString(Globals.USER_SECOND_NAME, ""),
+                preferences.getString(Globals.USER_PHONE, ""));
+        user.id = preferences.getInt(Globals.USER_ID, 0);
+        user.avatarFileName = preferences.getString(Globals.USER_AVATAR, "");
+        return user;
+    }
+
     public static void restoreUser(){
         if (Globals.user == null) {
-            SharedPreferences preferences = preferences();
-            Globals.user = new PunisherUser(
-                    preferences.getString(Globals.USER_EMAIL, ""),
-                    "", //for password
-                    preferences.getString(Globals.USER_SURNAME, ""),
-                    preferences.getString(Globals.USER_NAME, ""),
-                    preferences.getString(Globals.USER_SECOND_NAME, ""),
-                    preferences.getString(Globals.USER_PHONE, ""));
-            Globals.user.id = preferences.getInt(Globals.USER_ID, 0);
-            Globals.user.avatarFileName = preferences.getString(Globals.USER_AVATAR, "");
+            Globals.user = getUser();
         }
     }
 

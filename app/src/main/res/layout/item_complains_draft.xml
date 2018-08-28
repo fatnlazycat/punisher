@@ -14,23 +14,25 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/tvComplainTimeStamp"
         android:textAllCaps="true"
         android:textSize="12sp"
-        android:id="@+id/textViewComplainType"
-        android:layout_alignParentTop="true"/>
+        android:id="@+id/tvComplainType"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/textViewComplainTimeStamp"
+        android:id="@+id/tvComplainTimeStamp"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/textViewComplainName"
+        android:id="@+id/tvComplainName"
         android:textSize="16sp"
-        android:layout_below="@+id/textViewComplainType"
+        android:layout_below="@+id/tvComplainType"
         android:layout_alignParentLeft="true" />
 </RelativeLayout>

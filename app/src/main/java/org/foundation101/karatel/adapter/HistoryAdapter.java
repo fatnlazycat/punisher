@@ -105,7 +105,7 @@ public class HistoryAdapter extends BaseAdapter implements View.OnClickListener 
             holder = new ViewHolder();
             holder.imageViewStatus          = convertView.findViewById(R.id.imageViewStatus);
             holder.textViewRequestStatus    = convertView.findViewById(R.id.textViewRequestStatus);
-            holder.textViewRequestTimeStamp = convertView.findViewById(R.id.textViewRequestTimeStamp);
+            holder.textViewRequestTimeStamp = convertView.findViewById(R.id.tvRequestTimeStamp);
             holder.textViewDetailsAction    = convertView.findViewById(R.id.textViewDetailsAction);
             holder.collapsableLayout        = convertView.findViewById(R.id.collapsableLayout);
 

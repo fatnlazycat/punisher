@@ -175,10 +175,14 @@ public class ProfileFragment extends Fragment {
         if (HttpHelper.internetConnected(/*getActivity()*/)) {
             new ProfileFetcher(getActivity()).execute(Globals.user.id);
         }
-        fillTextFields();
         ((MainActivity)getActivity()).setAvatarImageView(avatarView);
     }
 
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        fillTextFields();
+        super.onViewStateRestored(savedInstanceState);
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

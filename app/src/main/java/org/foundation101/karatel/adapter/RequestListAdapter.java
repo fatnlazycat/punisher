@@ -137,7 +137,7 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
         public ViewHolder(View itemView) {
             super(itemView);
             textViewRequestStatus=(TextView)itemView.findViewById(R.id.textViewRequestStatus);
-            textViewRequestTimeStamp=(TextView)itemView.findViewById(R.id.textViewRequestTimeStamp);
+            textViewRequestTimeStamp=(TextView)itemView.findViewById(R.id.tvRequestTimeStamp);
             textViewRequestType=(TextView)itemView.findViewById(R.id.textViewRequestType);
             imageViewStatus = (ImageView) itemView.findViewById(R.id.imageViewStatus);
             itemView.setOnClickListener(new View.OnClickListener() {

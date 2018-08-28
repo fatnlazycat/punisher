@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -14,21 +15,16 @@ import android.util.Log;
 import android.view.Display;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
-//AppIndexing - don't know why did I add this here
-/*import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.common.api.GoogleApiClient;*/
-
-import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.retrofit.ProgressEvent;
 import org.foundation101.karatel.retrofit.RetrofitDownloader;
 import org.foundation101.karatel.utils.MediaUtils;
@@ -42,19 +38,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
-import java.util.List;
 
-import okhttp3.HttpUrl;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
-import retrofit2.Retrofit;
 
 public class ShowMediaActivity extends AppCompatActivity {
+    static final String TAG = "ShowMediaActivity";
+
     Bitmap picture;
     View progressBar;
     TextView tvProgress;
+    VideoView vView;
     AsyncTask loadingTask;
+    String downloadIdentifier;
+
+    Thread progressThread;
 
     String source;
 
@@ -79,29 +78,88 @@ public class ShowMediaActivity extends AppCompatActivity {
             ImageView iView = findViewById(R.id.imageViewJustShow);
             iView.setVisibility(View.VISIBLE);
             loadingTask = new BitmapWorkerTask(iView).execute(source);
+            downloadIdentifier = loadingTask.toString();
 
         } else if (source.endsWith(CameraManager.MP4)) {
-            VideoView vView = findViewById(R.id.videoViewJustShow);
+            vView = findViewById(R.id.videoViewJustShow);
+
+            //source = "http://104.154.131.217:9000/files/pdf/CMI10599.pdf" - to test VideoView error dialog with app context
+            /*vView = new VideoView(KaratelApplication.getInstance());
+            RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
+                    RelativeLayout.LayoutParams.MATCH_PARENT,RelativeLayout.LayoutParams.WRAP_CONTENT);
+            layoutParams.addRule(RelativeLayout.BELOW, R.id.toolbar);
+            layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+            vView.setLayoutParams(layoutParams);
+            ((RelativeLayout) findViewById(R.id.rlShowMediaActivity)).addView(vView);*/
+
+
             final MediaController mc = new MediaController(this);
             vView.setMediaController(mc);
             vView.setVideoPath(source);
             vView.setVisibility(View.VISIBLE);
+
+            progressBar.setVisibility(View.VISIBLE);
+
             vView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
+                    progressBar.setVisibility(View.GONE);
                     mc.show();
                 }
             });
+
+            //show buffering progress only starting from API 16
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                vView.setOnInfoListener(new MediaPlayer.OnInfoListener() {
+                    @Override
+                    public boolean onInfo(MediaPlayer mp, int what, int extra) {
+                        Log.d(TAG, "onInfo, what=" + what + ", extra=" + extra);
+                        switch (what) {
+                            case MediaPlayer.MEDIA_INFO_BUFFERING_START:
+                                progressBar.setVisibility(View.VISIBLE);
+                                runProgressThread();
+                                break;
+                            case MediaPlayer.MEDIA_INFO_BUFFERING_END:
+                                progressBar.setVisibility(View.GONE);
+                                break;
+                        }
+                        return false;
+                    }
+                });
+            }
+
+            downloadIdentifier = vView.toString();
+            runProgressThread();
         } else {
             Toast.makeText(this, R.string.media_format_not_supported, Toast.LENGTH_LONG).show();
             finish();
         }
+    }
 
-        /*
-          ATTENTION: This was auto-generated to implement the App Indexing API.
-          See https://g.co/AppIndexing/AndroidStudio for more information.
-         */
-        //GoogleApiClient client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+    void runProgressThread() {
+        Log.d(TAG, "runProgressThread, thread:" + progressThread + ", alive=" + (progressThread != null && progressThread.isAlive()));
+        if (progressThread != null && progressThread.isAlive()) {
+            Log.d(TAG, "Interrupting thread:" + progressThread);
+            progressThread.interrupt();
+        }
+        progressThread = new Thread(new Runnable() {
+            int percent = 0;
+            @Override
+            public void run() {
+                try {
+                    while (percent < 100 && progressBar != null && progressBar.getVisibility() == View.VISIBLE) {
+                        percent = vView.getBufferPercentage();
+                        EventBus.getDefault().post(new ProgressEvent(downloadIdentifier, percent));
+                        Log.d(TAG, "Thread:" + progressThread.toString() + " post progress:" + percent);
+                        Thread.sleep(700);
+                    }
+                } catch (InterruptedException e) {
+                    Log.d(TAG, e.toString());
+                }
+                Log.d(TAG, "exiting run in thread:" + progressThread);
+            }
+        });
+        progressThread.start();
     }
 
     @Override
@@ -118,7 +176,7 @@ public class ShowMediaActivity extends AppCompatActivity {
         //empty method to handle click events
     }
 
-         Point getDesiredSize() {
+    Point getDesiredSize() {
         Display display = getWindowManager().getDefaultDisplay();
         Point point = new Point();
         display.getSize(point);
@@ -127,6 +185,7 @@ public class ShowMediaActivity extends AppCompatActivity {
 
 
     @Subscribe(threadMode = ThreadMode.MAIN)
+    @SuppressWarnings("unused")
     public void postProgress(ProgressEvent progressEvent) {
         boolean isLoading = (thisDownload(progressEvent.getIdentifier())
                 && progressEvent.getProgress() > 0 && progressEvent.getProgress() <= 100);
@@ -135,10 +194,8 @@ public class ShowMediaActivity extends AppCompatActivity {
         if (isLoading) tvProgress.setText(progressEvent.getProgress() + "%");
     }
 
-    private boolean thisDownload(String downloadIdentifier) {
-        return downloadIdentifier != null
-                && loadingTask != null
-                && downloadIdentifier.equals(loadingTask.toString());
+    private boolean thisDownload(String id) {
+        return id != null && id.equals(downloadIdentifier);
 
         /*HttpUrl httpUrl = HttpUrl.parse(source);
 
@@ -175,6 +232,16 @@ public class ShowMediaActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         if (loadingTask != null) loadingTask.cancel(true);
+
+        Log.d(TAG, "onDestroy, thread:" + progressThread + ", alive=" + (progressThread != null && progressThread.isAlive()));
+        if (progressThread != null && progressThread.isAlive()) {
+            Log.d(TAG, "Interrupting thread:" + progressThread);
+            progressThread.interrupt();
+        }
+        progressThread = null;
+
+        vView = null; //otherwise the activity isn't garbage collected
+
         super.onDestroy();
     }
 
@@ -284,12 +351,6 @@ public class ShowMediaActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * class of ShowMediaActivity
-     * @param body
-     * @param file
-     * @return
-     */
     public static boolean writeResponseBodyToDisk(String downloadId, ResponseBody body, File file) {
         try {
             InputStream inputStream = null;

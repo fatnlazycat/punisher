@@ -2,12 +2,16 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
+ext {
+    appId = "org.foundation101.karatel"
+}
+
 android {
     compileSdkVersion 27
     buildToolsVersion '27.0.3'
 
     defaultConfig {
-        applicationId "org.foundation101.karatel"
+        applicationId appId
         minSdkVersion 16
         targetSdkVersion 27
         //multiDexEnabled true
@@ -111,11 +115,17 @@ dependencies {
     //implementation 'com.android.support.constraint:constraint-layout:1.1.0'
 
     implementation 'org.greenrobot:eventbus:3.1.1'
+    kapt 'org.greenrobot:eventbus-annotation-processor:3.1.1'
+
     implementation 'io.github.lizhangqu:coreprogress:1.0.2'
 
     implementation 'com.evernote:android-job:1.2.5'
 
     implementation 'org.apache.commons:commons-collections4:4.1'
+
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.6.1'
+    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.6.1'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-support-fragment:1.6.1'
 
     androidTestImplementation ('com.android.support.test.espresso:espresso-core:3.0.2') {
         exclude group: 'net.sf.kxml', module: 'kxml2'
@@ -124,6 +134,13 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-contrib:3.0.2'
     androidTestImplementation ('com.android.support.test:rules:1.0.2') {transitive = false}
 }
+
+kapt {
+    arguments {
+        arg('eventBusIndex', appId + '.EventBusIndex')
+    }
+}
+
 repositories {
     mavenCentral()
     maven {

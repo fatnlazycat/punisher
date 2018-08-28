@@ -2,6 +2,7 @@ package org.foundation101.karatel.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.view.LayoutInflater;
@@ -40,8 +41,9 @@ public class ComplainDraftsAdapter extends RecyclerView.Adapter<ComplainDraftsAd
         notifyDataSetChanged();
     }
 
+    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v =  LayoutInflater.from(parent.getContext()).inflate(R.layout.item_complains_draft, parent, false);
         return new ViewHolder(v);
     }
@@ -103,9 +105,9 @@ public class ComplainDraftsAdapter extends RecyclerView.Adapter<ComplainDraftsAd
 
         public ViewHolder(View itemView) {
             super(itemView);
-            tvComplainName              = (TextView)itemView.findViewById(R.id.textViewComplainName);
-            textViewComplainTimeStamp   = (TextView)itemView.findViewById(R.id.textViewComplainTimeStamp);
-            tvComplainType              = (TextView)itemView.findViewById(R.id.textViewComplainType);
+            tvComplainName              = itemView.findViewById(R.id.tvComplainName);
+            textViewComplainTimeStamp   = itemView.findViewById(R.id.tvComplainTimeStamp);
+            tvComplainType              = itemView.findViewById(R.id.tvComplainType);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

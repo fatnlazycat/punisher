@@ -58,7 +58,7 @@ class CursorAdapterForRecyclerView extends CursorAdapter{
         idOnServer = cursor.getInt(cursor.getColumnIndex(DBHelper.ID_SERVER));
         new ViolationFetcher(context, view, idOnServer, status, _id).execute();
 
-        TextView textViewRequestTimeStamp=(TextView)view.findViewById(R.id.textViewRequestTimeStamp);
+        TextView textViewRequestTimeStamp=(TextView)view.findViewById(R.id.tvRequestTimeStamp);
         textViewRequestTimeStamp.setText(cursor.getString(cursor.getColumnIndex("time_stamp")));
 
         TextView textViewRequestType=(TextView)view.findViewById(R.id.textViewRequestType);

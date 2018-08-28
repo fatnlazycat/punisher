@@ -37,7 +37,7 @@
             android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:layout_weight="0"
-            android:id="@+id/textViewRequestTimeStamp"
+            android:id="@+id/tvRequestTimeStamp"
             android:textSize="12sp"/>
     </LinearLayout>
 

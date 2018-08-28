@@ -16,11 +16,13 @@ import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.splunk.mint.Mint;
+import com.squareup.leakcanary.LeakCanary;
 
 import org.foundation101.karatel.dagger.DaggerComponent;
 import org.foundation101.karatel.dagger.DaggerDaggerComponent;
 import org.foundation101.karatel.scheduler.MyJobCreator;
 import org.foundation101.karatel.utils.RetrofitUtils;
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -68,10 +70,18 @@ public class KaratelApplication extends MultiDexApplication {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        if (LeakCanary.isInAnalyzerProcess(this)) {
+            // This process is dedicated to LeakCanary for heap analysis.
+            // You should not init your app in this process.
+            return;
+        }
+        LeakCanary.install(this);
+
         instance = this;
         initACRA();
         JobManager.create(getApplicationContext()).addJobCreator(new MyJobCreator());
-        //ACRA.init(this);
+        EventBus.builder().addIndex(new EventBusIndex()).installDefaultEventBus();
     }
 
     @Override
