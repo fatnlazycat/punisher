@@ -26,6 +26,7 @@ import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.manager.KaratelPreferences;
+import org.foundation101.karatel.utils.FileUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -284,18 +285,18 @@ public class TipsActivity extends Activity {
 
         @Override
         protected Void doInBackground(String... params) {
+            String avatarFileName = FileUtils.INSTANCE.avatarFileName(false);
             try {
-                Globals.user.avatarFileName = context.getFilesDir() + "avatar" + Globals.user.id + CameraManager.PNG;
                 URL url = new URL(Globals.SERVER_URL.replace("/api/v1/", "") + params[0]);
                 Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-                FileOutputStream fos = new FileOutputStream(Globals.user.avatarFileName);
+                FileOutputStream fos = new FileOutputStream(avatarFileName);
                 bmp.compress(Bitmap.CompressFormat.PNG, 100, fos);
                 fos.close();
             } catch (final Exception e){
-                Globals.user.avatarFileName = "";
+                avatarFileName = "";
                 Globals.showError(R.string.cannot_connect_server, e);
             }
-            KaratelPreferences.setUserAvatar(Globals.user.avatarFileName);
+            KaratelPreferences.setUserAvatar(avatarFileName);
             return null;
         }
 
@@ -303,8 +304,7 @@ public class TipsActivity extends Activity {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             if (context instanceof  MainActivity && viewToSet != null)
-                ((MainActivity) context).setAvatarImageView(viewToSet);
-            //Toast.makeText(TipsActivity.this, "end of AvatarGetter", Toast.LENGTH_SHORT).show();
+                ((MainActivity) context).setAvatarImageView(viewToSet, KaratelPreferences.userAvatar());
         }
     }
 }

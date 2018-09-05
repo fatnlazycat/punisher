@@ -34,8 +34,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import org.foundation101.karatel.AsyncTasks.AsyncTaskAction;
-import org.foundation101.karatel.AsyncTasks.RequestListFetcher;
+import org.foundation101.karatel.asyncTasks.AsyncTaskAction;
+import org.foundation101.karatel.asyncTasks.RequestListFetcher;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;

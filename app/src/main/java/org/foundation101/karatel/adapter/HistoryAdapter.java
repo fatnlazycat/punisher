@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.util.Log;
@@ -66,7 +67,7 @@ public class HistoryAdapter extends BaseAdapter implements View.OnClickListener 
 
     private Drawable fourSidesGradient;
     public UpdateEntity[] content = new UpdateEntity[0];
-    Context context;
+    private Context context;
     private String[] violationStatuses;
     private Map<String, WebView> webViews= new ConcurrentHashMap<>();
     private static final String googleDocsUrl = "https://drive.google.com/viewerng/viewer?embedded=true&url=";//"http://docs.google.com/viewer?url=";
@@ -318,7 +319,7 @@ public class HistoryAdapter extends BaseAdapter implements View.OnClickListener 
 
             call.enqueue(new Callback<ResponseBody>() {
                 @Override
-                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                     if (response.isSuccessful()) {
                         boolean writtenToDisk = RetrofitUtils.writeResponseBodyToDisk(response.body(), file);
                         if (writtenToDisk) {
@@ -356,6 +357,24 @@ public class HistoryAdapter extends BaseAdapter implements View.OnClickListener 
 
     public void onDestroy() {
         if (dialog != null) dialog.dismiss();
+
+        //a try to avoid crashes in crome engine
+        //example stacktrace (from PlayMarket console):
+        /*#00  pc 000000000004ad30  /system/lib/libc.so (tgkill+12)
+          #01  pc 00000000000484c3  /system/lib/libc.so (pthread_kill+34)
+          #02  pc 000000000001dd99  /system/lib/libc.so (raise+10)
+          #03  pc 0000000000019521  /system/lib/libc.so (__libc_android_abort+34)
+          #04  pc 0000000000017160  /system/lib/libc.so (abort+4)
+          #05  pc 00000000007c1ecf  /data/app/com.android.chrome-1/base.apk*/
+        for (Map.Entry<String, WebView> entry : webViews.entrySet()) {
+            if (entry != null) {
+                WebView wv = entry.getValue();
+                if (wv != null) {
+                    wv.destroy();
+                    wv = null;
+                }
+            }
+        }
     }
 
     public static class ViewHolder{

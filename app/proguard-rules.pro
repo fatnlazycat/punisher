@@ -55,7 +55,3 @@
      @org.greenrobot.eventbus.Subscribe <methods>;
  }
  -keep enum org.greenrobot.eventbus.ThreadMode { *; }
-
- #tests
- #-keep class javax.inject.Provider { *; }
- #-keep class kotlin.collections.MapsKt { *; }

@@ -13,7 +13,9 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -26,6 +28,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.foundation101.karatel.asyncTasks.AsyncTaskAction;
+import org.foundation101.karatel.asyncTasks.ProfileSaver;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
@@ -36,9 +40,8 @@ import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.manager.PermissionManager;
+import org.foundation101.karatel.utils.FileUtils;
 import org.foundation101.karatel.utils.MediaUtils;
-import org.foundation101.karatel.utils.MultipartUtility;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -46,7 +49,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.foundation101.karatel.fragment.ChangeAvatarFragment.PICK_IMAGE;
 import static org.foundation101.karatel.manager.PermissionManager.CAMERA_PERMISSIONS_PHOTO;
@@ -54,14 +58,34 @@ import static org.foundation101.karatel.manager.PermissionManager.STORAGE_PERMIS
 
 public class ProfileFragment extends Fragment {
     static final String TAG = "Profile";
-    static final int CHANGE_AVATAR_DIALOG = 500;
+    static final String PROFILE_VALUES = "PROFILE_VALUES";
+    static final String NEW_AVATAR = "NEW_AVATAR";
 
-    boolean avatarChanged = false;
+    boolean textChanged   = false;
+    boolean saveInstanceStateCalled = false;
 
+    Toolbar toolbar;
     ImageView avatarView;
     ViewGroup memberEmail, memberPassword, memberSurname, memberName, memberSecondName, memberPhone;
     EditText surnameEditText, nameEditText, secondNameEditText, phoneEditText, emailEditText, passwordEditText;
+    TextView userNameTextView;
     View progressBar;
+
+    String tempAvatarFileName;
+
+    AsyncTask profileFetcher;
+
+    TextWatcher textWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) { }
+        @Override
+        public void afterTextChanged(Editable s) {
+            if (!textChanged ) invalidateOptionsMenu();
+            textChanged = true;
+        }
+    };
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -74,21 +98,44 @@ public class ProfileFragment extends Fragment {
 
         //Google Analytics part
         KaratelApplication.getInstance().sendScreenName(TAG);
+
+        if (savedInstanceState != null) {
+            String temp = savedInstanceState.getString(NEW_AVATAR);
+            if (temp != null) tempAvatarFileName = temp;
+        } else { //clear temporary file in case the previous fragment unexpectedly destroyed after saveInstanceState
+            File tmpFile = new File(FileUtils.INSTANCE.avatarFileName(true));
+            if (tmpFile.exists()) tmpFile.delete();
+        }
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         final Activity activity = getActivity();
         if (activity != null && activity instanceof MainActivity) {
-            Toolbar toolbar = ((MainActivity) activity).toolbar;
+            toolbar = ((MainActivity) activity).toolbar;
             toolbar.inflateMenu(R.menu.profile_fragment_menu);
             toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
-                    if (progressBar.getVisibility() != View.VISIBLE) new ProfileSaver(activity).execute();
+                    if (progressBar.getVisibility() != View.VISIBLE) {
+                        PunisherUser userToSave = new PunisherUser(
+                            emailEditText.getText().toString(),
+                            passwordEditText.getText().toString(),
+                            surnameEditText.getText().toString().replace(" ", ""),
+                            nameEditText.getText().toString().replace(" ", ""),
+                            secondNameEditText.getText().toString().replace(" ", ""),
+                            phoneEditText.getText().toString()
+                        );
+                        new ProfileSaver(
+                                new ProfileSaverActions(ProfileFragment.this), userToSave, tempAvatarFileName
+                        ).execute();
+                    }
                     return false;
                 }
             });
+
+            MenuItem item = menu.findItem(R.id.saveProfileMenuItem);
+            item.setVisible(changesMade());
         }
         super.onCreateOptionsMenu(menu, inflater);
     }
@@ -96,6 +143,8 @@ public class ProfileFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_profile, container, false);
+
+        userNameTextView = v.findViewById(R.id.userNameTextView);
 
         progressBar = v.findViewById(R.id.rlProgress);
 
@@ -132,19 +181,19 @@ public class ProfileFragment extends Fragment {
         ((TextView)memberSurname.getChildAt(0)).setText(R.string.surname);
         memberSurname.getChildAt(1).setVisibility(View.GONE);
         surnameEditText = (EditText)memberSurname.getChildAt(2);
-        surnameEditText.setInputType(InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
+        surnameEditText.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
 
         memberName = v.findViewById(R.id.profile_name);
         ((TextView)memberName.getChildAt(0)).setText(R.string.name);
         memberName.getChildAt(1).setVisibility(View.GONE);
         nameEditText = (EditText)memberName.getChildAt(2);
-        nameEditText.setInputType(InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
+        nameEditText.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
 
         memberSecondName = v.findViewById(R.id.profile_second_name);
         ((TextView)memberSecondName.getChildAt(0)).setText(R.string.second_name);
         memberSecondName.getChildAt(1).setVisibility(View.GONE);
         secondNameEditText = (EditText)memberSecondName.getChildAt(2);
-        secondNameEditText.setInputType(InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
+        secondNameEditText.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
 
         memberPhone = v.findViewById(R.id.profile_phone);
         ((TextView)memberPhone.getChildAt(0)).setText(R.string.phone);
@@ -152,15 +201,11 @@ public class ProfileFragment extends Fragment {
         phoneEditText = (EditText)memberPhone.getChildAt(2);
         phoneEditText.setInputType(InputType.TYPE_CLASS_PHONE);
 
-        TextView userNameTextView = v.findViewById(R.id.userNameTextView);
-        userNameTextView.setText(Globals.user.name + " " + Globals.user.surname);
-
         avatarView = v.findViewById(R.id.avatarProfileImageView);
         avatarView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 DialogFragment dialog = new ChangeAvatarFragment();
-                //setTargetFragment(ProfileFragment.this, CHANGE_AVATAR_DIALOG);
                 dialog.show(getChildFragmentManager(), "changeAvatar");
             }
         });
@@ -172,16 +217,58 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (HttpHelper.internetConnected(/*getActivity()*/)) {
-            new ProfileFetcher(getActivity()).execute(Globals.user.id);
-        }
-        ((MainActivity)getActivity()).setAvatarImageView(avatarView);
+        String avatarFileName = tempAvatarFileName == null ? KaratelPreferences.userAvatar() : tempAvatarFileName;
+        ((MainActivity) getActivity()).setAvatarImageView(avatarView, avatarFileName);
     }
 
     @Override
     public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
-        fillTextFields();
+        ArrayList<String> savedValues = null;
+        if (savedInstanceState != null) {
+            savedValues = savedInstanceState.getStringArrayList(PROFILE_VALUES);
+        }
+        fillTextFields(savedValues);
+
+        if (!changesMade()) {
+            profileFetcher = new ProfileFetcher(getActivity()).execute(Globals.user.id);
+        }
+
         super.onViewStateRestored(savedInstanceState);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        saveInstanceStateCalled = false;
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        saveInstanceStateCalled = true;
+
+        if (textChanged) {
+            ArrayList<String> valuesToSave = new ArrayList<>();
+            TextView[] textViews = editableViews();
+            for (TextView v : textViews) {
+                valuesToSave.add(v.getText().toString());
+            }
+            outState.putStringArrayList(PROFILE_VALUES, valuesToSave);
+        }
+        if (tempAvatarFileName != null) outState.putString(NEW_AVATAR, tempAvatarFileName);
+
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onDestroy() {
+        if (!saveInstanceStateCalled && tempAvatarFileName != null) {
+            File tmpFile = new File(tempAvatarFileName);
+            if (tmpFile.exists()) tmpFile.delete();
+        }
+
+        if (toolbar != null) toolbar.setOnMenuItemClickListener(null);
+
+        super.onDestroy();
     }
 
     @Override
@@ -213,49 +300,79 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        try {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = 4;
-            if (requestCode == PICK_IMAGE && resultCode == Activity.RESULT_OK) {
-                if (data == null) {
-                    Log.e("Punisher", "data=null");
-                } else {
-                    InputStream inputStream = getContext().getContentResolver().openInputStream(data.getData());
-                    Bitmap bigImage = BitmapFactory.decodeStream(inputStream, null, options);
-                    int orientation = MediaUtils.getOrientation(getActivity(), data.getData());
-                    setNewAvatar(MediaUtils.rotateBitmap(bigImage, orientation));
+        synchronized (TAG) {
+            try {
+                if (profileFetcher != null) profileFetcher.cancel(false);
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inSampleSize = 4;
+                if (requestCode == PICK_IMAGE && resultCode == Activity.RESULT_OK) {
+                    if (data == null) {
+                        Log.e(TAG, "data=null");
+                    } else {
+                        InputStream inputStream = getContext().getContentResolver().openInputStream(data.getData());
+                        Bitmap bigImage = BitmapFactory.decodeStream(inputStream, null, options);
+                        int orientation = MediaUtils.getOrientation(getActivity(), data.getData());
+                        setNewAvatar(MediaUtils.rotateBitmap(bigImage, orientation));
+                    }
                 }
-            }
-            if (requestCode == CameraManager.IMAGE_CAPTURE_INTENT && resultCode == Activity.RESULT_OK) {
-                //no need to call CameraManager.setLastCapturedFile because with built in camera intent
-                //we call cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mediaFileUri); (see CameraManager.startCamera())
-                // and the result is in the path provided
-                //the below line will be needed if we switch to CustomCamera
-                //CameraManager.setLastCapturedFile(data.getStringExtra(eu.aejis.mycustomcamera.IntentExtras.MEDIA_FILE));
-                Bitmap bigImage = BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options);
+                if (requestCode == CameraManager.IMAGE_CAPTURE_INTENT && resultCode == Activity.RESULT_OK) {
+                    //no need to call CameraManager.setLastCapturedFile because with built in camera intent
+                    //we call cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mediaFileUri); (see CameraManager.startCamera())
+                    // and the result is in the path provided
+                    //the below line will be needed if we switch to CustomCamera
+                    //CameraManager.setLastCapturedFile(data.getStringExtra(eu.aejis.mycustomcamera.IntentExtras.MEDIA_FILE));
+                    Bitmap bigImage = BitmapFactory.decodeFile(CameraManager.lastCapturedFile, options);
 
-                int orientation = MediaUtils.getOrientation(CameraManager.lastCapturedFile);
+                    int orientation = MediaUtils.getOrientation(CameraManager.lastCapturedFile);
 
-                setNewAvatar(MediaUtils.rotateBitmap(bigImage, orientation));
-                boolean b = new File(CameraManager.lastCapturedFile).delete();
+                    setNewAvatar(MediaUtils.rotateBitmap(bigImage, orientation));
+                    boolean b = new File(CameraManager.lastCapturedFile).delete();
+                }
+            } catch (IOException | NullPointerException e) {
+                Globals.showError(R.string.error, e);
             }
-        } catch (IOException | NullPointerException e) {
-            Globals.showError(R.string.error, e);
         }
     }
 
-    void fillTextFields(){
-        surnameEditText.setText(Globals.user.surname);
-        nameEditText.setText(Globals.user.name);
-        secondNameEditText.setText(Globals.user.secondName);
-        phoneEditText.setText(Globals.user.phone);
-        emailEditText.setText(Globals.user.email);
+    void fillTextFields(ArrayList<String> savedValues){
+        TextView[] textViews = editableViews();
+
+        if (savedValues == null) {
+            String[] data = {Globals.user.surname, Globals.user.name, Globals.user.secondName, Globals.user.phone};
+            savedValues = new ArrayList<>(Arrays.asList(data));
+        } else {
+            textChanged = true;
+        }
+
+        int listSize = textViews.length;
+        for (int i = 0; i < listSize; i++) {
+            textViews[i].removeTextChangedListener(textWatcher);
+            textViews[i].setText(savedValues.get(i));
+            textViews[i].addTextChangedListener(textWatcher);
+        }
+
+        userNameTextView.setText(Globals.user.name + " " + Globals.user.surname);
+        emailEditText   .setText(Globals.user.email);
         passwordEditText.setText("qwerty"); //just to show 6 dots
+    }
+
+    TextView[] editableViews() {
+        return new TextView[]{surnameEditText, nameEditText, secondNameEditText, phoneEditText};
+    }
+
+    boolean changesMade() { return tempAvatarFileName != null || textChanged; }
+
+    void invalidateOptionsMenu() {
+        Activity activity = getActivity();
+        if (activity != null ) activity.invalidateOptionsMenu();
     }
 
     public void setNewAvatar(Bitmap image) throws IOException {
         if (image == null){
-            Globals.user.avatarFileName = "";
+            if (tempAvatarFileName != null && !tempAvatarFileName.isEmpty()) {
+                new File(tempAvatarFileName).delete();
+            }
+            tempAvatarFileName = "";
             avatarView.setBackgroundResource(R.mipmap.no_avatar);
         } else {
             int dimension = getResources().getDimensionPixelOffset(R.dimen.thumbnail_size);
@@ -263,116 +380,37 @@ public class ProfileFragment extends Fragment {
                     ThumbnailUtils.extractThumbnail(image, dimension, dimension));
             Bitmap bitmap = avatar.getBitmap();
 
-            if (Globals.user.avatarFileName == null || Globals.user.avatarFileName.isEmpty()) {
-                Globals.user.avatarFileName = getContext().getFilesDir() + "avatar" + Globals.user.id + CameraManager.PNG;
+            if (tempAvatarFileName == null || tempAvatarFileName.isEmpty()) {
+                tempAvatarFileName = FileUtils.INSTANCE.avatarFileName(true);
             }
-            FileOutputStream os = new FileOutputStream(Globals.user.avatarFileName);
+            FileOutputStream os = new FileOutputStream(tempAvatarFileName);
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, os);
             os.flush();
             os.close();
             avatarView.setBackground(avatar);
         }
-        avatarChanged = true;
+        invalidateOptionsMenu();
     }
 
-    private class ProfileSaver extends AsyncTask<Void, Void, String>{
-        String name, surname, secondName, phone;
-        Activity activity;
 
-        ProfileSaver(Activity a){
-            this.activity = a;
-        }
+    private static class ProfileSaverActions extends AsyncTaskAction<Void, String, ProfileFragment> {
+        ProfileSaverActions(ProfileFragment component) { super(component); }
 
         @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            name = nameEditText.getText().toString().replace(" ", "");
-            surname = surnameEditText.getText().toString().replace(" ", "");
-            secondName = secondNameEditText.getText().toString().replace(" ", "");
-            phone = phoneEditText.getText().toString();
-        }
+        public void pre(Void arg) { }
 
         @Override
-        protected String doInBackground(Void... params) {
-            StringBuilder response = new StringBuilder();
-            if (HttpHelper.internetConnected(/*getActivity()*/)) {
-                int tries = 0;
-                final int MAX_TRIES = 2;
-                while (tries++ < MAX_TRIES) try {
-                    String requestUrl = Globals.SERVER_URL + "users/" + Globals.user.id;
-                    MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8", "PUT");
-                    //multipart.addFormField("user[email]", Globals.user.email);
-                    multipart.addFormField("user[firstname]", name);
-                    multipart.addFormField("user[surname]", surname);
-                    multipart.addFormField("user[secondname]", secondName);
-                    multipart.addFormField("user[phone_number]", phone);
-                    //multipart.addFormField("user[password]", "qwerty"); //Globals.user.password
-                    //multipart.addFormField("user[password_confirmation]", "qwerty");//Globals.user.password
-
-                    if (Globals.user.avatarFileName != null && !Globals.user.avatarFileName.isEmpty()) {
-                        if (avatarChanged) {
-                            multipart.addFilePart("user[avatar]", new File(Globals.user.avatarFileName));
-                            avatarChanged = false;
-                        }
-                    } else {
-                        multipart.addFormField("user[avatar]", ""); //delete avatar
-                    }
-
-                    List<String> responseList = multipart.finish();
-                    for (String line : responseList) {
-                        Log.e("Punisher", "Upload Files Response:::" + line);
-                        response.append(line);
-                    }
-                    return response.toString();
-                } catch (final IOException e) {
-                    if (tries == MAX_TRIES) {
-                        Globals.showError(R.string.cannot_connect_server, e);
-                    }
-                }
-            } else {
-                response.append(HttpHelper.ERROR_JSON);
-            }
-            return response.toString();
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            try{
-                JSONObject json = new JSONObject(s);
-                switch (json.getString("status")){
-                    case Globals.SERVER_SUCCESS : {
-                        if (getContext() != null)
-                            Toast.makeText(getContext(), R.string.profile_changes_saved, Toast.LENGTH_LONG).show();
-                        Globals.user.name = name;
-                        Globals.user.surname = surname;
-                        Globals.user.secondName = secondName;
-                        Globals.user.phone = phone;
-
-                        KaratelPreferences.saveUserWithAvatar
-                                (surname, name, secondName, phone, Globals.user.avatarFileName);
-                        break;
-                    }
-                    case Globals.SERVER_ERROR : {
-                        StringBuilder errorMessage = new StringBuilder();
-                        JSONObject errorJSON = json.getJSONObject(Globals.SERVER_ERROR);
-                        JSONArray errorNames = errorJSON.names();
-                        for (int i = 0; i < errorNames.length(); i++){
-                            //read only the first message in the array for each error type
-                            String oneMessage = errorJSON.getJSONArray(errorNames.getString(i)).getString(0);
-                            errorMessage.append(oneMessage + "\n");
-                        }
-                        Toast.makeText(activity, errorMessage.toString(), Toast.LENGTH_LONG).show();
-                        break;
-                    }
-                    default:{
-
-                    }
-                }
-            } catch (JSONException eJSON){
-                Globals.showError(R.string.error, eJSON);
+        public void post(String status) {
+            ProfileFragment fragment = ref.get();
+            if (fragment != null && Globals.SERVER_SUCCESS.equals(status)) {
+                fragment.tempAvatarFileName = null;
+                fragment.textChanged = false;
+                fragment.fillTextFields(null);
+                fragment.invalidateOptionsMenu();
             }
         }
     }
+
 
     class ProfileFetcher extends AsyncTask<Integer, Void, String>{
         Activity activity;
@@ -389,58 +427,67 @@ public class ProfileFragment extends Fragment {
 
         @Override
         protected String doInBackground(Integer... params) {
-            try {
+            if (HttpHelper.internetConnected()) try {
                 return HttpHelper.proceedRequest("users/" + params[0], "GET", "", true);
             } catch (final IOException e){
                 Globals.showError(R.string.cannot_connect_server, e);
                 return "";
             }
+            return "";
         }
 
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            try {
-                JSONObject json = new JSONObject(s);
-                if (json.getString("status").equals("success")) {
-                    JSONObject dataJSON = json.getJSONObject("data");
-                    Globals.user = new PunisherUser(
-                            dataJSON.getString("email"),
-                            "", //for password
-                            dataJSON.getString("surname"),
-                            dataJSON.getString("firstname"),
-                            dataJSON.getString("secondname"),
-                            dataJSON.getString("phone_number"));
-                    Globals.user.id = dataJSON.getInt("id");
+            synchronized (TAG) {
+                try {
+                    JSONObject json = new JSONObject(s);
+                    if (json.getString("status").equals("success")) {
+                        JSONObject dataJSON = json.getJSONObject("data");
+                        Globals.user = new PunisherUser(
+                                dataJSON.getString("email"),
+                                "", //for password
+                                dataJSON.getString("surname"),
+                                dataJSON.getString("firstname"),
+                                dataJSON.getString("secondname"),
+                                dataJSON.getString("phone_number"));
+                        Globals.user.id = dataJSON.getInt("id");
 
-                    KaratelPreferences.saveUserWithEmail(
-                            dataJSON.getString("email"),
-                            dataJSON.getString("surname"),
-                            dataJSON.getString("firstname"),
-                            dataJSON.getString("secondname"),
-                            dataJSON.getString("phone_number"));
+                        KaratelPreferences.saveUserWithEmail(
+                                dataJSON.getString("email"),
+                                dataJSON.getString("surname"),
+                                dataJSON.getString("firstname"),
+                                dataJSON.getString("secondname"),
+                                dataJSON.getString("phone_number"));
 
-                    String avatarUrl = dataJSON.getJSONObject("avatar").getString("url");
-                    if (avatarUrl != null && !avatarUrl.equals("null")) {
-                        TipsActivity.AvatarGetter avatarGetter = new TipsActivity.AvatarGetter(activity);
-                        avatarGetter.setViewToSet(avatarView);
-                        avatarGetter.execute(avatarUrl);
-                    }
+                        String avatarUrl = dataJSON.getJSONObject("avatar").getString("url");
+                        if (avatarUrl != null && !avatarUrl.equals("null")) {
+                            TipsActivity.AvatarGetter avatarGetter = new TipsActivity.AvatarGetter(activity);
+                            avatarGetter.setViewToSet(avatarView);
+                            avatarGetter.execute(avatarUrl);
+                        }
 
-                    fillTextFields();
+                        fillTextFields(null);
 
-                } else {
-                    String errorMessage;
-                    if (json.getString("status").equals("error")){
-                        errorMessage = json.getString("error");
                     } else {
-                        errorMessage = s;
+                        String errorMessage;
+                        if (json.getString("status").equals("error")) {
+                            errorMessage = json.getString("error");
+                        } else {
+                            errorMessage = s;
+                        }
+                        Toast.makeText(activity, errorMessage, Toast.LENGTH_LONG).show();
                     }
-                    Toast.makeText(activity, errorMessage, Toast.LENGTH_LONG).show();
+                } catch (JSONException e) {
+                    Globals.showError(R.string.error, e);
                 }
-            } catch (JSONException e) {
-                Globals.showError(R.string.error, e);
             }
+            progressBar.setVisibility(View.GONE);
+        }
+
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
             progressBar.setVisibility(View.GONE);
         }
     }

@@ -1,4 +1,4 @@
-package org.foundation101.karatel.AsyncTasks;
+package org.foundation101.karatel.asyncTasks;
 
 public interface MyFunction<T> {
     void proceed(T arg);

@@ -44,7 +44,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.foundation101.karatel.AsyncTasks.RequestListFetcher;
+import org.foundation101.karatel.asyncTasks.RequestListFetcher;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;

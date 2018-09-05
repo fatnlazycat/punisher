@@ -451,6 +451,10 @@ public class MainActivity extends AppCompatActivity {
     public void openProfile(View view) {
         drawerLayout.closeDrawer(Gravity.START);
 
+        if (currentFragment == Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT) {//do not create duplicates
+            return;
+        }
+
         currentFragment = Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT;
         String tag = fragmentTags.get(currentFragment);
         toolbar.setTitle(tag);
@@ -536,15 +540,15 @@ public class MainActivity extends AppCompatActivity {
     public void initDrawerHeader(){
         if (Globals.user == null) finish();
         String userName = Globals.user.name + " " + Globals.user.surname;
-        setAvatarImageView(avatarImageView);
+        setAvatarImageView(avatarImageView, KaratelPreferences.userAvatar());
         avatarTextView.setText(userName);
     }
 
-    public void setAvatarImageView(ImageView avatarView){
-        if (Globals.user.avatarFileName == null || Globals.user.avatarFileName.isEmpty()){
+    public void setAvatarImageView(ImageView avatarView, @NonNull String avatarFileName){
+        if (avatarFileName.isEmpty()){
             avatarView.setBackgroundResource(R.mipmap.no_avatar);
         } else try {
-            avatarView.setBackground(Drawable.createFromPath(Globals.user.avatarFileName));
+            avatarView.setBackground(Drawable.createFromPath(avatarFileName));
         } catch (Exception e){
             Globals.showError(R.string.error, e);
         }

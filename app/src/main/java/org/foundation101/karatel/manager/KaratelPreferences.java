@@ -92,7 +92,7 @@ public class KaratelPreferences {
                 preferences.getString(Globals.USER_SECOND_NAME, ""),
                 preferences.getString(Globals.USER_PHONE, ""));
         user.id = preferences.getInt(Globals.USER_ID, 0);
-        user.avatarFileName = preferences.getString(Globals.USER_AVATAR, "");
+        user.avatarFileName = userAvatar();
         return user;
     }
 
@@ -105,6 +105,10 @@ public class KaratelPreferences {
 
     public static void setUserEmail(String email) {
         preferences().edit().putString(Globals.USER_EMAIL, email).commit();
+    }
+
+    public static String userAvatar() {
+        return preferences().getString(Globals.USER_AVATAR, "");
     }
     public static void setUserAvatar(String userAvatar) {
         preferences().edit().putString(Globals.USER_AVATAR, userAvatar).commit();

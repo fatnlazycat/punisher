@@ -76,10 +76,15 @@ public class PermissionManager {
     public boolean checkPermissions(int permissionsKey) {
         String[] permissions = permissionsMap.get(permissionsKey);
         boolean permissionCheck = true;
-        for (String p : permissions) permissionCheck = permissionCheck &&
-                ContextCompat.checkSelfPermission(KaratelApplication.getInstance(),p)
-                        == PackageManager.PERMISSION_GRANTED;
 
+        try {
+            for (String p : permissions)
+                permissionCheck = permissionCheck &&
+                        ContextCompat.checkSelfPermission(KaratelApplication.getInstance(), p)
+                                == PackageManager.PERMISSION_GRANTED;
+        } catch (Exception e) { //ContextCompat.checkSelfPermission can throw RuntimeException
+            return false;
+        }
         return permissionCheck;
     }
 

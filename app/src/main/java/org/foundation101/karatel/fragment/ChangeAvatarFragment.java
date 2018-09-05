@@ -1,29 +1,23 @@
 package org.foundation101.karatel.fragment;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.annotation.NonNull;
+import android.support.v4.app.DialogFragment;
 import android.util.Log;
 
 import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.manager.CameraManager;
-import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.manager.PermissionManager;
-import static org.foundation101.karatel.manager.PermissionManager.CAMERA_PERMISSIONS_PHOTO;
-import static org.foundation101.karatel.manager.PermissionManager.STORAGE_PERMISSION;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.inject.Inject;
+
+import static org.foundation101.karatel.manager.PermissionManager.CAMERA_PERMISSIONS_PHOTO;
+import static org.foundation101.karatel.manager.PermissionManager.STORAGE_PERMISSION;
 
 /**
  * Created by Dima on 02.06.2016.
@@ -65,20 +59,11 @@ public class ChangeAvatarFragment extends DialogFragment {
                         }
                         case 2 : {//delete image
                             try {
-                                new File(Globals.user.avatarFileName).delete();
-                            } catch (Exception e){
-                                Log.e("Punisher", e.toString());
-                            }
-                            try {
-                                /*excluded this into a separate try/catch block to avoid situation when
-                                 * problem with file deletion breaks & we do not make a server request
-                                 * File deletion should go first because it uses Globals.user.avatarFileName
-                                 * & setNewAvatar(null) in a separate thread uses it too
-                                 */
                                 parentFragment.setNewAvatar(null);
                             } catch (IOException e) {
                                 Log.e("Punisher", e.toString());
                             }
+                            break;
                         }
                     }
                 }
@@ -89,30 +74,4 @@ public class ChangeAvatarFragment extends DialogFragment {
             });
         return builder.create();
     }
-
-    /*void startCamera(Activity activity) {
-        CameraManager cameraManager = CameraManager.getInstance(activity);
-        cameraManager.startCamera(CameraManager.IMAGE_CAPTURE_INTENT);
-    }
-
-    void startGallery() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT).setType("image*//*");
-        parentFragment.startActivityForResult(Intent.createChooser(intent,
-                getResources().getString(R.string.choose_picture)), PICK_IMAGE);
-    }*/
-
-/*    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        boolean granted = PermissionManager.allGranted(grantResults);
-        if (granted) switch (requestCode) {
-            case CAMERA_PERMISSIONS_PHOTO : {
-                startCamera(getActivity());
-                break;
-            }
-            case STORAGE_PERMISSION : {
-                startGallery();
-                break;
-            }
-        }
-    }*/
 }

@@ -53,7 +53,7 @@ public class KaratelLocationManager implements
     public static final int LOCATION_SERVICE_MAIN    = 0;
     public static final int LOCATION_SERVICE_ADDRESS = 1;
 
-    public KaratelLocationManager(Formular formularActivity/*, int[] services*/){
+    public KaratelLocationManager(Formular formularActivity){
         if (!(formularActivity instanceof Activity))
             throw new IllegalArgumentException("formularActivity should be an instance of Activity");
         activity = (Activity) formularActivity;
@@ -149,11 +149,16 @@ public class KaratelLocationManager implements
     private void obtainAndroidLocation(){
         if (locationPermitted && activity != null) {
             locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
+
+            assert locationManager != null;
+
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 locationListener = new MyOldAndroidLocationListener();
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                         TimeUnit.MINUTES.toMillis(1),
                         100, //100 meters
                         locationListener);
+            }
         }
     }
 
