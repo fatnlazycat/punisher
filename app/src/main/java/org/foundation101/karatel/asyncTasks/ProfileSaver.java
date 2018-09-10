@@ -27,6 +27,7 @@ public class ProfileSaver extends AsyncTask<Void, Void, String> {
     private String avatarFileName;
     private PunisherUser userToSave;
     private String swapFileName;
+    private boolean filesRenamed = false;
 
     public ProfileSaver(AsyncTaskAction<Void, String, ?> actions, PunisherUser user, String avatarFileName) {
         this.actions = actions;
@@ -68,6 +69,7 @@ public class ProfileSaver extends AsyncTask<Void, Void, String> {
                         File file = new File(swapFileName);
 
                         if (fileOperationsSuccess && file.length() > 0) {
+                            filesRenamed = true;
                             multipart.addFilePart("user[avatar]", file);
                         }
                     }
@@ -82,6 +84,7 @@ public class ProfileSaver extends AsyncTask<Void, Void, String> {
             } catch (final IOException e) {
                 if (tries == MAX_TRIES) {
                     Globals.showError(R.string.cannot_connect_server, e);
+                    response.append(HttpHelper.ERROR_JSON);
                 }
             }
         } else {
@@ -124,17 +127,23 @@ public class ProfileSaver extends AsyncTask<Void, Void, String> {
                     break;
                 }
                 case Globals.SERVER_ERROR : {
-                    if (avatarFileName != null && !avatarFileName.isEmpty()) { //rename the files back
+                    if (filesRenamed) { //rename the files back
                         FileUtils.INSTANCE.swapRename(swapFileName, avatarFileName);
                     }
 
                     StringBuilder errorMessage = new StringBuilder();
-                    JSONObject errorJSON = json.getJSONObject(Globals.SERVER_ERROR);
-                    JSONArray errorNames = errorJSON.names();
-                    for (int i = 0; i < errorNames.length(); i++){
-                        //read only the first message in the array for each error type
-                        String oneMessage = errorJSON.getJSONArray(errorNames.getString(i)).getString(0);
-                        errorMessage.append(oneMessage + "\n");
+                    Object errorData = json.opt(Globals.SERVER_ERROR);
+                    if (errorData instanceof JSONObject) {
+                        JSONObject errorJSON = (JSONObject)errorData;
+                        JSONArray errorNames = errorJSON.names();
+                        for (int i = 0; i < errorNames.length(); i++) {
+                            //read only the first message in the array for each error type
+                            String oneMessage = errorJSON.getJSONArray(errorNames.getString(i)).getString(0);
+                            errorMessage.append(oneMessage)
+                                        .append("\n");
+                        }
+                    } else {
+                        errorMessage.append(errorData.toString());
                     }
                     Globals.showMessage(errorMessage.toString());
                     break;
