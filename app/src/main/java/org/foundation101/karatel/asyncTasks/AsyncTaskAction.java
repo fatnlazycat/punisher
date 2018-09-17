@@ -11,4 +11,6 @@ public abstract class AsyncTaskAction<IN, OUT, T> {
 
     public abstract void pre (IN  arg);
     public abstract void post(OUT arg);
+
+    public void onCancel() {}
 }

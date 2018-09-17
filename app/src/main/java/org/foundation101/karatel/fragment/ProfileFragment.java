@@ -26,24 +26,21 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import org.foundation101.karatel.asyncTasks.AsyncTaskAction;
-import org.foundation101.karatel.asyncTasks.ProfileSaver;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.TipsActivity;
+import org.foundation101.karatel.asyncTasks.AsyncTaskAction;
+import org.foundation101.karatel.asyncTasks.ProfileFetcher;
+import org.foundation101.karatel.asyncTasks.ProfileSaver;
 import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.manager.CameraManager;
-import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.manager.PermissionManager;
 import org.foundation101.karatel.utils.FileUtils;
 import org.foundation101.karatel.utils.MediaUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -230,7 +227,7 @@ public class ProfileFragment extends Fragment {
         fillTextFields(savedValues);
 
         if (!changesMade()) {
-            profileFetcher = new ProfileFetcher(getActivity()).execute(Globals.user.id);
+            profileFetcher = new ProfileFetcher(new ProfileFetcherActions(this)).execute(Globals.user.id);
         }
 
         super.onViewStateRestored(savedInstanceState);
@@ -300,7 +297,7 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        synchronized (TAG) {
+        synchronized (ProfileFetcher.TAG) {
             try {
                 if (profileFetcher != null) profileFetcher.cancel(false);
                 BitmapFactory.Options options = new BitmapFactory.Options();
@@ -412,83 +409,42 @@ public class ProfileFragment extends Fragment {
     }
 
 
-    class ProfileFetcher extends AsyncTask<Integer, Void, String>{
-        Activity activity;
+    private static class ProfileFetcherActions extends AsyncTaskAction<Void, PunisherUser, ProfileFragment> {
+        ProfileFetcherActions(ProfileFragment component) { super(component); }
 
-        ProfileFetcher(Activity a){
-            this.activity = a;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            progressBar.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected String doInBackground(Integer... params) {
-            if (HttpHelper.internetConnected()) try {
-                return HttpHelper.proceedRequest("users/" + params[0], "GET", "", true);
-            } catch (final IOException e){
-                Globals.showError(R.string.cannot_connect_server, e);
-                return "";
+        private void progressBarVisibility(int visibility) {
+            ProfileFragment fragment = ref.get();
+            if (fragment != null) {
+                View progress = fragment.progressBar;
+                if (progress != null) progress.setVisibility(visibility);
             }
-            return "";
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            synchronized (TAG) {
-                try {
-                    JSONObject json = new JSONObject(s);
-                    if (json.getString("status").equals("success")) {
-                        JSONObject dataJSON = json.getJSONObject("data");
-                        Globals.user = new PunisherUser(
-                                dataJSON.getString("email"),
-                                "", //for password
-                                dataJSON.getString("surname"),
-                                dataJSON.getString("firstname"),
-                                dataJSON.getString("secondname"),
-                                dataJSON.getString("phone_number"));
-                        Globals.user.id = dataJSON.getInt("id");
+        public void pre(Void arg) {
+            progressBarVisibility(View.VISIBLE);
+        }
 
-                        KaratelPreferences.saveUserWithEmail(
-                                dataJSON.getString("email"),
-                                dataJSON.getString("surname"),
-                                dataJSON.getString("firstname"),
-                                dataJSON.getString("secondname"),
-                                dataJSON.getString("phone_number"));
-
-                        String avatarUrl = dataJSON.getJSONObject("avatar").getString("url");
-                        if (avatarUrl != null && !avatarUrl.equals("null")) {
-                            TipsActivity.AvatarGetter avatarGetter = new TipsActivity.AvatarGetter(activity);
-                            avatarGetter.setViewToSet(avatarView);
-                            avatarGetter.execute(avatarUrl);
-                        }
-
-                        fillTextFields(null);
-
-                    } else {
-                        String errorMessage;
-                        if (json.getString("status").equals("error")) {
-                            errorMessage = json.getString("error");
-                        } else {
-                            errorMessage = s;
-                        }
-                        Toast.makeText(activity, errorMessage, Toast.LENGTH_LONG).show();
-                    }
-                } catch (JSONException e) {
-                    Globals.showError(R.string.error, e);
+        @Override
+        public void post(PunisherUser user) {
+            ProfileFragment fragment = ref.get();
+            if (fragment != null) {
+                String avatarUrl = user.avatarFileName;
+                if (avatarUrl != null && !avatarUrl.equals("null")) {
+                    TipsActivity.AvatarGetter avatarGetter = new TipsActivity.AvatarGetter(fragment.getActivity());
+                    avatarGetter.setViewToSet(fragment.avatarView);
+                    avatarGetter.execute(avatarUrl);
                 }
+
+                fragment.fillTextFields(null);
+
+                progressBarVisibility(View.GONE);
             }
-            progressBar.setVisibility(View.GONE);
         }
 
         @Override
-        protected void onCancelled() {
-            super.onCancelled();
-            progressBar.setVisibility(View.GONE);
+        public void onCancel() {
+            progressBarVisibility(View.GONE);
         }
     }
 }

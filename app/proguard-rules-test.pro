@@ -4,6 +4,7 @@
 -keep class kotlin.collections.MapsKt* { *; }
 -keep class kotlin.collections.ArraysKt* { *; }
 -keep class kotlin.sequences.SequencesKt* { *; }
+-keep class okhttp3.internal.* { *; }
 
 #-keep class * { *; }
 

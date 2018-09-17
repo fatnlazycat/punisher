@@ -4,6 +4,7 @@ import android.support.test.InstrumentationRegistry
 import android.support.test.espresso.Espresso.onData
 import android.support.test.espresso.Espresso.onView
 import android.support.test.espresso.action.ViewActions.click
+import android.support.test.espresso.action.ViewActions.scrollTo
 import android.support.test.espresso.assertion.ViewAssertions.matches
 import android.support.test.espresso.contrib.DrawerActions
 import android.support.test.espresso.matcher.ViewMatchers.*
@@ -11,13 +12,19 @@ import android.support.test.rule.ActivityTestRule
 import android.support.test.runner.AndroidJUnit4
 import android.support.test.uiautomator.UiDevice
 import android.support.test.uiautomator.UiSelector
+import okhttp3.mockwebserver.Dispatcher
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.foundation101.karatel.activity.MainActivity
 import org.hamcrest.Matchers.`is`
+import org.json.JSONObject
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.TimeUnit
+
 
 @RunWith(AndroidJUnit4::class)
 class MainActivity_Test {
@@ -25,6 +32,39 @@ class MainActivity_Test {
     val testRule = ActivityTestRule<MainActivity>(MainActivity::class.java)
 
     private fun getDrawerItemTitle(i: Int) = KaratelApplication.getInstance().resources.getStringArray(R.array.drawerMenuItems)[i]
+
+    @Test
+    fun openProfile() {
+        val webServer = MockWebServer()
+        webServer.start(8080)
+        webServer.setDispatcher(MyRequestDispatcher())
+
+        onView(withId(R.id.drawerLayoutMainActivity)).perform(DrawerActions.open())
+        onView(withId(R.id.drawerHeaderLayout)).perform(click())
+
+        val views = arrayOf(R.id.avatarProfileImageView, R.id.userNameTextView,
+                R.id.profile_surname, R.id.profile_name, R.id.profile_second_name, R.id.profile_phone,
+                R.id.llEmail, R.id.profile_email, R.id.profile_password)
+        views.forEach {
+            onView(withId(it))
+                    .perform(scrollTo())
+                    .check(matches(isDisplayed()))
+        }
+
+        onView(
+            withChild(
+                withText(R.string.email)
+            )
+        ).check(
+            matches(
+                withChild(
+                    withText(TestUser.EMAIL)
+                )
+            )
+        )
+
+        webServer.shutdown()
+    }
 
     @Test
     fun openFragmentsFromDrawer() {
@@ -95,4 +135,41 @@ class MainActivity_Test {
         }
 
     }
+
+}
+
+object TestUser {
+    const val EMAIL = "dmitry.kosiakov@aejis.eu"
+}
+
+internal class MyRequestDispatcher : Dispatcher() {
+    override fun dispatch(request: RecordedRequest): MockResponse {
+
+        return when (request.path){
+            "/users/" + Globals.user.id -> MockResponse().setResponseCode(200).setBody(userJSON)
+            else -> MockResponse().setResponseCode(404)
+        }
+
+    }
+    val userJSON: String = JSONObject(mapOf(
+        "status"         to "success",
+        "data"           to JSONObject(mapOf(
+                            "id"      to 44,
+                            "surname" to "Тестовое",
+                            "avatar"  to JSONObject(mapOf(
+                                "url"   to "/uploads/user/avatar/44/filesavatar44.png",
+                                "thumb" to JSONObject(mapOf("url" to "/uploads/user/avatar/44/thumb_filesavatar44.png"))
+                            )),
+        "firstname"      to "Имя",
+        "secondname"     to "Отчествович",
+        "phone_number"   to "+380958742405",
+        "email"          to TestUser.EMAIL,
+        "status"         to "active",
+        "admin"          to false,
+        "user_status_id" to null,
+        "created_at"     to "2016-06-22T17:30:42.675+03:00",
+        "updated_at"     to "2018-09-14T12:48:24.584+03:00",
+        "banned_message" to "Вас забанено-с..."
+        ))
+    )).toString()
 }

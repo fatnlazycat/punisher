@@ -5,6 +5,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 
+import org.foundation101.karatel.Const;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 
@@ -65,7 +66,7 @@ public class HttpHelper {
     public static String proceedRequest (String api, String method, String request, boolean authorizationRequired)
         throws IOException {
             StringBuilder response = new StringBuilder();
-            HttpURLConnection urlConnection = (HttpURLConnection) new URL(Globals.SERVER_URL + api).openConnection();
+            HttpURLConnection urlConnection = (HttpURLConnection) new URL(Const.SERVER_URL + api).openConnection();
             switch (method){
                 case "POST" : {
                     urlConnection.setRequestMethod(method);
