@@ -15,6 +15,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -34,8 +35,6 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import org.foundation101.karatel.asyncTasks.AsyncTaskAction;
-import org.foundation101.karatel.asyncTasks.RequestListFetcher;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
@@ -43,6 +42,8 @@ import org.foundation101.karatel.activity.MainActivity;
 import org.foundation101.karatel.activity.ViolationActivity;
 import org.foundation101.karatel.adapter.ItemTouchHelperAdapter;
 import org.foundation101.karatel.adapter.RequestListAdapter;
+import org.foundation101.karatel.asyncTasks.AsyncTaskAction;
+import org.foundation101.karatel.asyncTasks.RequestListFetcher;
 import org.foundation101.karatel.entity.Request;
 import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.manager.HttpHelper;
@@ -91,45 +92,6 @@ public class RequestListFragment extends Fragment {
         setHasOptionsMenu(true);
 
         KaratelApplication.getInstance().sendScreenName(TAG);
-
-        /*requestFetcherPre = new RequestFetcherCallback<Void>(this) {
-            @Override public void proceed(Void arg) {
-                RequestListFragment requestListFragment = ref.get();
-                if (requestListFragment != null) {
-                    View progressBar = requestListFragment.progressBar;
-                    if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
-                }
-            }
-        };
-        requestFetcherPost = new RequestFetcherCallback<ArrayList<Request>>(this) {
-            @Override public void proceed(ArrayList<Request> requests) {
-                RequestListFragment requestListFragment = ref.get();
-                if (requestListFragment != null) {
-                    View progressBar = requestListFragment.progressBar;
-                    progressBar.setVisibility(View.GONE);
-
-                    RequestListAdapter requestListAdapter = requestListFragment.requestListAdapter;
-                    if (requests != null && requests.size() > 0) {
-                        requestListAdapter.getContent().addAll(requests);
-                    }
-                    if (requestListAdapter.getItemCount() == 0) { //there are no requests
-                        showNoRequestsLayout();
-                    } else {
-                        Collections.sort(requestListAdapter.content, new RequestComparator(RequestComparator.SORT_FLAG_DATE));
-                        requestListAdapter.notifyDataSetChanged();
-                    }
-
-                    Activity activity = requestListFragment.getActivity();
-                    String requestFromPush = activity == null ?
-                            null : activity.getIntent().getStringExtra(MyGcmListenerService.REQUEST_NUMBER);
-                    if (requestFromPush != null) {
-                        activity.getIntent().removeExtra(MyGcmListenerService.REQUEST_NUMBER);
-                        int index = requestListAdapter.getRequestNumberFromTag(requestFromPush);
-                        if (index > -1) requestListAdapter.openRequest(index);
-                    }
-                }
-            }
-        };*/
     }
 
     @Override
@@ -153,13 +115,13 @@ public class RequestListFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_list_of_requests, container, false);
         return v;
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         progressBar = view.findViewById(R.id.rlProgress);
         sortMenu = view.findViewById(R.id.sortingLayout);
@@ -258,7 +220,6 @@ public class RequestListFragment extends Fragment {
     }
 
     void showNoRequestsLayout(){
-        //recycler.setVisibility(View.GONE);
         swipeRefreshLayout.setVisibility(View.GONE);
         LinearLayout layoutNoRequests = mainView.findViewById(R.id.layoutNoRequests);
         layoutNoRequests.setVisibility(View.VISIBLE);
@@ -375,75 +336,6 @@ public class RequestListFragment extends Fragment {
             super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
         }
     }
-
-    /*private class RequestListFetcher extends AsyncTask<Void, Void, String>{
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            progressBar.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected String doInBackground(Void... params) {
-            try {
-                if (HttpHelper.internetConnected(*//*getActivity()*//*)) {
-                    return HttpHelper.proceedRequest("complains", "GET", "", true);
-                } else return HttpHelper.ERROR_JSON;
-            } catch (final IOException e){
-                Globals.showError(R.string.cannot_connect_server, e);
-                return "";
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            progressBar.setVisibility(View.GONE);
-            ArrayList<Request> requestsFromServer = new ArrayList<>();
-            try {
-                JSONObject json = new JSONObject(s);
-                switch (json.getString("status")) {
-                    case Globals.SERVER_SUCCESS : {
-                        JSONArray dataJSON = json.getJSONArray("data");
-                        ObjectMapper mapper = new ObjectMapper();
-                        for (int i = 0; i < dataJSON.length(); i++) {
-                            JSONArray oneRequest = dataJSON.getJSONArray(i);
-                            JSONObject requestBody = oneRequest.getJSONObject(1);
-                            String requestBodyString = requestBody.toString();
-                            Request request = mapper.readValue(requestBodyString, Request.class);
-
-                            request.type = oneRequest.getString(0);
-
-                            requestsFromServer.add(request);
-                        }
-                        requestListAdapter.getContent().addAll(requestsFromServer);
-                        break;
-                    }
-                    case Globals.SERVER_ERROR : {
-                        Globals.showMessage(json.getString(Globals.SERVER_ERROR));
-                        break;
-                    }
-                }
-                if (requestListAdapter.getItemCount() == 0) { //there are no requests
-                    showNoRequestsLayout();
-                } else {
-                    Collections.sort(requestListAdapter.content, new RequestComparator(RequestComparator.SORT_FLAG_DATE));
-                    requestListAdapter.notifyDataSetChanged();
-                }
-            } catch (JSONException | IOException e) {
-                Globals.showError(R.string.error, e);
-            }
-            Activity activity = getActivity();
-            String requestFromPush = activity == null ?
-                    null : activity.getIntent().getStringExtra(MyGcmListenerService.REQUEST_NUMBER);
-            if (requestFromPush != null){
-                activity.getIntent().removeExtra(MyGcmListenerService.REQUEST_NUMBER);
-                int index = requestListAdapter.getRequestNumberFromTag(requestFromPush);
-                if (index > -1) requestListAdapter.openRequest(index);
-            }
-        }
-    }*/
 
     private class RequestEraser extends AsyncTask<Integer, Void, String>{
         @Override

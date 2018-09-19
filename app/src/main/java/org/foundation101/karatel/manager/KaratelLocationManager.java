@@ -49,10 +49,6 @@ public class KaratelLocationManager implements
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
-    public static final int LOCATION_SERVICE_NONE = -100;
-    public static final int LOCATION_SERVICE_MAIN    = 0;
-    public static final int LOCATION_SERVICE_ADDRESS = 1;
-
     public KaratelLocationManager(Formular formularActivity){
         if (!(formularActivity instanceof Activity))
             throw new IllegalArgumentException("formularActivity should be an instance of Activity");
@@ -148,7 +144,8 @@ public class KaratelLocationManager implements
     @SuppressWarnings({"MissingPermission"})
     private void obtainAndroidLocation(){
         if (locationPermitted && activity != null) {
-            locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
+            locationManager = (LocationManager) KaratelApplication.getInstance()
+                    .getSystemService(Context.LOCATION_SERVICE);
 
             assert locationManager != null;
 
@@ -314,7 +311,8 @@ public class KaratelLocationManager implements
     public void onDestroy() {
         if (locationListener != null) {
             locationManager.removeUpdates(locationListener);
-            //locationListener = null; //don't do this! - since onLocationChanged is being fired several times which causes NPE
+            locationManager = null;
+            locationListener = null; //don't do this! - since onLocationChanged is being fired several times which causes NPE
         }
 
         PermissionManager.clearPendingRequests();
