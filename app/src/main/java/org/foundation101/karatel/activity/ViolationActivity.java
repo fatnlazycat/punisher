@@ -44,6 +44,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.foundation101.karatel.Const;
 import org.foundation101.karatel.asyncTasks.RequestListFetcher;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
@@ -557,7 +558,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             _cursor.close();
             _db.close();
         } else if (mode > MODE_EDIT){
-            String serverUrl = Globals.SERVER_URL.replace("/api/v1/", "");
+            String serverUrl = Const.SERVER_URL.replace("/api/v1/", "");
             for (int i = 0; i < request.images.length; i++) {
                 String evidenceFileName = serverUrl + request.images[i].thumb.url;
                 new ThumbnailFetcher().execute(evidenceFileName);
@@ -1098,7 +1099,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                 //also need to remove trailing 's' from type server suffix
                 String typeServerSuffixNoS = typeServerSuffix.substring(0, typeServerSuffix.length()-1);
 
-                String requestUrl = Globals.SERVER_URL + typeServerSuffix;
+                String requestUrl = Const.SERVER_URL + typeServerSuffix;
 
                 //prepare the request parameters
                 ArrayList<String> requestParameters = new ArrayList<>();
@@ -1265,7 +1266,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             try {
                 String filePath = getExternalFilesDir(null) + File.separator + TAG + CameraManager.JPG;
                 File file  = new File(filePath);
-                String baseUrl = Globals.SERVER_URL.replace("/api/v1/", "");
+                String baseUrl = Const.SERVER_URL.replace("/api/v1/", "");
 
                 RetrofitDownloader downloader = new Retrofit.Builder()
                         .baseUrl(baseUrl)

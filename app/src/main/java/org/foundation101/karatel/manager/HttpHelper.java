@@ -81,7 +81,7 @@ public class HttpHelper {
                     urlConnection.setRequestProperty("Accept-Encoding", "UTF-8");
                     break;
                 } case "DELETE" : {//DELETE with body not supported on old Android versions -> body is urlencoded
-                    urlConnection = (HttpURLConnection) new URL(Globals.SERVER_URL + api + "?" + request).openConnection();
+                    urlConnection = (HttpURLConnection) new URL(Const.SERVER_URL + api + "?" + request).openConnection();
                     urlConnection.setRequestMethod(method);
                     urlConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
                     urlConnection.setRequestProperty("Accept-Encoding", "UTF-8");

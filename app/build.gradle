@@ -16,8 +16,8 @@ android {
         targetSdkVersion 27
         //multiDexEnabled true
 
-        versionCode 59
-        versionName "3.0.2" //don't forget to remove -test in api endpoint!!!
+        versionCode 60
+        versionName "3.0.3" //don't forget to remove -test in api endpoint!!!
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

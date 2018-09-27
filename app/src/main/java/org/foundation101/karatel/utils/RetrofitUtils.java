@@ -1,11 +1,7 @@
 package org.foundation101.karatel.utils;
 
-import android.util.Log;
-
 import org.foundation101.karatel.BuildConfig;
-import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.retrofit.DownloadProgressInterceptor;
+import org.foundation101.karatel.Const;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -44,7 +40,7 @@ public class RetrofitUtils {
             // add logging as last interceptor
             httpClient.addInterceptor(logging);
 
-            String newBaseUrl = Globals.SERVER_URL.replace("/v1/", "/v" + apiVersion + "/");
+            String newBaseUrl = Const.SERVER_URL.replace("/v1/", "/v" + apiVersion + "/");
 
             retrofit = new Retrofit.Builder()
                     .baseUrl(newBaseUrl)

@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import org.foundation101.karatel.Const;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
@@ -289,7 +290,7 @@ public class ShowMediaActivity extends AppCompatActivity {
             Point point = MediaUtils.getDesiredSize(ShowMediaActivity.this);
             try {
                 if (fileUrl.matches("https?://.+")) {
-                    String baseUrl = Globals.SERVER_URL.replace("/api/v1/", "");
+                    String baseUrl = Const.SERVER_URL.replace("/api/v1/", "");
 
                     /*RetrofitDownloader downloader = new Retrofit.Builder()
                             .baseUrl(baseUrl)

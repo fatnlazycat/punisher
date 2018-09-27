@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.splunk.mint.Mint;
 
+import org.foundation101.karatel.Const;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.entity.PunisherUser;
@@ -52,7 +53,7 @@ public class ProfileSaver extends AsyncTask<Void, Void, String> {
             int tries = 0;
             final int MAX_TRIES = 2;
             while (tries++ < MAX_TRIES) try {
-                String requestUrl = Globals.SERVER_URL + "users/" + Globals.user.id;
+                String requestUrl = Const.SERVER_URL + "users/" + Globals.user.id;
                 MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8", "PUT");
                 //multipart.addFormField("user[email]", Globals.user.email);
                 multipart.addFormField("user[firstname]", userToSave.name);

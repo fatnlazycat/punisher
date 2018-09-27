@@ -20,7 +20,7 @@ import java.util.List;
  * Created by Dima on 08.05.2016.
  */
 public class DBHelper extends SQLiteOpenHelper {
-    public static final int DB_VERSION = 5;
+    public static final int DB_VERSION = 6;
     public static final String DATABASE = "violations_db";
     public static final String VIOLATIONS_TABLE = "violations_table";
     public static final String MEDIA_TABLE = "media_table";
@@ -64,13 +64,21 @@ public class DBHelper extends SQLiteOpenHelper {
                 upgrade_locationFromMainTableToMediaTable(db, Violation.CATEGORY_PUBLIC);
                 break;
             }
-            case 3 : //v.3 was changes in column names ("Kyivblagoustriy") - no special method here, everything's done by checkViolationsAndAddColumns()
-            case 4 : {
-                upgrade_addSendAttemptColumn(db);
+            case 3 : //v.4 was changes in column names ("Kyivblagoustriy") - no special method here, everything's done by checkViolationsAndAddColumns()
+            case 4 : break; //v.5 added sendAttempt which should be common irrespective of old version
+            case 5 : {  //v.6 is a fix of the error in v.5 when upgrade_addSendAttemptColumn()
+                        // wasn't called when upgrading from v.1 or v.2
+                clearBadRecords(db);
+                break;
             }
         }
+
+        //these two should stay here forever
         checkViolationsAndAddColumns(db, Violation.CATEGORY_BUSINESS);
         checkViolationsAndAddColumns(db, Violation.CATEGORY_PUBLIC);
+
+        //this one is relevant for upgrading from 1 to 4, on 5 it will throw caught (it's ok) exception "duplicate column name"
+        upgrade_addSendAttemptColumn(db);
     }
 
     private void createTablesForViolations(SQLiteDatabase db) {
@@ -155,6 +163,34 @@ public class DBHelper extends SQLiteOpenHelper {
             db.endTransaction();
         }
         //we don't drop lat/lng column in violation table - let it stay there empty
+    }
+
+    /**When upgrading from 1 or 2 to 5 there was a situation where SEND_ATTEMPT column wasn't created
+     * (due to break; in switch statement). The users created records that were stored in db the following way:
+     * - records in media table had column "id" = -1 (because of error while saving)
+     * - this led to broken join of violations_table & media_table
+     * The solution - delete all these records from both media table & violations table
+     * */
+
+    private void clearBadRecords(SQLiteDatabase db) {
+        db.delete(MEDIA_TABLE, ID + " = ?", new String[] {"-1"});
+
+        db.beginTransaction();
+        try {
+            /*db.rawQuery("SELECT * FROM " + VIOLATIONS_TABLE + " LEFT JOIN " + MEDIA_TABLE + " ON " +
+            VIOLATIONS_TABLE + "." + _ID + " = " + MEDIA_TABLE + "." + ID + " WHERE " + MEDIA_TABLE + "." + ID +
+            " IS NULL", new String[]{});*/
+            db.delete(VIOLATIONS_TABLE, VIOLATIONS_TABLE + "." + _ID + " NOT IN (SELECT " + ID +
+                    " FROM " + MEDIA_TABLE + ")",
+                    new String[]{});
+
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            Log.e("DBHelper", e.toString());
+            Mint.logException(e);
+        } finally {
+            db.endTransaction();
+        }
     }
 
     private void upgrade_addSendAttemptColumn(SQLiteDatabase db) {

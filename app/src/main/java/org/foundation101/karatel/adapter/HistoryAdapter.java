@@ -29,6 +29,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.foundation101.karatel.Const;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
@@ -291,7 +292,7 @@ public class HistoryAdapter extends BaseAdapter implements View.OnClickListener 
 
     private String getDocUrl(UpdateEntity.DocUrl arg){
         String suffix = arg.url.endsWith(PDF) ? googleDocsUrl : "";
-        final String result = suffix + Globals.SERVER_URL.replace("/api/v1/", "") + arg.url;
+        final String result = suffix + Const.SERVER_URL.replace("/api/v1/", "") + arg.url;
         return result;
     }
 

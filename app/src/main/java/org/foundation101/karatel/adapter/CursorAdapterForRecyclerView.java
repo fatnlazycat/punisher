@@ -14,10 +14,10 @@ import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.foundation101.karatel.manager.DBHelper;
-import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.Const;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.entity.Violation;
+import org.foundation101.karatel.manager.DBHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -114,7 +114,7 @@ class CursorAdapterForRecyclerView extends CursorAdapter{
         protected String doInBackground(Void... params) {
             StringBuilder response = new StringBuilder();
             try {
-                String stringParam = Globals.SERVER_URL + "complains/" + idOnServer.toString();
+                String stringParam = Const.SERVER_URL + "complains/" + idOnServer.toString();
                 HttpURLConnection urlConnection = (HttpURLConnection) new URL(stringParam).openConnection();
 
                 int responseCode = urlConnection.getResponseCode();

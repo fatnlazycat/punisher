@@ -19,11 +19,11 @@ import com.facebook.FacebookException;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 
+import org.foundation101.karatel.Const;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.entity.PunisherUser;
-import org.foundation101.karatel.manager.CameraManager;
 import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.utils.FileUtils;
@@ -287,7 +287,7 @@ public class TipsActivity extends Activity {
         protected Void doInBackground(String... params) {
             String avatarFileName = FileUtils.INSTANCE.avatarFileName(false);
             try {
-                URL url = new URL(Globals.SERVER_URL.replace("/api/v1/", "") + params[0]);
+                URL url = new URL(Const.SERVER_URL.replace("/api/v1/", "") + params[0]);
                 Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
                 FileOutputStream fos = new FileOutputStream(avatarFileName);
                 bmp.compress(Bitmap.CompressFormat.PNG, 100, fos);
