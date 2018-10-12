@@ -13,7 +13,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,26 +55,26 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
 
-        textViewSignUpErrorMessage = findViewById(R.id.textViewSignUpErrorMessage);
+        textViewSignUpErrorMessage    = findViewById(R.id.textViewSignUpErrorMessage);
 
-        signUpButton = findViewById(R.id.buttonRegister);
+        signUpButton                  = findViewById(R.id.buttonRegister);
 
-        editTextEmail = findViewById(R.id.editTextSignUpEmail);
-        editTextPassword = findViewById(R.id.editTextSignUpPassword);
-        editTextSurname = findViewById(R.id.editTextSignUpSurname);
-        editTextName = findViewById(R.id.editTextSignUpName);
-        editTextSecondName = findViewById(R.id.editTextSignUpSecondName);
-        editTextPhone = findViewById(R.id.editTextSignUpPhone);
+        editTextEmail                 = findViewById(R.id.etSignUpEmail);
+        editTextPassword              = findViewById(R.id.etSignUpPassword);
+        editTextSurname               = findViewById(R.id.etSignUpSurname);
+        editTextName                  = findViewById(R.id.etSignUpName);
+        editTextSecondName            = findViewById(R.id.etSignUpSecondName);
+        editTextPhone                 = findViewById(R.id.etSignUpPhone);
         checkBoxPersonalDataAgreement = findViewById(R.id.checkBoxPersonalDataAgreement);
 
         SignUpTextWatcher textWatcher = new SignUpTextWatcher();
 
-        editTextEmail.addTextChangedListener(textWatcher);
-        editTextPassword.addTextChangedListener(textWatcher);
-        editTextSurname.addTextChangedListener(textWatcher);
-        editTextName.addTextChangedListener(textWatcher);
-        editTextSecondName.addTextChangedListener(textWatcher);
-        editTextPhone.addTextChangedListener(textWatcher);
+        editTextEmail                .addTextChangedListener(textWatcher);
+        editTextPassword             .addTextChangedListener(textWatcher);
+        editTextSurname              .addTextChangedListener(textWatcher);
+        editTextName                 .addTextChangedListener(textWatcher);
+        editTextSecondName           .addTextChangedListener(textWatcher);
+        editTextPhone                .addTextChangedListener(textWatcher);
         checkBoxPersonalDataAgreement.setOnClickListener(this);
     }
 
@@ -135,19 +134,9 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     class SignUpSender extends AsyncTask<PunisherUser, Void, String> {
-
-        /*static final String RESPONSE_INVALID_EMAIL = "Email is invalid";
-        static final String MESSAGE_INVALID_EMAIL = "Перевірте правильність написання вашого email\n";
-        static final String RESPONSE_INVALID_PASSWORD = "Password is too short (minimum is 6 characters)";
-        static final String MESSAGE_INVALID_PASSWORD = "Пароль має бути не коротшим за 6 символів\n";
-        static final String RESPONSE_INVALID_PHONE = "Phone number is an invalid number";
-        static final String MESSAGE_INVALID_PHONE = "Перевірте правильність та формат телефонного номеру\n";
-        static final String RESPONSE_EMAIL_ALREADY_TAKEN = "Email has already been taken";
-        static final String MESSAGE_EMAIL_ALREADY_TAKEN = "Користувача з цим e-mail вже зареєстровано\n";*/
-
         Context context;
 
-        public SignUpSender(Context context){
+        SignUpSender(Context context){
             this.context = context;
         }
 

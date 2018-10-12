@@ -153,4 +153,6 @@
     <string name="allChangesWillBeLost">Всі не збережені зміни будуть скасовані. Ви дійсно бажаєте вийти в головне меню?</string>
     <string name="edit"> Редагувати</string>
     <string name="karatel">Каратєль</string>
+
+    <string name="youTubeShareButtonContentDescription">Share</string>
 </resources>

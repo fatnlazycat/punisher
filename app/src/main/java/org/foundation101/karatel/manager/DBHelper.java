@@ -77,8 +77,10 @@ public class DBHelper extends SQLiteOpenHelper {
         checkViolationsAndAddColumns(db, Violation.CATEGORY_BUSINESS);
         checkViolationsAndAddColumns(db, Violation.CATEGORY_PUBLIC);
 
-        //this one is relevant for upgrading from 1 to 4, on 5 it will throw caught (it's ok) exception "duplicate column name"
-        upgrade_addSendAttemptColumn(db);
+        //this one is relevant for upgrading from 1 to 4,
+        //on 5 it will throw exception "duplicate column name" (because the column was added in v.5)
+        //exception prevents db version to be upgraded
+        if (oldVersion != 5) upgrade_addSendAttemptColumn(db);
     }
 
     private void createTablesForViolations(SQLiteDatabase db) {

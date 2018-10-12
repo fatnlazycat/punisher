@@ -40,9 +40,9 @@
                 android:layout_marginStart="@dimen/activity_horizontal_margin"
                 android:layout_marginEnd="@dimen/activity_horizontal_margin"
                 android:layout_marginBottom="1dp"
-                android:id="@+id/editTextSignUpEmail"
+                android:id="@+id/etSignUpEmail"
                 android:inputType="textEmailAddress"
-                android:nextFocusForward="@+id/editTextSignUpPassword"
+                android:nextFocusForward="@+id/etSignUpPassword"
                 android:hint="@string/email" />
 
             <EditText
@@ -52,7 +52,7 @@
                 android:layout_marginStart="@dimen/activity_horizontal_margin"
                 android:layout_marginEnd="@dimen/activity_horizontal_margin"
                 android:layout_marginBottom="1dp"
-                android:id="@id/editTextSignUpPassword"
+                android:id="@id/etSignUpPassword"
                 android:inputType="textPassword"
                 android:hint="@string/passw" />
 
@@ -63,7 +63,7 @@
                 android:layout_marginBottom="1dp"
                 android:layout_marginStart="@dimen/activity_horizontal_margin"
                 android:layout_marginEnd="@dimen/activity_horizontal_margin"
-                android:id="@+id/editTextSignUpSurname"
+                android:id="@+id/etSignUpSurname"
                 android:inputType="textPersonName"
                 android:hint="@string/surname" />
 
@@ -74,7 +74,7 @@
                 android:layout_marginStart="@dimen/activity_horizontal_margin"
                 android:layout_marginEnd="@dimen/activity_horizontal_margin"
                 android:layout_marginBottom="1dp"
-                android:id="@+id/editTextSignUpName"
+                android:id="@+id/etSignUpName"
                 android:inputType="textPersonName"
                 android:hint="@string/name" />
 
@@ -85,7 +85,7 @@
                 android:layout_marginStart="@dimen/activity_horizontal_margin"
                 android:layout_marginEnd="@dimen/activity_horizontal_margin"
                 android:layout_marginBottom="1dp"
-                android:id="@+id/editTextSignUpSecondName"
+                android:id="@+id/etSignUpSecondName"
                 android:inputType="textPersonName"
                 android:hint="@string/second_name" />
 
@@ -96,7 +96,7 @@
                 android:layout_marginStart="@dimen/activity_horizontal_margin"
                 android:layout_marginEnd="@dimen/activity_horizontal_margin"
                 android:layout_marginBottom="1dp"
-                android:id="@+id/editTextSignUpPhone"
+                android:id="@+id/etSignUpPhone"
                 android:inputType="phone"
                 android:hint="@string/phone" />
 

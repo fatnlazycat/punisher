@@ -69,11 +69,9 @@ public class RequestListFragment extends Fragment {
     SwipeRefreshLayout swipeRefreshLayout;
     TextView textViewByStatus, textViewByDate;
     Snackbar snackbar;
+    Toolbar toolbar;
 
     SQLiteDatabase db;
-
-    //RequestFetcherCallback<Void> requestFetcherPre;
-    //RequestFetcherCallback<ArrayList<Request>> requestFetcherPost;
 
     final int COLOR_GREY = Color.parseColor("#86888a");
     final int COLOR_GREEN = Color.parseColor("#6c8c39");
@@ -97,12 +95,13 @@ public class RequestListFragment extends Fragment {
     @Override
     public void onDestroy() {
         db.close();
+        if (toolbar != null) toolbar.setOnMenuItemClickListener(null);
         super.onDestroy();
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        Toolbar toolbar = ((MainActivity)getActivity()).toolbar;
+        toolbar = ((MainActivity)getActivity()).toolbar;
         toolbar.inflateMenu(R.menu.sort_items_menu);
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override

@@ -4,7 +4,6 @@ import android.support.test.InstrumentationRegistry
 import android.support.test.espresso.Espresso.onData
 import android.support.test.espresso.Espresso.onView
 import android.support.test.espresso.action.ViewActions.click
-import android.support.test.espresso.action.ViewActions.scrollTo
 import android.support.test.espresso.assertion.ViewAssertions.matches
 import android.support.test.espresso.contrib.DrawerActions
 import android.support.test.espresso.matcher.ViewMatchers.*
@@ -16,40 +15,41 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
+import org.foundation101.karatel.TestUtils.checkChildViewArrayIsDisplayedWithScroll
+import org.foundation101.karatel.TestUtils.checkViewArrayIsDisplayed
+import org.foundation101.karatel.TestUtils.checkViewArrayIsDisplayedWithScroll
 import org.foundation101.karatel.activity.MainActivity
-import org.hamcrest.Matchers.`is`
+import org.foundation101.karatel.entity.Violation
+import org.foundation101.karatel.manager.KaratelPreferences
+import org.hamcrest.Matchers.*
 import org.json.JSONObject
+import org.junit.*
 import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.TimeUnit
 
 
 @RunWith(AndroidJUnit4::class)
+
 class MainActivity_Test {
     @Rule @JvmField
     val testRule = ActivityTestRule<MainActivity>(MainActivity::class.java)
 
     private fun getDrawerItemTitle(i: Int) = KaratelApplication.getInstance().resources.getStringArray(R.array.drawerMenuItems)[i]
+    private fun openDrawer() = onView(withId(R.id.drawerLayoutMainActivity)).perform(DrawerActions.open())
 
-    @Test
-    fun openProfile() {
+    @Test fun openProfile() {
         val webServer = MockWebServer()
         webServer.start(8080)
         webServer.setDispatcher(MyRequestDispatcher())
 
-        onView(withId(R.id.drawerLayoutMainActivity)).perform(DrawerActions.open())
+        openDrawer()
         onView(withId(R.id.drawerHeaderLayout)).perform(click())
 
         val views = arrayOf(R.id.avatarProfileImageView, R.id.userNameTextView,
                 R.id.profile_surname, R.id.profile_name, R.id.profile_second_name, R.id.profile_phone,
                 R.id.llEmail, R.id.profile_email, R.id.profile_password)
-        views.forEach {
-            onView(withId(it))
-                    .perform(scrollTo())
-                    .check(matches(isDisplayed()))
-        }
+        checkViewArrayIsDisplayedWithScroll(views)
 
         onView(
             withChild(
@@ -66,9 +66,7 @@ class MainActivity_Test {
         webServer.shutdown()
     }
 
-    @Test
-    fun openFragmentsFromDrawer() {
-
+    @Test fun openFragmentsFromDrawer() {
         //keys - fragment numbers, values - array of views that should be displayed
         val data = mapOf(
             0 to arrayOf(R.id.llFragmentMain, R.id.gridViewMain),
@@ -85,24 +83,19 @@ class MainActivity_Test {
         )
 
         data.asSequence()
-        .map {
-            onView(withId(R.id.drawerLayoutMainActivity)).perform(DrawerActions.open())
+            .map {
+                openDrawer()
 
-            onData(`is`(getDrawerItemTitle(it.key)))
-                    .inAdapterView(withId(R.id.drawerListView))
-                    .perform(click())
+                onData(`is`(getDrawerItemTitle(it.key)))
+                        .inAdapterView(withId(R.id.drawerListView))
+                        .perform(click())
 
-            it.value
-        }
-        .flatMap { it.asSequence() }
-        .forEach {
-            onView(withId(it)).check(matches(isDisplayed()))
-        }
+                it.value
+            }.forEach { checkViewArrayIsDisplayed(it) }
     }
 
-    @Test
-    fun openWebPageFromDrawer() {
-        onView(withId(R.id.drawerLayoutMainActivity)).perform(DrawerActions.open())
+    @Test fun openWebPageFromDrawer() {
+        openDrawer()
         onData(`is`("Підтримати проект"))
                 .inAdapterView(withId(R.id.drawerListView))
                 .perform(click())
@@ -121,7 +114,7 @@ class MainActivity_Test {
         }
 
         fun performCheck() {
-            val urlBar = device.findObject(UiSelector().text("https://secure.wayforpay.com/page"))
+            val urlBar = device.findObject(UiSelector().textMatches("(https://)?secure.wayforpay.com/page"))
             assertTrue(urlBar.waitForExists(TimeUnit.SECONDS.toMillis(5)))
         }
 
@@ -136,6 +129,53 @@ class MainActivity_Test {
 
     }
 
+    @Test fun openYouTubeActivity() {
+        openDrawer()
+        onData(`is`("Відеонавчання"))
+                .inAdapterView(withId(R.id.drawerListView))
+                .perform(click())
+
+        onData(hasEntry("header", "Інформація з обмеженим доступом"))
+                .inAdapterView(withId(R.id.lvVideos))
+                .perform(click())
+
+        checkViewArrayIsDisplayed(arrayOf(R.id.toolbar, R.id.youTubeView, R.id.tvTitle, R.id.tvDescription))
+    }
+
+    @Test fun openViolationActivity() {
+        onData(instanceOf(Violation::class.java))
+                .inAdapterView(withId(R.id.gridViewMain))
+                .atPosition(0)
+                .perform(click())
+
+        checkViewArrayIsDisplayed(arrayOf(R.id.toolbar, R.id.tabInfo))
+        checkViewArrayIsDisplayedWithScroll(arrayOf(
+                R.id.textViewViolationHeader, R.id.llAddEvidence, R.id.punishButton, R.id.saveButton
+        ))
+
+        onView(withId(R.id.requisitesList)).check(matches(isDisplayingAtLeast(1)))
+
+        checkChildViewArrayIsDisplayedWithScroll(arrayOf(
+                R.id.uploadButton, R.id.addedPhotoVideoTextView, R.id.imageButtonAddEvidence))
+    }
+
+
+    companion object {
+        private const val TEST_SESSION_TOKEN = "testSessionToken"
+
+        @JvmStatic
+        @BeforeClass
+        fun initialize() {
+            val oldSessionToken = KaratelPreferences.sessionToken()
+            if (oldSessionToken.isEmpty()) KaratelPreferences.setSessionToken(TEST_SESSION_TOKEN)
+        }
+
+        @JvmStatic
+        @AfterClass
+        fun finalize() {
+            if (TEST_SESSION_TOKEN == KaratelPreferences.sessionToken()) KaratelPreferences.remove(Globals.SESSION_TOKEN)
+        }
+    }
 }
 
 object TestUser {
@@ -151,7 +191,7 @@ internal class MyRequestDispatcher : Dispatcher() {
         }
 
     }
-    val userJSON: String = JSONObject(mapOf(
+    private val userJSON: String = JSONObject(mapOf(
         "status"         to "success",
         "data"           to JSONObject(mapOf(
                             "id"      to 44,

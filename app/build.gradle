@@ -45,6 +45,8 @@ android {
     packagingOptions {
         exclude 'META-INF/ASL2.0'
         exclude 'META-INF/LICENSE'
+        exclude 'mockito-extensions/org.mockito.plugins.MockMaker'
+        exclude 'mockito-extensions/org.mockito.plugins.StackTraceCleanerProvider'
     }
     dexOptions {
         javaMaxHeapSize "4g"
@@ -126,6 +128,10 @@ dependencies {
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.6.1'
     releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.6.1'
     debugImplementation 'com.squareup.leakcanary:leakcanary-support-fragment:1.6.1'
+
+    //androidTestImplementation 'org.mockito:mockito-core:2.1.0-beta.119'
+    androidTestImplementation 'com.linkedin.dexmaker:dexmaker-mockito:2.19.1'
+    /*androidTestImplementation 'org.mockito:mockito-android:2.22.0'*/
 
     androidTestImplementation ('com.android.support.test.espresso:espresso-core:3.0.2') {
         exclude group: 'net.sf.kxml', module: 'kxml2'

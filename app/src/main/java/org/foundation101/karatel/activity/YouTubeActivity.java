@@ -11,9 +11,9 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.youtube.player.YouTubeBaseActivity;
 import com.google.android.youtube.player.YouTubeInitializationResult;
@@ -110,32 +110,31 @@ public class YouTubeActivity extends YouTubeBaseActivity implements AppCompatCal
     // YouTubePlayer.OnInitializedListener methods
     @Override
     public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer player, boolean wasRestored) {
-        View youTubeAppButton = ViewUtils.findFirstAmongChildren((YouTubePlayerView) provider, new ApplicableToView() {
-            @Override
-            public boolean methodToApply(View v) {
-                CharSequence contentDescription = (v != null && v instanceof ImageView) ?
-                        v.getContentDescription() : null;
-                return (contentDescription != null && contentDescription.equals(YOU_TUBE_APP_BUTTON_CONTENT_DESCRIPTION));
-            }
-        });
+        ApplicableToView viewFinder = new ViewFinderByContentDescription(YOU_TUBE_APP_BUTTON_CONTENT_DESCRIPTION);
+        View youTubeAppButton = ViewUtils.findFirstAmongChildren((YouTubePlayerView) provider, viewFinder);
         if (youTubeAppButton != null) youTubeAppButton.setVisibility(View.GONE);
-        player.setPlayerStateChangeListener(new YouTubePlayer.PlayerStateChangeListener() {
 
+        String localizedContentDescription = getResources().getString(R.string.youTubeShareButtonContentDescription);
+        viewFinder = new ViewFinderByContentDescription(localizedContentDescription);
+        View shareButton = ViewUtils.findFirstAmongChildren((YouTubePlayerView) provider, viewFinder);
+        if (shareButton != null) try {
+            ViewGroup.LayoutParams lp = shareButton.getLayoutParams();
+            lp.height = 0;
+            lp.width = 0;
+            shareButton.setLayoutParams(lp);
+        } catch (Exception e) { /*ignored*/ }
+
+        player.setPlayerStateChangeListener(new YouTubePlayer.PlayerStateChangeListener() {
             @Override
             public void onLoading() { }
-
             @Override
             public void onLoaded(String s) { }
-
             @Override
             public void onAdStarted() { }
-
             @Override
             public void onVideoStarted() {}
-
             @Override
             public void onVideoEnded() { }
-
             @Override
             public void onError(YouTubePlayer.ErrorReason errorReason) {
                 Log.d(TAG, errorReason.toString());
@@ -149,8 +148,22 @@ public class YouTubeActivity extends YouTubeBaseActivity implements AppCompatCal
         if (error.isUserRecoverableError()) {
             error.getErrorDialog(this, RECOVERY_DIALOG_REQUEST).show();
         } else {
-            Toast.makeText(YouTubeActivity.this,
-                    "YouTube initialization failed" + error.toString(), Toast.LENGTH_LONG).show();
+            Globals.showMessage("YouTube initialization failed" + error.toString());
+        }
+    }
+
+    private static class ViewFinderByContentDescription implements ApplicableToView {
+        String sampleContentDescription;
+
+        ViewFinderByContentDescription(String contentDescription) {
+            this.sampleContentDescription = contentDescription;
+        }
+
+        @Override
+        public boolean methodToApply(View v) {
+            CharSequence contentDescription = (v instanceof ImageView/*no need for null check in instanceof*/) ?
+                    v.getContentDescription() : null;
+            return (contentDescription != null && contentDescription.equals(sampleContentDescription));
         }
     }
 }
