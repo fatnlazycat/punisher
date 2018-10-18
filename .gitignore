@@ -7,3 +7,7 @@ app/base/
 /build
 /captures
 /projectFilesBackup
+/.blackbox/pubring.gpg~
+/.blackbox/pubring.kbx~
+/.blackbox/secring.gpg
+/app/google-services-old.json
