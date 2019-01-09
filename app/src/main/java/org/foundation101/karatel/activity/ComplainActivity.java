@@ -24,9 +24,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
@@ -37,23 +35,23 @@ import android.widget.Toast;
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.foundation101.karatel.entity.EvidenceEntity;
-import org.foundation101.karatel.manager.CameraManager;
-import org.foundation101.karatel.manager.GoogleApiManager;
-import org.foundation101.karatel.manager.KaratelLocationManager;
-import org.foundation101.karatel.manager.KaratelPreferences;
-import org.foundation101.karatel.entity.ComplainCreationResponse;
-import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.manager.HttpHelper;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.EvidenceAdapter;
 import org.foundation101.karatel.adapter.RequestListAdapter;
 import org.foundation101.karatel.adapter.RequisitesListAdapter;
+import org.foundation101.karatel.entity.ComplainCreationResponse;
 import org.foundation101.karatel.entity.ComplainRequest;
+import org.foundation101.karatel.entity.EvidenceEntity;
 import org.foundation101.karatel.entity.Violation;
 import org.foundation101.karatel.entity.ViolationRequisite;
+import org.foundation101.karatel.manager.CameraManager;
+import org.foundation101.karatel.manager.DBHelper;
+import org.foundation101.karatel.manager.GoogleApiManager;
+import org.foundation101.karatel.manager.HttpHelper;
+import org.foundation101.karatel.manager.KaratelLocationManager;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.manager.PermissionManager;
 import org.foundation101.karatel.retrofit.ProgressEvent;
 import org.foundation101.karatel.retrofit.RetrofitMultipartUploader;
@@ -90,8 +88,6 @@ import static org.foundation101.karatel.manager.PermissionManager.CUSTOM_CAMERA_
 import static org.foundation101.karatel.manager.PermissionManager.LOCATION_PERMISSIONS;
 
 public class ComplainActivity extends AppCompatActivity implements Formular {
-
-    final int RQS_GooglePlayServices = 1000;
     final int REQUEST_CODE_SELECT_POSSIBLE_VALUE = 1001;
     final double EMPTY_LOCATION_STUB = 0;
 
@@ -338,6 +334,11 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                         intent.putExtra(Globals.POSSIBLE_VALUES_HEADER, thisRequisite.getName());
                         intent.putExtra(Globals.VIOLATION_TYPE, violation.getType());
                         intent.putExtra(Globals.REQUISITE_NUMBER_FOR_POSSIBLE_VALUES, requisites.indexOf(thisRequisite));
+
+                        CharSequence currentText = ((TextView)v).getText();
+                        if (currentText != null && currentText.length() > 0)
+                            intent.putExtra(Globals.POSSIBLE_VALUES_TEXT, currentText);
+
                         startActivityForResult(intent, REQUEST_CODE_SELECT_POSSIBLE_VALUE);
                     }
                 });
@@ -528,7 +529,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
         changesLostDialog.show();
     }
 
-    public void saveToBase(View view) throws Exception {
+    public void saveToBase(View view) {
         boolean fromPunishButton = view == null;
         /*first check if location is available - show error dialog if not
         this is made to prevent saving request with zero LatLng -> leads to crash.*/

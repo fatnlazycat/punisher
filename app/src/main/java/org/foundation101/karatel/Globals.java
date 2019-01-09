@@ -42,6 +42,7 @@ public class Globals {
     public static final String POSSIBLE_VALUES = "PUNISHER_POSSIBLE_VALUES";
     public static final String POSSIBLE_VALUES_HEADER = "PUNISHER_POSSIBLE_VALUES_HEADER";
     public static final String REQUISITE_NUMBER_FOR_POSSIBLE_VALUES = "PUNISHER_REQUISITE_NUMBER_FOR_POSSIBLE_VALUES";
+    public static final String POSSIBLE_VALUES_TEXT = "PUNISHER_POSSIBLE_VALUES_TEXT";
     public static final String VIOLATION_TYPE = "PUNISHER_VIOLATION_TYPE";
     public static final String YOUTUBE_VIDEO_NAME = "PUNISHER_YOUTUBE_VIDEO_NAME";
 

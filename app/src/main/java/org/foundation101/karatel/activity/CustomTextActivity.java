@@ -22,20 +22,24 @@ public class CustomTextActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_custom_text);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_back_green);
 
+        EditText etCustomText = findViewById(R.id.etCustomText);
+
         final Intent intent = getIntent();
         if (intent != null) {
             final String title = intent.getStringExtra(Globals.POSSIBLE_VALUES_HEADER);
             toolbar.setTitle(title);
+
+            if (intent.hasExtra(Globals.POSSIBLE_VALUES_TEXT))
+                etCustomText.setText(intent.getCharSequenceExtra(Globals.POSSIBLE_VALUES_TEXT));
         }
 
-        EditText etCustomText = (EditText) findViewById(R.id.etCustomText);
         etCustomText.setOnEditorActionListener(new EditText.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {

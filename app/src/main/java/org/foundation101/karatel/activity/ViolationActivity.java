@@ -143,7 +143,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
         this.mode = mode;
     }
 
-    ArrayList<EvidenceEntity> savedInstanceStateEvidenceFileNames = new ArrayList<>();
+    ArrayList<EvidenceEntity> savedInstanceStateEvidenceFileNames = null;
     public Request request = null;
     Integer id, status, idOnServer;
     String idInDbString, time_stamp;
@@ -523,7 +523,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     }
 
     void makeEvidenceAdapterContent(int mode, ArrayList<EvidenceEntity> savedEvidences, Request request){
-        if (!savedEvidences.isEmpty()) { //this can be true only in MODE_CREATE | MODE_EDIT
+        if (savedEvidences != null) { //this can be true only in MODE_CREATE | MODE_EDIT
             for (EvidenceEntity evidence : savedEvidences) try {
                 Bitmap thumbnail = MediaUtils.getThumbnail(evidence.fileName);
                 evidenceAdapter.content.add(evidence);
