@@ -47,6 +47,7 @@ import org.foundation101.karatel.asyncTasks.RequestListFetcher;
 import org.foundation101.karatel.entity.Request;
 import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.manager.HttpHelper;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.service.MyGcmListenerService;
 
 import java.io.IOException;
@@ -204,7 +205,7 @@ public class RequestListFragment extends Fragment {
         String[] columns = {DBHelper._ID, DBHelper.ID_SERVER, DBHelper.TYPE, DBHelper.STATUS,
                 DBHelper.TIME_STAMP};
         String where = "user_id=? AND status=?"; //select only with status "draft"
-        String[] selectionArgs = {Integer.toString(Globals.user.id), Integer.toString(ViolationActivity.MODE_EDIT)};
+        String[] selectionArgs = {Integer.toString(KaratelPreferences.userId()), Integer.toString(ViolationActivity.MODE_EDIT)};
         Cursor cursor = db.query(table, columns, where, selectionArgs, null, null, null);
         while (cursor.moveToNext()){
             Request request = new Request();

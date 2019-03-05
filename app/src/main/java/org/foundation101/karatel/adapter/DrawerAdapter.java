@@ -18,6 +18,8 @@ import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.manager.KaratelPreferences;
+
 import static org.foundation101.karatel.utils.LayoutUtils.dpToPx;
 
 /**
@@ -127,7 +129,7 @@ public class DrawerAdapter extends BaseAdapter {
         String table = DBHelper.VIOLATIONS_TABLE;
         String[] columns = {DBHelper._ID, DBHelper.TYPE};
         String where = "user_id=?";
-        String[] selectionArgs = {Globals.user.id.toString()};
+        String[] selectionArgs = {"" + KaratelPreferences.userId()};
         Cursor cursor = db.query(table, columns, where, selectionArgs, null, null, null);
         int result = cursor.getCount();
         cursor.close();

@@ -15,9 +15,9 @@ import java.io.IOException;
 public class ProfileFetcher extends AsyncTask<Integer, Void, String> {
     public static final String TAG = "ProfileFetcher"; //also used in ProfileFragment for synchronization when cancelling task
 
-    private AsyncTaskAction<Void, PunisherUser, ?> actions;
+    private AsyncTaskAction<Void, Void, ?> actions;
 
-    public ProfileFetcher(AsyncTaskAction<Void, PunisherUser, ?> a){
+    public ProfileFetcher(AsyncTaskAction<Void, Void, ?> a){
         this.actions = a;
     }
 
@@ -46,26 +46,21 @@ public class ProfileFetcher extends AsyncTask<Integer, Void, String> {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals("success")) {
                     JSONObject dataJSON = json.getJSONObject("data");
-                    Globals.user = new PunisherUser(
+
+                    String avatarUrl = dataJSON.getJSONObject("avatar").getString("url");
+                    if ("null".equals(avatarUrl)) avatarUrl = "";
+
+                    PunisherUser user = new PunisherUser(
                             dataJSON.getString("email"),
                             "", //for password
                             dataJSON.getString("surname"),
                             dataJSON.getString("firstname"),
                             dataJSON.getString("secondname"),
-                            dataJSON.getString("phone_number"));
-                    Globals.user.id = dataJSON.getInt("id");
-                    Globals.user.avatarFileName = dataJSON.getJSONObject("avatar").getString("url");
+                            dataJSON.getString("phone_number")
+                    ).withId(dataJSON.getInt("id"))
+                     .withAvatar(avatarUrl);
 
-                    KaratelPreferences.saveUserWithEmail(
-                            dataJSON.getString("email"),
-                            dataJSON.getString("surname"),
-                            dataJSON.getString("firstname"),
-                            dataJSON.getString("secondname"),
-                            dataJSON.getString("phone_number"));
-
-
-
-
+                    KaratelPreferences.saveUser(user);
                 } else {
                     String errorMessage;
                     if (json.getString("status").equals("error")) {
@@ -79,7 +74,7 @@ public class ProfileFetcher extends AsyncTask<Integer, Void, String> {
                 Globals.showError(R.string.error, e);
             }
         }
-        actions.post(Globals.user);
+        actions.post(null);
     }
 
     @Override

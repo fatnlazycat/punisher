@@ -222,7 +222,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
             lManager.onCreate();
         }
 
-        KaratelPreferences.restoreUser();
+        //KaratelPreferences.restoreUser();
 
         dbHelper = new DBHelper(this, DBHelper.DATABASE, DBHelper.DB_VERSION);
 
@@ -541,7 +541,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
             cv.put("type", violation.type);
             //cv.put("status", status);
             //cv.put(DBHelper.ID_SERVER,  violation.getId());
-            cv.put(DBHelper.USER_ID,    Globals.user.id);
+            cv.put(DBHelper.USER_ID, KaratelPreferences.userId());
 
             for (int i = 0; i < requisites.size(); i++) {
                 ViolationRequisite thisRequisite = requisites.get(i);
@@ -827,7 +827,7 @@ public class ComplainActivity extends AppCompatActivity implements Formular {
                     requestParameters.add(str);
                     switch (str) {
                         case "user_id" : {
-                            requestParameters.add(Globals.user.id.toString()); break;
+                            requestParameters.add("" + KaratelPreferences.userId()); break;
                         }
                         case "company_id" : {
                             requestParameters.add("" + violation.getId()); break;

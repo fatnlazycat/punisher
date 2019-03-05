@@ -9,6 +9,7 @@ import org.foundation101.karatel.manager.DBHelper;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.manager.KaratelPreferences;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -85,7 +86,7 @@ public class DBUtils {
         String table = DBHelper.COMPLAINS_TABLE;
         String[] columns = {DBHelper._ID};
         String where = "user_id=?";
-        String[] selectionArgs = {Globals.user.id.toString()};
+        String[] selectionArgs = {"" + KaratelPreferences.userId()};
         Cursor cursor = db.query(table, columns, where, selectionArgs, null, null, null);
         int result = cursor.getCount();
         cursor.close();

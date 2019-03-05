@@ -186,7 +186,7 @@ internal class MyRequestDispatcher : Dispatcher() {
     override fun dispatch(request: RecordedRequest): MockResponse {
 
         return when (request.path){
-            "/users/" + Globals.user.id -> MockResponse().setResponseCode(200).setBody(userJSON)
+            "/users/" + KaratelPreferences.userId() -> MockResponse().setResponseCode(200).setBody(userJSON)
             else -> MockResponse().setResponseCode(404)
         }
 

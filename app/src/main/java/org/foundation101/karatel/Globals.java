@@ -45,6 +45,7 @@ public class Globals {
     public static final String POSSIBLE_VALUES_TEXT = "PUNISHER_POSSIBLE_VALUES_TEXT";
     public static final String VIOLATION_TYPE = "PUNISHER_VIOLATION_TYPE";
     public static final String YOUTUBE_VIDEO_NAME = "PUNISHER_YOUTUBE_VIDEO_NAME";
+    public static final String FB_UID = "PUNISHER_FB_UID";
 
     //Bundle keys
     public static final String REQUISITES_VALUES = "REQUISITES_VALUES";
@@ -74,6 +75,10 @@ public class Globals {
 
     public static final String PENDING_JOB = "PENDING_JOB";
 
+    public static final String BACKGROUND_FB_LOGIN_UID = "BACKGROUND_FB_LOGIN_UID";
+    public static final String BACKGROUND_FB_LOGIN_PASSW = "BACKGROUND_FB_LOGIN_PASSW";
+    public static final String BACKGROUND_FB_LOGIN_EMAIL = "BACKGROUND_FB_LOGIN_EMAIL";
+
     //user data tags
     public static final String LAST_LOGIN_EMAIL = "LAST_LOGIN_EMAIL";
     public static final String SESSION_TOKEN = "SESSION_TOKEN";
@@ -98,7 +103,7 @@ public class Globals {
         */
 
     //public static String sessionToken;
-    public static PunisherUser user;
+    //public static PunisherUser user;
 
     //map of complain statuses: key-indexes on server, value-index in array in apk resources
     public static HashMap<Integer, Integer> statusesMap = new HashMap<>();

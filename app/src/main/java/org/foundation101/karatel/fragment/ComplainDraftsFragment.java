@@ -31,6 +31,7 @@ import org.foundation101.karatel.adapter.ComplainDraftsAdapter;
 import org.foundation101.karatel.adapter.ItemTouchHelperAdapter;
 import org.foundation101.karatel.entity.ComplainRequest;
 import org.foundation101.karatel.entity.Violation;
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.utils.DBUtils;
 
 import java.util.ArrayList;
@@ -115,7 +116,7 @@ public class ComplainDraftsFragment extends Fragment {
         String table = DBHelper.COMPLAINS_TABLE;
         String[] columns = null;
         String where = "user_id=?";
-        String[] selectionArgs = {Integer.toString(Globals.user.id)};
+        String[] selectionArgs = {Integer.toString(KaratelPreferences.userId())};
         Cursor cursor = db.query(table, columns, where, selectionArgs, null, null, null);
         while (cursor.moveToNext()){
             ComplainRequest request = new ComplainRequest();

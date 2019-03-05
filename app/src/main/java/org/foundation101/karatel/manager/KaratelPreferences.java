@@ -1,5 +1,6 @@
 package org.foundation101.karatel.manager;
 
+import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
@@ -65,24 +66,34 @@ public class KaratelPreferences {
                 .putString(Globals.USER_PHONE, phone_number).apply();
     }
 
-    public static void saveUser(String token,
-                                String email,
-                                String surname,
-                                String firstname,
-                                String secondname,
-                                String phone_number,
-                                int id) {
+    /*public static void saveUser(String email,
+                                     String surname,
+                                     String firstname,
+                                     String secondname,
+                                     String phone_number,
+                                     int id) {
         preferences().edit()
-                .putString(Globals.SESSION_TOKEN, token)
                 .putString(Globals.USER_EMAIL, email)
                 .putString(Globals.USER_SURNAME, surname)
                 .putString(Globals.USER_NAME, firstname)
                 .putString(Globals.USER_SECOND_NAME, secondname)
                 .putString(Globals.USER_PHONE, phone_number)
                 .putInt(Globals.USER_ID, id).apply();
+    }*/
+
+    @SuppressLint("ApplySharedPref")
+    public static void saveUser(PunisherUser user) {
+        preferences().edit()
+                .putString(Globals.USER_EMAIL, user.email)
+                .putString(Globals.USER_SURNAME, user.surname)
+                .putString(Globals.USER_NAME, user.name)
+                .putString(Globals.USER_SECOND_NAME, user.secondName)
+                .putString(Globals.USER_PHONE, user.phone)
+                .putString(Globals.USER_AVATAR, user.avatarFileName)
+                .putInt(Globals.USER_ID, user.id).commit();
     }
 
-    public static PunisherUser getUser() {
+    public static PunisherUser user() {
         SharedPreferences preferences = preferences();
         PunisherUser user = new PunisherUser(
                 preferences.getString(Globals.USER_EMAIL, ""),
@@ -96,11 +107,19 @@ public class KaratelPreferences {
         return user;
     }
 
-    public static void restoreUser(){
-        if (Globals.user == null) {
-            Globals.user = getUser();
-        }
+    public static void setUserId(int id) {
+        preferences().edit().putInt(Globals.USER_ID, id).apply();
     }
+
+    public static int userId() {
+        return preferences().getInt(Globals.USER_ID, 0);
+    }
+
+    /*public static void restoreUser(){
+        if (Globals.user == null) {
+            Globals.user = user();
+        }
+    }*/
 
 
     public static void setUserEmail(String email) {
@@ -187,5 +206,31 @@ public class KaratelPreferences {
     }
     public static void setPendingJob(String jobData) {
         preferences().edit().putString(Globals.PENDING_JOB, jobData).apply();
+    }
+
+    /**
+     * preferences storing data necessary for background fb login
+     */
+    public static String fbLoginUid() {
+        return preferences().getString(Globals.BACKGROUND_FB_LOGIN_UID, "");
+    }
+    public static void setFbLoginUid(String fbLoginUid) {
+        preferences().edit().putString(Globals.BACKGROUND_FB_LOGIN_UID, fbLoginUid).apply();
+    }
+
+    public static String fbLoginEmail() {
+        return preferences().getString(Globals.BACKGROUND_FB_LOGIN_EMAIL, "");
+    }
+    public static void setFbLoginEmail(String fbLoginEmail) {
+        preferences().edit().putString(Globals.BACKGROUND_FB_LOGIN_EMAIL, fbLoginEmail).apply();
+    }
+
+    public static String fbLoginPassword() {
+        String data = preferences().getString(Globals.BACKGROUND_FB_LOGIN_PASSW, "");
+        return TextUtils.INSTANCE.decodeString(data);
+    }
+    public static void setFbLoginPassword(String password) {
+        String data = TextUtils.INSTANCE.encodeStringWithSHA(password);
+        preferences().edit().putString(Globals.BACKGROUND_FB_LOGIN_PASSW, data).apply();
     }
 }

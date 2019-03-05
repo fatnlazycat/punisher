@@ -13,6 +13,16 @@ public class PunisherUser {
         this.phone = phone;
     }
 
+    public PunisherUser withId(int id) {
+        this.id = id;
+        return this;
+    }
+
+    public PunisherUser withAvatar(String avatar) {
+        this.avatarFileName = avatar;
+        return this;
+    }
+
     public String email, password, surname, name, secondName, phone, avatarFileName;
     public Integer id;
 }

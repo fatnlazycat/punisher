@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.InputType;
@@ -67,6 +68,7 @@ public class ProfileFragment extends Fragment {
     EditText surnameEditText, nameEditText, secondNameEditText, phoneEditText, emailEditText, passwordEditText;
     TextView userNameTextView;
     View progressBar;
+    SwipeRefreshLayout srl;
 
     String tempAvatarFileName;
 
@@ -140,6 +142,15 @@ public class ProfileFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_profile, container, false);
+
+        srl = v.findViewById(R.id.srlProfileFragment);
+        srl.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                profileFetcher = new ProfileFetcher(new ProfileFetcherActions(ProfileFragment.this))
+                        .execute(KaratelPreferences.userId());
+            }
+        });
 
         userNameTextView = v.findViewById(R.id.userNameTextView);
 
@@ -225,10 +236,6 @@ public class ProfileFragment extends Fragment {
             savedValues = savedInstanceState.getStringArrayList(PROFILE_VALUES);
         }
         fillTextFields(savedValues);
-
-        if (!changesMade()) {
-            profileFetcher = new ProfileFetcher(new ProfileFetcherActions(this)).execute(Globals.user.id);
-        }
 
         super.onViewStateRestored(savedInstanceState);
     }
@@ -332,10 +339,11 @@ public class ProfileFragment extends Fragment {
     }
 
     void fillTextFields(ArrayList<String> savedValues){
+        PunisherUser user = KaratelPreferences.user();
         TextView[] textViews = editableViews();
 
         if (savedValues == null) {
-            String[] data = {Globals.user.surname, Globals.user.name, Globals.user.secondName, Globals.user.phone};
+            String[] data = {user.surname, user.name, user.secondName, user.phone};
             savedValues = new ArrayList<>(Arrays.asList(data));
         } else {
             textChanged = true;
@@ -348,8 +356,8 @@ public class ProfileFragment extends Fragment {
             textViews[i].addTextChangedListener(textWatcher);
         }
 
-        userNameTextView.setText(Globals.user.name + " " + Globals.user.surname);
-        emailEditText   .setText(Globals.user.email);
+        userNameTextView.setText(user.name + " " + user.surname);
+        emailEditText   .setText(user.email);
         passwordEditText.setText("qwerty"); //just to show 6 dots
     }
 
@@ -409,7 +417,7 @@ public class ProfileFragment extends Fragment {
     }
 
 
-    private static class ProfileFetcherActions extends AsyncTaskAction<Void, PunisherUser, ProfileFragment> {
+    private static class ProfileFetcherActions extends AsyncTaskAction<Void, Void, ProfileFragment> {
         ProfileFetcherActions(ProfileFragment component) { super(component); }
 
         private void progressBarVisibility(int visibility) {
@@ -417,6 +425,9 @@ public class ProfileFragment extends Fragment {
             if (fragment != null) {
                 View progress = fragment.progressBar;
                 if (progress != null) progress.setVisibility(visibility);
+
+                SwipeRefreshLayout srl = fragment.srl;
+                if (srl != null) srl.setRefreshing(false);
             }
         }
 
@@ -426,17 +437,20 @@ public class ProfileFragment extends Fragment {
         }
 
         @Override
-        public void post(PunisherUser user) {
+        public void post(Void arg) {
             ProfileFragment fragment = ref.get();
             if (fragment != null) {
-                String avatarUrl = user.avatarFileName;
+                fragment.tempAvatarFileName = null;
+                String avatarUrl = KaratelPreferences.user().avatarFileName;
                 if (avatarUrl != null && !avatarUrl.equals("null")) {
                     TipsActivity.AvatarGetter avatarGetter = new TipsActivity.AvatarGetter(fragment.getActivity());
                     avatarGetter.setViewToSet(fragment.avatarView);
                     avatarGetter.execute(avatarUrl);
                 }
 
+                fragment.textChanged = false;
                 fragment.fillTextFields(null);
+                fragment.invalidateOptionsMenu();
 
                 progressBarVisibility(View.GONE);
             }

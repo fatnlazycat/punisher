@@ -46,6 +46,7 @@ import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.DrawerAdapter;
+import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.fragment.AboutFragment;
 import org.foundation101.karatel.fragment.ComplainDraftsFragment;
 import org.foundation101.karatel.fragment.ComplainsBookFragment;
@@ -130,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
 
         progressBar = findViewById(R.id.rlProgress);
 
-        KaratelPreferences.restoreUser();
+        //KaratelPreferences.restoreUser();
 
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -320,6 +321,9 @@ public class MainActivity extends AppCompatActivity {
 
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .registerReceiver(myBroadcastReceiver, new IntentFilter(BROADCAST_RECEIVER_TAG));
+
+        String fbUid = KaratelPreferences.fbLoginUid();
+        if (!fbUid.isEmpty()) sendBindRequest(fbUid);
     }
 
     @Override
@@ -491,7 +495,7 @@ public class MainActivity extends AppCompatActivity {
             AccessToken fbToken = AccessToken.getCurrentAccessToken();
             boolean loggedIn = fbToken != null;
             if (loggedIn) {
-                sendBindRequest(fbToken);
+                sendBindRequest(fbToken.getUserId());
             } else {
                 List<String> permissionNeeds = Arrays.asList(/*"user_photos", */"email"/*, "user_birthday", "user_friends"*/);
                 fbCallbackManager = CallbackManager.Factory.create();
@@ -501,7 +505,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onSuccess(LoginResult loginResults) {
                         AccessToken fbToken = AccessToken.getCurrentAccessToken();
                         boolean loggedIn = fbToken != null;
-                        if (loggedIn) sendBindRequest(fbToken);
+                        if (loggedIn) sendBindRequest(fbToken.getUserId());
                     /*GraphRequest request = GraphRequest.newMeRequest(loginResults.getAccessToken(),
                             new GraphRequest.GraphJSONObjectCallback() {
                                 @Override
@@ -529,8 +533,7 @@ public class MainActivity extends AppCompatActivity {
         } else Toast.makeText(this, R.string.no_internet_connection, Toast.LENGTH_LONG).show();
     }
 
-    void sendBindRequest(AccessToken fbToken){
-        String fbUserId = fbToken.getUserId();
+    void sendBindRequest(String fbUserId){
         String request = new HttpHelper("social").makeRequestString(new String[]{
                 "provider", "facebook", "uid", fbUserId
         });
@@ -538,10 +541,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initDrawerHeader(){
-        if (Globals.user == null) finish();
-        String userName = Globals.user.name + " " + Globals.user.surname;
-        setAvatarImageView(avatarImageView, KaratelPreferences.userAvatar());
+        PunisherUser user = KaratelPreferences.user();
+        if (user.id == 0) finish(); //0 is the default value, means we've got empty preferences
+        String userName = user.name + " " + user.surname;
         avatarTextView.setText(userName);
+        setAvatarImageView(avatarImageView, user.avatarFileName);
     }
 
     public void setAvatarImageView(ImageView avatarView, @NonNull String avatarFileName){
@@ -621,6 +625,10 @@ public class MainActivity extends AppCompatActivity {
             try {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals("success")){
+                    KaratelPreferences.remove(Globals.BACKGROUND_FB_LOGIN_UID);
+                    KaratelPreferences.remove(Globals.BACKGROUND_FB_LOGIN_PASSW);
+                    KaratelPreferences.remove(Globals.BACKGROUND_FB_LOGIN_EMAIL);
+
                     message = KaratelApplication.getInstance().getResources().getString(R.string.facebook_profile_binded);
                 } else message = json.getString("error");
                 Toast.makeText(KaratelApplication.getInstance(), message, Toast.LENGTH_LONG).show();

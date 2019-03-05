@@ -73,6 +73,9 @@ public class TipsActivity extends Activity {
     }
 
     public void login(View view) {
+        //we want to login with password so previously stored fb uid is no longer needed
+        KaratelPreferences.remove(Globals.BACKGROUND_FB_LOGIN_UID);
+
         String email = editTextLoginEmail.getText().toString();
         String passw = editTextLoginPassword.getText().toString();
         String gcmToken = KaratelPreferences.pushToken();
@@ -81,6 +84,9 @@ public class TipsActivity extends Activity {
     }
 
     public void signUp(View view) {
+        //we want to create a new user so previously stored fb uid is no longer needed
+        KaratelPreferences.remove(Globals.BACKGROUND_FB_LOGIN_UID);
+
         startActivity(new Intent(this, SignUpActivity.class));
     }
 
@@ -108,29 +114,38 @@ public class TipsActivity extends Activity {
 
     public void facebookLogin(View view) {
         if (HttpHelper.internetConnected()) {
-            List<String> permissionNeeds = Arrays.asList(/*"user_photos", */"email"/*, "user_birthday", "user_friends"*/);
-            //fbCallbackManager = CallbackManager.Factory.create();
-            LoginManager.getInstance().logInWithReadPermissions(this, permissionNeeds);
-            LoginManager.getInstance().registerCallback(fbCallbackManager, new FacebookCallback<LoginResult>() {
-                @Override
-                public void onSuccess(LoginResult loginResult) {
-                    final AccessToken accessToken = loginResult.getAccessToken();
-                    String gcmToken = KaratelPreferences.pushToken();
-                    String uid = accessToken.getUserId();
 
-                    new LoginSender(TipsActivity.this, uid, gcmToken).execute();
-                }
+            if (KaratelPreferences.fbLoginUid().isEmpty()) { //normal fb login
+                List<String> permissionNeeds = Arrays.asList(/*"user_photos", */"email"/*, "user_birthday", "user_friends"*/);
+                //fbCallbackManager = CallbackManager.Factory.create();
+                LoginManager.getInstance().logInWithReadPermissions(this, permissionNeeds);
+                LoginManager.getInstance().registerCallback(fbCallbackManager, new FacebookCallback<LoginResult>() {
+                    @Override
+                    public void onSuccess(LoginResult loginResult) {
+                        final AccessToken accessToken = loginResult.getAccessToken();
+                        String gcmToken = KaratelPreferences.pushToken();
+                        String uid = accessToken.getUserId();
 
-                @Override
-                public void onCancel() {
-                    LoginManager.getInstance().logOut();
-                }
+                        new LoginSender(TipsActivity.this, uid, gcmToken).execute();
+                    }
 
-                @Override
-                public void onError(FacebookException e) {
-                    Globals.showError(R.string.cannot_connect_server, e);
-                }
-            });
+                    @Override
+                    public void onCancel() {
+                        LoginManager.getInstance().logOut();
+                    }
+
+                    @Override
+                    public void onError(FacebookException e) {
+                        Globals.showError(R.string.cannot_connect_server, e);
+                    }
+                });
+            } else { //login with password/email after new user creation
+                String email = KaratelPreferences.fbLoginEmail();
+                String passw = KaratelPreferences.fbLoginPassword();
+                String gcmToken = KaratelPreferences.pushToken();
+
+                new LoginSender(this, email, passw, gcmToken).execute();
+            }
         } else {
             Globals.showMessage(R.string.no_internet_connection);
         }
@@ -204,26 +219,24 @@ public class TipsActivity extends Activity {
 
                     //get user data
                     JSONObject userJSON = dataJSON.getJSONObject("user");
-                    Globals.user = new PunisherUser(
+                    String avatarUrl = userJSON.getJSONObject("avatar").getString("url");
+                    if ("null".equals(avatarUrl)) avatarUrl = "";
+
+                    PunisherUser user = new PunisherUser(
                             userJSON.getString("email"),
                             "", //for password
                             userJSON.getString("surname"),
                             userJSON.getString("firstname"),
                             userJSON.getString("secondname"),
-                            userJSON.getString("phone_number"));
-                    Globals.user.id = userJSON.getInt("id");
+                            userJSON.getString("phone_number")
+                    ).withId(userJSON.getInt("id"))
+                     .withAvatar(avatarUrl);
+                    //Globals.user.id = userJSON.getInt("id");
 
-                    KaratelPreferences.saveUser(
-                            dataJSON.getString("token"),
-                            userJSON.getString("email"),
-                            userJSON.getString("surname"),
-                            userJSON.getString("firstname"),
-                            userJSON.getString("secondname"),
-                            userJSON.getString("phone_number"),
-                            userJSON.getInt("id"));
+                    KaratelPreferences.setSessionToken(dataJSON.getString("token"));
+                    KaratelPreferences.saveUser(user);
 
-                    String avatarUrl = userJSON.getJSONObject("avatar").getString("url");
-                    if (avatarUrl != null && !avatarUrl.equals("null")) {
+                    if (avatarUrl != null && !avatarUrl.isEmpty()) {
                         new AvatarGetter(activity).execute(avatarUrl);
                     }
                     activity.startActivity(new Intent(activity, MainActivity.class));
@@ -231,6 +244,11 @@ public class TipsActivity extends Activity {
                     String errorMessage;
                     if (json.getString("status").equals("error")){
                         errorMessage = json.getString("error");
+                        if ("Прив’яжіть аккаунт до соціальної мережі у налаштуваннях профілю".equals(errorMessage)) {
+                            KaratelPreferences.setFbLoginUid(uid);
+                            Intent intent = new Intent(activity, SignUpActivity.class);
+                            activity.startActivity(intent);
+                        }
                     } else {
                         errorMessage = s;
                     }
@@ -285,18 +303,21 @@ public class TipsActivity extends Activity {
 
         @Override
         protected Void doInBackground(String... params) {
-            String avatarFileName = FileUtils.INSTANCE.avatarFileName(false);
+            KaratelPreferences.setUserAvatar("");
+
             try {
+                String avatarFileName = FileUtils.INSTANCE.avatarFileName(false);
+
                 URL url = new URL(Const.SERVER_URL.replace("/api/v1/", "") + params[0]);
                 Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
                 FileOutputStream fos = new FileOutputStream(avatarFileName);
                 bmp.compress(Bitmap.CompressFormat.PNG, 100, fos);
                 fos.close();
+
+                KaratelPreferences.setUserAvatar(avatarFileName);
             } catch (final Exception e){
-                avatarFileName = "";
                 Globals.showError(R.string.cannot_connect_server, e);
             }
-            KaratelPreferences.setUserAvatar(avatarFileName);
             return null;
         }
 

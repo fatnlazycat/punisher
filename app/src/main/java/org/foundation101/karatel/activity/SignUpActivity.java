@@ -1,6 +1,7 @@
 package org.foundation101.karatel.activity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
@@ -22,6 +23,7 @@ import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.manager.HttpHelper;
 
+import org.foundation101.karatel.manager.KaratelPreferences;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -76,13 +78,15 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         editTextSecondName           .addTextChangedListener(textWatcher);
         editTextPhone                .addTextChangedListener(textWatcher);
         checkBoxPersonalDataAgreement.setOnClickListener(this);
+
+        if (!KaratelPreferences.fbLoginUid().isEmpty()) findViewById(R.id.tvFb).setVisibility(View.VISIBLE);
     }
 
     public void signUp(View view) {
         if (textViewSignUpErrorMessage.getVisibility() == View.VISIBLE)
             textViewSignUpErrorMessage.setVisibility(View.GONE);
         newUser = new PunisherUser(email, password, surname, name, secondName, phone);
-        if (HttpHelper.internetConnected(/*this*/)) {
+        if (HttpHelper.internetConnected()) {
             new SignUpSender(this).execute(newUser);
         } else {
             Toast.makeText(this, R.string.no_internet_connection, Toast.LENGTH_LONG).show();
@@ -135,6 +139,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
 
     class SignUpSender extends AsyncTask<PunisherUser, Void, String> {
         Context context;
+        PunisherUser user;
 
         SignUpSender(Context context){
             this.context = context;
@@ -151,7 +156,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
 
         @Override
         protected String doInBackground(PunisherUser... params) {
-            PunisherUser user = params[0];
+            user = params[0];
             String request = new HttpHelper("user").makeRequestString(new String[]{
                     "email", user.email,
                     "firstname", user.name,
@@ -178,6 +183,12 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals("success")) {
                     JSONObject dataJSON = json.getJSONObject("data");
+
+                    if (!KaratelPreferences.fbLoginUid().isEmpty()) {
+                        KaratelPreferences.setFbLoginEmail(user.email);
+                        KaratelPreferences.setFbLoginPassword(user.password);
+                    }
+
                     if (dataJSON.has("id")) {
                         Toast.makeText(SignUpActivity.this, R.string.user_created, Toast.LENGTH_LONG).show();
                         SignUpActivity.this.finish();

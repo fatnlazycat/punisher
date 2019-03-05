@@ -191,7 +191,6 @@ public class ChangeEmailActivity extends AppCompatActivity {
             try {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals(Globals.SERVER_SUCCESS)){
-                    Globals.user.email = email;
                     KaratelPreferences.setUserEmail(email);
                     showSuccessDialog();
                 } else {

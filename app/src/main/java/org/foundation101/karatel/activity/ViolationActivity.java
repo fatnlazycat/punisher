@@ -268,7 +268,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             lManager.onCreate();
         }
 
-        KaratelPreferences.restoreUser();
+        //KaratelPreferences.restoreUser();
 
         //initializing tab view with only one tab - the second will be initialized later
         tabs = findViewById(android.R.id.tabhost);
@@ -738,7 +738,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             cv.put("status", status);
             cv.put(DBHelper.ID_SERVER, idOnServer);
             cv.put(DBHelper.ID_NUMBER_SERVER, id_number_server);
-            cv.put(DBHelper.USER_ID, Globals.user.id);
+            cv.put(DBHelper.USER_ID, KaratelPreferences.userId());
 
             for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                 ViolationRequisite thisRequisite = (ViolationRequisite) requisitesAdapter.getItem(i);
@@ -1108,7 +1108,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                     requestParameters.add(str);
                     switch (str) {
                         case "user_id" : {
-                            requestParameters.add(Globals.user.id.toString()); break;
+                            requestParameters.add("" + KaratelPreferences.userId()); break;
                         }
                         case "id_number" : {
                             requestParameters.add(idInDbString); break;

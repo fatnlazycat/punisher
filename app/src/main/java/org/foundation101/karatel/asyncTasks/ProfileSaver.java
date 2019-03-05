@@ -53,7 +53,7 @@ public class ProfileSaver extends AsyncTask<Void, Void, String> {
             int tries = 0;
             final int MAX_TRIES = 2;
             while (tries++ < MAX_TRIES) try {
-                String requestUrl = Const.SERVER_URL + "users/" + Globals.user.id;
+                String requestUrl = Const.SERVER_URL + "users/" + KaratelPreferences.userId();
                 MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8", "PUT");
                 //multipart.addFormField("user[email]", Globals.user.email);
                 multipart.addFormField("user[firstname]", userToSave.name);
@@ -103,10 +103,12 @@ public class ProfileSaver extends AsyncTask<Void, Void, String> {
                 case Globals.SERVER_SUCCESS : {
                     Globals.showMessage(R.string.profile_changes_saved);
 
-                    Globals.user.name = userToSave.name;
-                    Globals.user.surname = userToSave.surname;
-                    Globals.user.secondName = userToSave.secondName;
-                    Globals.user.phone = userToSave.phone;
+                    PunisherUser user = KaratelPreferences.user();
+                    user.name = userToSave.name;
+                    user.surname = userToSave.surname;
+                    user.secondName = userToSave.secondName;
+                    user.phone = userToSave.phone;
+                    KaratelPreferences.saveUser(user);
 
                     if (avatarFileName != null) {
                         String fileToDelete;
