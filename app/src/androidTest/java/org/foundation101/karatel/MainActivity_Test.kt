@@ -1,16 +1,18 @@
 package org.foundation101.karatel
 
-import android.support.test.InstrumentationRegistry
-import android.support.test.espresso.Espresso.onData
-import android.support.test.espresso.Espresso.onView
-import android.support.test.espresso.action.ViewActions.click
-import android.support.test.espresso.assertion.ViewAssertions.matches
-import android.support.test.espresso.contrib.DrawerActions
-import android.support.test.espresso.matcher.ViewMatchers.*
-import android.support.test.rule.ActivityTestRule
-import android.support.test.runner.AndroidJUnit4
-import android.support.test.uiautomator.UiDevice
-import android.support.test.uiautomator.UiSelector
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.test.espresso.Espresso.onData
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.DrawerActions
+import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.filters.LargeTest
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.rule.ActivityTestRule
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -19,30 +21,38 @@ import org.foundation101.karatel.TestUtils.checkChildViewArrayIsDisplayedWithScr
 import org.foundation101.karatel.TestUtils.checkViewArrayIsDisplayed
 import org.foundation101.karatel.TestUtils.checkViewArrayIsDisplayedWithScroll
 import org.foundation101.karatel.activity.MainActivity
+import org.foundation101.karatel.entity.PunisherUser
 import org.foundation101.karatel.entity.Violation
 import org.foundation101.karatel.manager.KaratelPreferences
 import org.hamcrest.Matchers.*
 import org.json.JSONObject
-import org.junit.*
+import org.junit.AfterClass
 import org.junit.Assert.assertTrue
+import org.junit.BeforeClass
+import org.junit.Rule
+import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito
+import org.mockito.junit.MockitoJUnitRunner
+import org.powermock.api.mockito.PowerMockito
+import org.powermock.core.classloader.annotations.PrepareForTest
+import org.powermock.modules.junit4.legacy.PowerMockRunner
 import java.util.concurrent.TimeUnit
 
 
-@RunWith(AndroidJUnit4::class)
-
+@RunWith(PowerMockRunner::class)
+@LargeTest
+@PrepareForTest(KaratelPreferences::class)
 class MainActivity_Test {
-    @Rule @JvmField
-    val testRule = ActivityTestRule<MainActivity>(MainActivity::class.java)
+    @get:Rule //@JvmField
+    val testRule = ActivityTestRule(MainActivity::class.java)
 
     private fun getDrawerItemTitle(i: Int) = KaratelApplication.getInstance().resources.getStringArray(R.array.drawerMenuItems)[i]
     private fun openDrawer() = onView(withId(R.id.drawerLayoutMainActivity)).perform(DrawerActions.open())
 
     @Test fun openProfile() {
-        val webServer = MockWebServer()
-        webServer.start(8080)
-        webServer.setDispatcher(MyRequestDispatcher())
-
         openDrawer()
         onView(withId(R.id.drawerHeaderLayout)).perform(click())
 
@@ -62,8 +72,6 @@ class MainActivity_Test {
                 )
             )
         )
-
-        webServer.shutdown()
     }
 
     @Test fun openFragmentsFromDrawer() {
@@ -163,9 +171,22 @@ class MainActivity_Test {
     companion object {
         private const val TEST_SESSION_TOKEN = "testSessionToken"
 
+        private val webServer = MockWebServer()
+
         @JvmStatic
         @BeforeClass
         fun initialize() {
+            webServer.start(8080)
+            webServer.setDispatcher(MyRequestDispatcher())
+
+            /*val ctx = Mockito.mock(Context::class.java)
+            val sh = Mockito.mock(SharedPreferences::class.java)
+            Mockito.`when`(ctx.getSharedPreferences(anyString(), anyInt())).thenReturn(sh)
+            Mockito.`when`(sh.getInt(Globals.USER_ID, 0)).thenReturn(TestUser.user.id)*/
+
+            PowerMockito.mockStatic(KaratelPreferences::class.java)
+            Mockito.`when`(KaratelPreferences.user()).thenReturn(TestUser.user)
+
             val oldSessionToken = KaratelPreferences.sessionToken()
             if (oldSessionToken.isEmpty()) KaratelPreferences.setSessionToken(TEST_SESSION_TOKEN)
         }
@@ -173,6 +194,8 @@ class MainActivity_Test {
         @JvmStatic
         @AfterClass
         fun finalize() {
+            webServer.shutdown()
+
             if (TEST_SESSION_TOKEN == KaratelPreferences.sessionToken()) KaratelPreferences.remove(Globals.SESSION_TOKEN)
         }
     }
@@ -180,36 +203,49 @@ class MainActivity_Test {
 
 object TestUser {
     const val EMAIL = "dmitry.kosiakov@aejis.eu"
+
+    val userDataJSON = JSONObject(mapOf(
+            "id"      to 44,
+            "surname" to "Тестовое",
+            "avatar"  to JSONObject(mapOf(
+                    "url"   to "/uploads/user/avatar/44/filesavatar44.png",
+                    "thumb" to JSONObject(mapOf("url" to "/uploads/user/avatar/44/thumb_filesavatar44.png"))
+            )),
+            "firstname"      to "Имя",
+            "secondname"     to "Отчествович",
+            "phone_number"   to "+380958742405",
+            "email"          to EMAIL,
+            "status"         to "active",
+            "admin"          to false,
+            "user_status_id" to null,
+            "created_at"     to "2016-06-22T17:30:42.675+03:00",
+            "updated_at"     to "2018-09-14T12:48:24.584+03:00",
+            "banned_message" to "Вас забанено-с..."
+    ))
+
+    val userResponseJSON = JSONObject(mapOf(
+            "status"    to "success",
+            "data"      to userDataJSON
+    ))
+
+    val user = PunisherUser(
+        userDataJSON.getString("email"),
+        "", //for password
+        userDataJSON.getString("surname"),
+        userDataJSON.getString("firstname"),
+        userDataJSON.getString("secondname"),
+        userDataJSON.getString("phone_number")
+    ).withId(userDataJSON.getInt("id"))
+     .withAvatar(userDataJSON.getJSONObject("avatar").getString("url"))
 }
 
 internal class MyRequestDispatcher : Dispatcher() {
     override fun dispatch(request: RecordedRequest): MockResponse {
 
         return when (request.path){
-            "/users/" + KaratelPreferences.userId() -> MockResponse().setResponseCode(200).setBody(userJSON)
+            "/users/" + KaratelPreferences.userId() -> MockResponse().setResponseCode(200).setBody(TestUser.userResponseJSON.toString())
             else -> MockResponse().setResponseCode(404)
         }
 
     }
-    private val userJSON: String = JSONObject(mapOf(
-        "status"         to "success",
-        "data"           to JSONObject(mapOf(
-                            "id"      to 44,
-                            "surname" to "Тестовое",
-                            "avatar"  to JSONObject(mapOf(
-                                "url"   to "/uploads/user/avatar/44/filesavatar44.png",
-                                "thumb" to JSONObject(mapOf("url" to "/uploads/user/avatar/44/thumb_filesavatar44.png"))
-                            )),
-        "firstname"      to "Имя",
-        "secondname"     to "Отчествович",
-        "phone_number"   to "+380958742405",
-        "email"          to TestUser.EMAIL,
-        "status"         to "active",
-        "admin"          to false,
-        "user_status_id" to null,
-        "created_at"     to "2016-06-22T17:30:42.675+03:00",
-        "updated_at"     to "2018-09-14T12:48:24.584+03:00",
-        "banned_message" to "Вас забанено-с..."
-        ))
-    )).toString()
 }

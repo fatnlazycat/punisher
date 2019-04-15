@@ -3,6 +3,7 @@
 /local.properties
 /.idea
 app/base/
+app/private_key.pepk
 .DS_Store
 /build
 /captures

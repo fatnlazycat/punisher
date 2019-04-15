@@ -1,10 +1,10 @@
 package org.foundation101.karatel
 
-import android.support.test.espresso.Espresso.onView
-import android.support.test.espresso.action.ViewActions.click
-import android.support.test.espresso.matcher.ViewMatchers.withId
-import android.support.test.rule.ActivityTestRule
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.rule.ActivityTestRule
+import androidx.test.runner.AndroidJUnit4
 import org.foundation101.karatel.TestUtils.checkViewArrayIsDisplayed
 import org.foundation101.karatel.TestUtils.checkViewArrayIsDisplayedWithScroll
 import org.foundation101.karatel.activity.TipsActivity
