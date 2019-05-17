@@ -127,6 +127,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        JobUtils.INSTANCE.scheduleRequestFetch();
+
         fManager = getSupportFragmentManager();
 
         progressBar = findViewById(R.id.rlProgress);
@@ -180,19 +182,19 @@ public class MainActivity extends AppCompatActivity {
                     toolbar.setTitle(tag);
                 }
                 switch (position){
-                    case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
+                    case Globals.MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT: {
+                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new ComplainsBookFragment(), tag)
+                                .addToBackStack(tag).commit();
+                        break;
+                    }
+                    /*case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new MainFragment(), tag)
                                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
                                 .addToBackStack(tag).commit();
                         break;
-                    }
+                    }*/
                     case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT: {
                         fManager.beginTransaction().replace(R.id.frameLayoutMain, new RequestListFragment(), tag)
-                                .addToBackStack(tag).commit();
-                        break;
-                    }
-                    case Globals.MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT: {
-                        fManager.beginTransaction().replace(R.id.frameLayoutMain, new ComplainsBookFragment(), tag)
                                 .addToBackStack(tag).commit();
                         break;
                     }
@@ -263,16 +265,16 @@ public class MainActivity extends AppCompatActivity {
                     Fragment fragmentInstance = fManager.findFragmentByTag(tag);
                     if (fragmentInstance == null) {
                         switch (currentFragment) {
-                            case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
-                                fragmentInstance = new MainFragment();
-                                break;
-                            }
-                            case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT: {
-                                fragmentInstance = new RequestListFragment();
-                                break;
-                            }
                             case Globals.MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT: {
                                 fragmentInstance = new ComplainsBookFragment();
+                                break;
+                            }
+                            /*case Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT: {
+                                fragmentInstance = new MainFragment();
+                                break;
+                            }*/
+                            case Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT: {
+                                fragmentInstance = new RequestListFragment();
                                 break;
                             }
                             case Globals.MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT: {
@@ -311,9 +313,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                     ft.replace(R.id.frameLayoutMain, fragmentInstance, tag).commit();
                 } else {
-                    currentFragment = Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT;
+                    currentFragment = Globals.MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT;
                     tag = fragmentTags.get(currentFragment);
-                    ft.add(R.id.frameLayoutMain, new MainFragment(), tag).addToBackStack(tag).commit();
+                    ft.add(R.id.frameLayoutMain, new ComplainsBookFragment(), tag).addToBackStack(tag).commit();
                 }
             }
         }
@@ -396,9 +398,9 @@ public class MainActivity extends AppCompatActivity {
     HashMap<Integer, String> getFragmentTags(){
         HashMap<Integer, String> result = new HashMap<>();
 
-        result.put(Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT,           getResources().getString(R.string.do_punish));
-        result.put(Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT,     getResources().getString(R.string.punishment_requests));
         result.put(Globals.MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT,   getResources().getString(R.string.complains_book));
+        //result.put(Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT,           getResources().getString(R.string.do_punish));
+        result.put(Globals.MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT,     getResources().getString(R.string.punishment_requests));
         result.put(Globals.MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT,       getResources().getString(R.string.video_tutorial));
         result.put(Globals.MAIN_ACTIVITY_DONATE,                    "");
         result.put(Globals.MAIN_ACTIVITY_ABOUT_FRAGMENT,            getResources().getString(R.string.about_header));
@@ -437,12 +439,13 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void createRequest(View view) {
+    //commented out because we don't create requests any more
+    /*public void createRequest(View view) {
         currentFragment = Globals.MAIN_ACTIVITY_PUNISH_FRAGMENT; //Покарати за порушення
         String tag = fragmentTags.get(currentFragment);
         toolbar.setTitle(tag);
         fManager.beginTransaction().replace(R.id.frameLayoutMain, new MainFragment(), tag).commit();
-    }
+    }*/
 
     public void openComplainDrafts() {
         currentFragment = Globals.MAIN_ACTIVITY_COMPLAIN_DRAFTS;
@@ -716,6 +719,7 @@ public class MainActivity extends AppCompatActivity {
                 String oldPushToken = KaratelPreferences.oldPushToken();
                 //boolean appClosed = KaratelPreferences.appClosed();
                 KaratelPreferences.clearAll();
+                KaratelApplication.getInstance().requests.clear();
                 /*if (appClosed) {
                     KaratelPreferences.setAppClosed();
                 }*/

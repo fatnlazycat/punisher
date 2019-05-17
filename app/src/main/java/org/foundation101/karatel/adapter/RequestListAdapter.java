@@ -3,6 +3,7 @@ package org.foundation101.karatel.adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.util.Log;
@@ -34,7 +35,7 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
     public static final String INPUT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ";
     public static final String OUTPUT_DATE_FORMAT = "dd.MM.yyyy, HH:mm";
 
-    public ArrayList<Request> content;
+    public ArrayList<Request> content = new ArrayList<>();
     String[] violationStatuses;
     Context context;
     RecyclerView recycler;
@@ -52,14 +53,15 @@ public class RequestListAdapter extends RecyclerView.Adapter<RequestListAdapter.
         new StatusListFetcher().execute();
     }
 
+    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v =  LayoutInflater.from(context).inflate(R.layout.item_request, parent, false);
         return new ViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Request thisRequest = content.get(position);
 
         String dateString = Globals.translateDate(INPUT_DATE_FORMAT, OUTPUT_DATE_FORMAT, thisRequest.created_at);

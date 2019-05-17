@@ -45,6 +45,7 @@ import com.google.android.gms.maps.model.LatLng;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.foundation101.karatel.Const;
+import org.foundation101.karatel.asyncTasks.ErrorHandler;
 import org.foundation101.karatel.asyncTasks.RequestListFetcher;
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
@@ -1067,8 +1068,9 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             boolean wasSendAttempt = cursor.getInt(cursor.getColumnIndex(DBHelper.SEND_ATTEMPT)) > 0;
 
             if (wasSendAttempt) {
-                ArrayList<Request> allRequests = RequestListFetcher.parseResponse(RequestListFetcher.getRequests());
-                for (Request r : allRequests) {
+                ArrayList<Request> allRequests =
+                        RequestListFetcher.parseResponse(RequestListFetcher.getRequests(), new ErrorHandler());
+                if (allRequests != null) for (Request r : allRequests) {
                     if (time_stamp.equals(r.create_in_the_device))
                         return new CreationResponse(null, Globals.SERVER_SUCCESS, null);
                 }

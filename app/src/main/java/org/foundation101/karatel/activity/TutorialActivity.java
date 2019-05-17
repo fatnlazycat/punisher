@@ -15,24 +15,24 @@ import org.foundation101.karatel.fragment.TutorialFragment;
 
 public class TutorialActivity extends FragmentActivity {
     static final String TAG = "Instruction";
-    final int MAX_STAGE=4;
+    //final int MAX_STAGE=4;
     public static final String FIRST_TIME_TUTORIAL = "firstTimeTutorial";
 
-    ViewPager viewPager;
+    //ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tutorial);
+        setContentView(R.layout.activity_tutorial2);
 
-        // Instantiate a ViewPager and a PagerAdapter.
+        /*// Instantiate a ViewPager and a PagerAdapter.
         viewPager = (ViewPager) findViewById(R.id.viewPager);
         ScreenSlidePagerAdapter adapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
-        viewPager.setAdapter(adapter);
+        viewPager.setAdapter(adapter);*/
     }
 
     public void proceedWithTutorial(View view) {
-        int stage = viewPager.getCurrentItem();
+        /*int stage = viewPager.getCurrentItem();
         if (stage < MAX_STAGE) {
             viewPager.setCurrentItem(stage + 1);
             ((KaratelApplication)getApplication()).sendScreenName(TAG + (stage + 1));
@@ -42,13 +42,19 @@ public class TutorialActivity extends FragmentActivity {
             } else {
                 finish();
             }
+        }*/
+
+        if (getIntent().getBooleanExtra(FIRST_TIME_TUTORIAL, true)) {
+            startActivity(new Intent(this, TipsActivity.class));
+        } else {
+            finish();
         }
     }
 
     /**
      * A simple pager adapter
      */
-    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
+    /*private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
         public ScreenSlidePagerAdapter(FragmentManager fm) {
             super(fm);
         }
@@ -67,5 +73,5 @@ public class TutorialActivity extends FragmentActivity {
         public int getCount() {
             return MAX_STAGE + 1;
         }
-    }
+    }*/
 }

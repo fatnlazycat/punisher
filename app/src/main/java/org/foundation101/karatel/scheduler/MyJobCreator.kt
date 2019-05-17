@@ -5,8 +5,9 @@ import com.evernote.android.job.JobCreator
 
 class MyJobCreator: JobCreator {
     override fun create(tag: String): Job? = when (tag) {
-        TokenExchangeJob.TAG     -> TokenExchangeJob()
+        TokenExchangeJob.TAG -> TokenExchangeJob()
+        FetchRequestsJob.TAG -> FetchRequestsJob()
         //RegistrationRetryJob.TAG -> RegistrationRetryJob()
-        else                     -> null
+        else                 -> null
     }
 }

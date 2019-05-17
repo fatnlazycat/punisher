@@ -110,7 +110,7 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         final Activity activity = getActivity();
-        if (activity != null && activity instanceof MainActivity) {
+        if (activity instanceof MainActivity) {
             toolbar = ((MainActivity) activity).toolbar;
             toolbar.inflateMenu(R.menu.profile_fragment_menu);
             toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
@@ -442,7 +442,7 @@ public class ProfileFragment extends Fragment {
             if (fragment != null) {
                 fragment.tempAvatarFileName = null;
                 String avatarUrl = KaratelPreferences.user().avatarFileName;
-                if (avatarUrl != null && !avatarUrl.equals("null")) {
+                if (avatarUrl != null && !avatarUrl.isEmpty()) {
                     TipsActivity.AvatarGetter avatarGetter = new TipsActivity.AvatarGetter(fragment.getActivity());
                     avatarGetter.setViewToSet(fragment.avatarView);
                     avatarGetter.execute(avatarUrl);

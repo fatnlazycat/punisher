@@ -177,7 +177,7 @@ public class RequestListFragment extends Fragment {
         recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         requestListAdapter = new RequestListAdapter(getContext());
 
-        makeRequestListAdapterContent();
+        makeRequestListAdapterContentFirstTime();
 
         recycler.setAdapter(requestListAdapter);
         ItemTouchHelper.Callback callback = new MyItemTouchHelperCallback(requestListAdapter);
@@ -195,8 +195,18 @@ public class RequestListFragment extends Fragment {
     }
 
     void makeRequestListAdapterContent(){
-        requestListAdapter.setContent(getDraftRequests());
+        //commented out drafts
+        //requestListAdapter.setContent(getDraftRequests());
+
         new RequestListFetcher(new RequestListFetcherActions(this)).execute();
+    }
+
+    void makeRequestListAdapterContentFirstTime(){
+        //commented out drafts
+        //requestListAdapter.setContent(getDraftRequests());
+
+        new RequestListFetcherActions(this)
+                .post(new ArrayList<>(KaratelApplication.getInstance().requests));
     }
 
     ArrayList<Request> getDraftRequests(){

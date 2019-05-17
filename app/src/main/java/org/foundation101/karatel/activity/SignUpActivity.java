@@ -1,10 +1,12 @@
 package org.foundation101.karatel.activity;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -19,10 +21,9 @@ import android.widget.Toast;
 
 import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
-import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.R;
+import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.manager.HttpHelper;
-
 import org.foundation101.karatel.manager.KaratelPreferences;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,6 +41,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
     CheckBox checkBoxPersonalDataAgreement;
     Button signUpButton;
     View progressBar;
+    AlertDialog dialog = null;
     PunisherUser newUser;
 
     @Override
@@ -137,6 +139,37 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         return super.dispatchTouchEvent( event );
     }
 
+    AlertDialog accountCreatedDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setMessage(R.string.user_created)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        /*Intent intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setType("message/rfc822");*/
+
+                        Intent intent = new Intent(Intent.ACTION_MAIN);
+                        intent.addCategory(Intent.CATEGORY_APP_EMAIL);
+
+                        if (intent.resolveActivity(getPackageManager()) != null) startActivity(intent);
+                    }
+                })
+                .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        if (!isFinishing()) finish();
+                    }
+                });
+        return builder.show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (dialog != null) dialog.dismiss();
+        super.onDestroy();
+    }
+
     class SignUpSender extends AsyncTask<PunisherUser, Void, String> {
         Context context;
         PunisherUser user;
@@ -190,8 +223,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                     }
 
                     if (dataJSON.has("id")) {
-                        Toast.makeText(SignUpActivity.this, R.string.user_created, Toast.LENGTH_LONG).show();
-                        SignUpActivity.this.finish();
+                        dialog = accountCreatedDialog();
                     }
                 } else if (json.getString("status").equals("error")) {
                     textViewSignUpErrorMessage.setVisibility(View.VISIBLE);

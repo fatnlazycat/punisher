@@ -15,7 +15,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.foundation101.karatel.manager.DBHelper;
-import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.manager.KaratelPreferences;
@@ -57,14 +56,14 @@ public class DrawerAdapter extends BaseAdapter {
 
         switch (position) {
             case 0:
-            case 2:
-            case 3:
                 setDivider(menuItemText);
                 break;
-            /*
-                disableItem(menuItemText);
-                break;*/
-            case 4:
+            case 1:
+                boolean hasRequests = !KaratelApplication.getInstance().requests.isEmpty();
+                setItemEnabled(menuItemText, hasRequests);
+                if (hasRequests) setDivider(menuItemText);
+                break;
+            case 3:
                 setDonateItem(menuItemText);
                 break;
         }
@@ -74,7 +73,7 @@ public class DrawerAdapter extends BaseAdapter {
          *(or else specified in appropriate String resource)
          */
         if (content[position].equals(parent.getContext().getResources().getString(R.string.menu_item_claims))) {
-            TextView extraText = (TextView)convertView.findViewById(R.id.extraText);
+            TextView extraText = convertView.findViewById(R.id.extraText);
             Integer count = getNumberOfRequests(parent.getContext());
             if (count > 0) {
                 menuItemText.setTypeface(menuItemText.getTypeface(), Typeface.BOLD);
@@ -96,11 +95,11 @@ public class DrawerAdapter extends BaseAdapter {
         view.setPadding(0, 0, 0, dpToPx(12));
     }
 
-    private void disableItem(TextView view) {
+    private void setItemEnabled(TextView view, boolean enabled) {
         LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) view.getLayoutParams();
-        params.height = 0;
+        params.height = enabled ? ViewGroup.LayoutParams.WRAP_CONTENT : 0;
         view.setLayoutParams(params);
-        view.setText("");
+        if (!enabled) view.setText("");
     }
 
     private void setDonateItem(TextView view) {

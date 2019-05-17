@@ -93,9 +93,9 @@
     </string-array>
 
     <string-array name="drawerMenuItems">
-        <item>Покарати за порушення</item>
-        <item>Заявки</item>
         <item>Книга скарг</item>
+        <!--<item>Покарати за порушення</item>-->
+        <item>Заявки</item>
         <item>Відеонавчання</item>
         <item>Підтримати проект</item>
         <item>Про додаток</item>

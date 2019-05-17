@@ -20,6 +20,7 @@ import com.squareup.leakcanary.LeakCanary;
 
 import org.foundation101.karatel.dagger.DaggerComponent;
 import org.foundation101.karatel.dagger.DaggerDaggerComponent;
+import org.foundation101.karatel.entity.Request;
 import org.foundation101.karatel.scheduler.MyJobCreator;
 import org.foundation101.karatel.utils.RetrofitUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -29,6 +30,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import retrofit2.Retrofit;
 
@@ -38,6 +41,8 @@ public class KaratelApplication extends MultiDexApplication {
 
     //google's Status.startResolutionForResult doesn't give any control over its dialog, so check ourselves
     public boolean locationSettingsDialogShown = false;
+
+    public CopyOnWriteArrayList<Request> requests = new CopyOnWriteArrayList<>();
 
     private static KaratelApplication instance;
     public static KaratelApplication getInstance() {

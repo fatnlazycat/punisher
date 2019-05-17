@@ -54,16 +54,16 @@ public class Globals {
     public static final String VIOLATION_ACTIVITY_CHANGES_MADE = "VIOLATION_ACTIVITY_CHANGES_MADE";
 
     //fragment tags for MainActivity
-    public static final int MAIN_ACTIVITY_PUNISH_FRAGMENT = 1;
+    public static final int MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT = 1;
+    //public static final int MAIN_ACTIVITY_PUNISH_FRAGMENT = 1;
     public static final int MAIN_ACTIVITY_REQUEST_LIST_FRAGMENT = 2;
-    public static final int MAIN_ACTIVITY_COMPLAINS_BOOK_FRAGMENT = 3;
-    public static final int MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT = 4;
-    public static final int MAIN_ACTIVITY_DONATE = 5;
-    public static final int MAIN_ACTIVITY_ABOUT_FRAGMENT = 6;
-    public static final int MAIN_ACTIVITY_SPONSORS_FRAGMENT = 7;
-    public static final int MAIN_ACTIVITY_PARTNERS_FRAGMENT = 8;
-    public static final int MAIN_ACTIVITY_NEWS_FRAGMENT = 9;
-    public static final int MAIN_ACTIVITY_CONTACTS_FRAGMENT = 10;
+    public static final int MAIN_ACTIVITY_VIDEO_LIST_FRAGMENT = 3;
+    public static final int MAIN_ACTIVITY_DONATE = 4;
+    public static final int MAIN_ACTIVITY_ABOUT_FRAGMENT = 5;
+    public static final int MAIN_ACTIVITY_SPONSORS_FRAGMENT = 6;
+    public static final int MAIN_ACTIVITY_PARTNERS_FRAGMENT = 7;
+    public static final int MAIN_ACTIVITY_NEWS_FRAGMENT = 8;
+    public static final int MAIN_ACTIVITY_CONTACTS_FRAGMENT = 9;
     //public static final int MAIN_ACTIVITY_EXIT = 12;
     //now go fragments that won't be called from the drawer
     public static final int MAIN_ACTIVITY_COMPLAIN_DRAFTS  = 100;

@@ -35,7 +35,7 @@ public class RequestListFetcher extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
-        actions.post(parseResponse(s));
+        actions.post(parseResponse(s, new ErrorHandler()));
     }
 
 
@@ -45,11 +45,11 @@ public class RequestListFetcher extends AsyncTask<Void, Void, String> {
                 return HttpHelper.proceedRequest("complains", "GET", "", true);
             } else return HttpHelper.ERROR_JSON;
         } catch (final IOException e){
-            return "";
+            return null;
         }
     }
 
-    public static ArrayList<Request> parseResponse(String response) {
+    public static ArrayList<Request> parseResponse(String response, ErrorHandler errorHandler) {
         ArrayList<Request> requestsFromServer = new ArrayList<>();
         try {
             JSONObject json = new JSONObject(response);
@@ -70,12 +70,13 @@ public class RequestListFetcher extends AsyncTask<Void, Void, String> {
                     break;
                 }
                 case Globals.SERVER_ERROR : {
-                    Globals.showMessage(json.getString(Globals.SERVER_ERROR));
+                    errorHandler.handleError(json.getString(Globals.SERVER_ERROR), null);
                     break;
                 }
             }
         } catch (JSONException | IOException e) {
-            Globals.showError(R.string.error, e);
+            errorHandler.handleError(R.string.error, e);
+            return null;
         }
         return requestsFromServer;
     }

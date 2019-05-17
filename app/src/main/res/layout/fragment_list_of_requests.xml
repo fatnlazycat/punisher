@@ -23,7 +23,7 @@
             android:layout_marginBottom="56dp"
             android:src="@mipmap/ill_empty"/>
 
-        <TextView
+        <!--<TextView
             android:id="@+id/textViewNoRequests"
             android:layout_width="192dp"
             android:layout_height="wrap_content"
@@ -39,7 +39,7 @@
             android:text="@string/create_request"
             android:onClick="createRequest"
             android:layout_marginTop="56dp"
-            style="@style/GreenButton"/>
+            style="@style/GreenButton"/>-->
     </LinearLayout>
 
     <RelativeLayout

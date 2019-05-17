@@ -12,21 +12,18 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.util.TimeUtils;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
 import org.foundation101.karatel.Globals;
-import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.service.RegistrationIntentService;
 
-import java.util.concurrent.TimeUnit;
-
 public class StartActivity extends Activity {
-    private static final String PREFERENCE_FIRST_RUN_FLAG = "firstRun";
+    private static final String PREFERENCE_OLD_FIRST_RUN_FLAG = "firstRun";
+    private static final String PREFERENCE_FIRST_RUN2_FLAG = "firstRun2";
     static final String TAG = "StartActivity";
     AlertDialog alertDialog;
     Dialog settingsDialog;
@@ -98,13 +95,17 @@ public class StartActivity extends Activity {
 
     public void leaveStartPage() {
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+
         Intent intent = new Intent();
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        if (preferences.contains(PREFERENCE_FIRST_RUN_FLAG)) {
+        if (preferences.contains(PREFERENCE_FIRST_RUN2_FLAG)) {
             intent.setClass(this, TipsActivity.class);
         } else {
-            preferences.edit().putBoolean(PREFERENCE_FIRST_RUN_FLAG, true).apply();
+            preferences.edit().putBoolean(PREFERENCE_FIRST_RUN2_FLAG, true).apply();
             intent.setClass(this, TutorialActivity.class);
+
+            //do not need this any more
+            preferences.edit().remove(PREFERENCE_OLD_FIRST_RUN_FLAG).apply();
         }
         startActivity(intent);
     }

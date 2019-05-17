@@ -3,6 +3,7 @@ package org.foundation101.karatel.utils
 import android.util.Log
 import com.evernote.android.job.JobRequest
 import org.foundation101.karatel.manager.KaratelPreferences
+import org.foundation101.karatel.scheduler.FetchRequestsJob
 import java.util.concurrent.TimeUnit
 
 object JobUtils {
@@ -39,5 +40,13 @@ object JobUtils {
             if (it.size > 2) return Pair(it[1], it[2].toInt())
         }
         return null
+    }
+
+    fun scheduleRequestFetch() {
+        JobRequest.Builder(FetchRequestsJob.TAG)
+                .startNow()
+                .setUpdateCurrent(true)
+                .build()
+                .scheduleAsync()
     }
 }
