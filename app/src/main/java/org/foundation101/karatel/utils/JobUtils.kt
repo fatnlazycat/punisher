@@ -21,13 +21,13 @@ object JobUtils {
                 .setUpdateCurrent(true)
                 .build()
 
-        KaratelPreferences.setPendingJob(makeJobId(tag, jobRequest.jobId))
+        KaratelPreferences().setPendingJob(makeJobId(tag, jobRequest.jobId))
         jobRequest.scheduleAsync()
         Log.d(TAG, "scheduled $tag  id=${jobRequest.jobId}")
     }
 
     fun pendingJob(): Pair<String, Int>? {
-        return jobData(KaratelPreferences.pendingJob())
+        return jobData(KaratelPreferences().pendingJob())
     }
 
     fun pendingJobTag(): String = pendingJob()?.first ?: ""

@@ -5,10 +5,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.MotionEvent;
@@ -31,6 +31,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
+
 public class SignUpActivity extends AppCompatActivity implements View.OnClickListener {
 
     static final String TAG = "Registration";
@@ -44,10 +46,13 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
     AlertDialog dialog = null;
     PunisherUser newUser;
 
+    @Inject KaratelPreferences preferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
+        KaratelApplication.dagger().inject(this);
 
         ((KaratelApplication)getApplication()).sendScreenName(TAG);
 
@@ -81,7 +86,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         editTextPhone                .addTextChangedListener(textWatcher);
         checkBoxPersonalDataAgreement.setOnClickListener(this);
 
-        if (!KaratelPreferences.fbLoginUid().isEmpty()) findViewById(R.id.tvFb).setVisibility(View.VISIBLE);
+        if (!preferences.fbLoginUid().isEmpty()) findViewById(R.id.tvFb).setVisibility(View.VISIBLE);
     }
 
     public void signUp(View view) {
@@ -217,9 +222,9 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                 if (json.getString("status").equals("success")) {
                     JSONObject dataJSON = json.getJSONObject("data");
 
-                    if (!KaratelPreferences.fbLoginUid().isEmpty()) {
-                        KaratelPreferences.setFbLoginEmail(user.email);
-                        KaratelPreferences.setFbLoginPassword(user.password);
+                    if (!preferences.fbLoginUid().isEmpty()) {
+                        preferences.setFbLoginEmail(user.email);
+                        preferences.setFbLoginPassword(user.password);
                     }
 
                     if (dataJSON.has("id")) {

@@ -2,7 +2,7 @@ package org.foundation101.karatel.adapter;
 
 import android.graphics.Color;
 import android.graphics.ColorMatrixColorFilter;
-import android.support.v4.content.ContextCompat;
+import androidx.core.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

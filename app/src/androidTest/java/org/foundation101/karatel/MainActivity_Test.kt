@@ -8,6 +8,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.DrawerActions
 import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
@@ -36,15 +37,12 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
-import org.powermock.api.mockito.PowerMockito
-import org.powermock.core.classloader.annotations.PrepareForTest
-import org.powermock.modules.junit4.legacy.PowerMockRunner
+
 import java.util.concurrent.TimeUnit
 
 
-@RunWith(PowerMockRunner::class)
+@RunWith(AndroidJUnit4::class)
 @LargeTest
-@PrepareForTest(KaratelPreferences::class)
 class MainActivity_Test {
     @get:Rule //@JvmField
     val testRule = ActivityTestRule(MainActivity::class.java)
@@ -184,11 +182,11 @@ class MainActivity_Test {
             Mockito.`when`(ctx.getSharedPreferences(anyString(), anyInt())).thenReturn(sh)
             Mockito.`when`(sh.getInt(Globals.USER_ID, 0)).thenReturn(TestUser.user.id)*/
 
-            PowerMockito.mockStatic(KaratelPreferences::class.java)
-            Mockito.`when`(KaratelPreferences.user()).thenReturn(TestUser.user)
+            val mockPreferences = Mockito.mock(KaratelPreferences::class.java)
+            Mockito.`when`(mockPreferences.user()).thenReturn(TestUser.user)
 
-            val oldSessionToken = KaratelPreferences.sessionToken()
-            if (oldSessionToken.isEmpty()) KaratelPreferences.setSessionToken(TEST_SESSION_TOKEN)
+            val oldSessionToken = KaratelPreferences().sessionToken()
+            if (oldSessionToken.isEmpty()) KaratelPreferences().setSessionToken(TEST_SESSION_TOKEN)
         }
 
         @JvmStatic
@@ -196,7 +194,7 @@ class MainActivity_Test {
         fun finalize() {
             webServer.shutdown()
 
-            if (TEST_SESSION_TOKEN == KaratelPreferences.sessionToken()) KaratelPreferences.remove(Globals.SESSION_TOKEN)
+            if (TEST_SESSION_TOKEN == KaratelPreferences().sessionToken()) KaratelPreferences().remove(Globals.SESSION_TOKEN)
         }
     }
 }
@@ -243,7 +241,7 @@ internal class MyRequestDispatcher : Dispatcher() {
     override fun dispatch(request: RecordedRequest): MockResponse {
 
         return when (request.path){
-            "/users/" + KaratelPreferences.userId() -> MockResponse().setResponseCode(200).setBody(TestUser.userResponseJSON.toString())
+            "/users/" + KaratelPreferences().userId() -> MockResponse().setResponseCode(200).setBody(TestUser.userResponseJSON.toString())
             else -> MockResponse().setResponseCode(404)
         }
 

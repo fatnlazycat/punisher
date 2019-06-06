@@ -8,12 +8,12 @@ import android.graphics.drawable.BitmapDrawable;
 import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.appcompat.widget.Toolbar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -50,6 +50,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import javax.inject.Inject;
+
 import static org.foundation101.karatel.fragment.ChangeAvatarFragment.PICK_IMAGE;
 import static org.foundation101.karatel.manager.PermissionManager.CAMERA_PERMISSIONS_PHOTO;
 import static org.foundation101.karatel.manager.PermissionManager.STORAGE_PERMISSION;
@@ -58,6 +60,8 @@ public class ProfileFragment extends Fragment {
     static final String TAG = "Profile";
     static final String PROFILE_VALUES = "PROFILE_VALUES";
     static final String NEW_AVATAR = "NEW_AVATAR";
+
+    @Inject KaratelPreferences preferences;
 
     boolean textChanged   = false;
     boolean saveInstanceStateCalled = false;
@@ -93,6 +97,7 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        KaratelApplication.dagger().inject(this);
         setHasOptionsMenu(true);
 
         //Google Analytics part
@@ -148,7 +153,7 @@ public class ProfileFragment extends Fragment {
             @Override
             public void onRefresh() {
                 profileFetcher = new ProfileFetcher(new ProfileFetcherActions(ProfileFragment.this))
-                        .execute(KaratelPreferences.userId());
+                        .execute(preferences.userId());
             }
         });
 
@@ -225,7 +230,7 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        String avatarFileName = tempAvatarFileName == null ? KaratelPreferences.userAvatar() : tempAvatarFileName;
+        String avatarFileName = tempAvatarFileName == null ? preferences.userAvatar() : tempAvatarFileName;
         ((MainActivity) getActivity()).setAvatarImageView(avatarView, avatarFileName);
     }
 
@@ -339,7 +344,7 @@ public class ProfileFragment extends Fragment {
     }
 
     void fillTextFields(ArrayList<String> savedValues){
-        PunisherUser user = KaratelPreferences.user();
+        PunisherUser user = preferences.user();
         TextView[] textViews = editableViews();
 
         if (savedValues == null) {
@@ -417,8 +422,13 @@ public class ProfileFragment extends Fragment {
     }
 
 
-    private static class ProfileFetcherActions extends AsyncTaskAction<Void, Void, ProfileFragment> {
-        ProfileFetcherActions(ProfileFragment component) { super(component); }
+    public static class ProfileFetcherActions extends AsyncTaskAction<Void, Void, ProfileFragment> {
+        @Inject KaratelPreferences preferences;
+
+        ProfileFetcherActions(ProfileFragment component) {
+            super(component);
+            KaratelApplication.dagger().inject(this);
+        }
 
         private void progressBarVisibility(int visibility) {
             ProfileFragment fragment = ref.get();
@@ -441,7 +451,7 @@ public class ProfileFragment extends Fragment {
             ProfileFragment fragment = ref.get();
             if (fragment != null) {
                 fragment.tempAvatarFileName = null;
-                String avatarUrl = KaratelPreferences.user().avatarFileName;
+                String avatarUrl = preferences.user().avatarFileName;
                 if (avatarUrl != null && !avatarUrl.isEmpty()) {
                     TipsActivity.AvatarGetter avatarGetter = new TipsActivity.AvatarGetter(fragment.getActivity());
                     avatarGetter.setViewToSet(fragment.avatarView);

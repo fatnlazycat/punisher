@@ -9,15 +9,24 @@ import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.utils.TextUtils;
 
+import javax.inject.Inject;
+
+import dagger.Module;
+import dagger.Provides;
+
 /**
  * Created by Dima on 03.11.2017.
  */
 
+@Module
 public class KaratelPreferences {
     public static final String TAG = "KARATEL_PREFERENCES";
 
+    @Inject public KaratelPreferences() { }
+
     private static SharedPreferences instance;
-    private static SharedPreferences preferences() {
+
+    private SharedPreferences preferences() {
         if (instance == null) {
             instance = PreferenceManager.getDefaultSharedPreferences(KaratelApplication.getInstance());
         }
@@ -25,22 +34,22 @@ public class KaratelPreferences {
     }
 
 
-    public static void clearAll() {
+    public void clearAll() {
         preferences().edit().clear().apply();
     }
 
 
-    public static void remove(String key) {
+    public void remove(String key) {
         preferences().edit().remove(key).apply();
     }
 
 
-    public static boolean loggedIn() {
+    public boolean loggedIn() {
         return preferences().contains(Globals.SESSION_TOKEN);
     }
 
 
-    public static void saveUserWithAvatar(String surname,
+    public void saveUserWithAvatar(String surname,
                                           String firstname,
                                           String secondname,
                                           String phone_number,
@@ -53,7 +62,7 @@ public class KaratelPreferences {
                 .putString(Globals.USER_AVATAR, avatarFileName).apply();
     }
 
-    public static void saveUserWithEmail(String email,
+    public void saveUserWithEmail(String email,
                                          String surname,
                                          String firstname,
                                          String secondname,
@@ -82,7 +91,7 @@ public class KaratelPreferences {
     }*/
 
     @SuppressLint("ApplySharedPref")
-    public static void saveUser(PunisherUser user) {
+    public void saveUser(PunisherUser user) {
         preferences().edit()
                 .putString(Globals.USER_EMAIL, user.email)
                 .putString(Globals.USER_SURNAME, user.surname)
@@ -93,7 +102,7 @@ public class KaratelPreferences {
                 .putInt(Globals.USER_ID, user.id).commit();
     }
 
-    public static PunisherUser user() {
+    public PunisherUser user() {
         SharedPreferences preferences = preferences();
         PunisherUser user = new PunisherUser(
                 preferences.getString(Globals.USER_EMAIL, ""),
@@ -107,11 +116,11 @@ public class KaratelPreferences {
         return user;
     }
 
-    public static void setUserId(int id) {
+    public void setUserId(int id) {
         preferences().edit().putInt(Globals.USER_ID, id).apply();
     }
 
-    public static int userId() {
+    public int userId() {
         return preferences().getInt(Globals.USER_ID, 0);
     }
 
@@ -122,54 +131,54 @@ public class KaratelPreferences {
     }*/
 
 
-    public static void setUserEmail(String email) {
+    public void setUserEmail(String email) {
         preferences().edit().putString(Globals.USER_EMAIL, email).commit();
     }
 
-    public static String userAvatar() {
+    public String userAvatar() {
         return preferences().getString(Globals.USER_AVATAR, "");
     }
-    public static void setUserAvatar(String userAvatar) {
+    public void setUserAvatar(String userAvatar) {
         preferences().edit().putString(Globals.USER_AVATAR, userAvatar).commit();
     }
 
 
-    public static String oldSessionToken() {
+    public String oldSessionToken() {
         return preferences().getString(Globals.OLD_SESSION_TOKEN, "");
     }
-    public static void setOldSessionToken(String token) {
+    public void setOldSessionToken(String token) {
         preferences().edit().putString(Globals.OLD_SESSION_TOKEN, token).apply();
     }
 
 
-    public static String sessionToken() {
+    public String sessionToken() {
         return preferences().getString(Globals.SESSION_TOKEN, "");
     }
-    public static void setSessionToken(String token) {
+    public void setSessionToken(String token) {
         preferences().edit().putString(Globals.SESSION_TOKEN, token).apply();
     }
 
 
-    public static String pushToken() {
+    public String pushToken() {
         return preferences().getString(Globals.PUSH_TOKEN, "");
     }
-    public static void setPushToken(String token) {
+    public void setPushToken(String token) {
         preferences().edit().putString(Globals.PUSH_TOKEN, token).apply();
     }
 
 
-    public static String newPushToken() {
+    public String newPushToken() {
         return preferences().getString(Globals.NEW_PUSH_TOKEN, "");
     }
-    public static void setNewPushToken(String token) {
+    public void setNewPushToken(String token) {
         preferences().edit().putString(Globals.NEW_PUSH_TOKEN, token).apply();
     }
 
 
-    public static String oldPushToken() {
+    public String oldPushToken() {
         return preferences().getString(Globals.OLD_PUSH_TOKEN, "");
     }
-    public static void setOldPushToken(String token) {
+    public void setOldPushToken(String token) {
         preferences().edit().putString(Globals.OLD_PUSH_TOKEN, token).apply();
     }
 
@@ -184,52 +193,52 @@ public class KaratelPreferences {
     }*/
 
 
-    public static String lastLoginEmail() {
+    public String lastLoginEmail() {
         return preferences().getString(Globals.LAST_LOGIN_EMAIL, "");
     }
-    public static void setLastLoginEmail(String lastLoginEmail) {
+    public void setLastLoginEmail(String lastLoginEmail) {
         preferences().edit().putString(Globals.LAST_LOGIN_EMAIL, lastLoginEmail).apply();
     }
 
 
-    public static String password() {
+    public String password() {
         String data = preferences().getString(Globals.USER_PASSWORD, "");
         return TextUtils.INSTANCE.decodeString(data);
     }
-    public static void setPassword(String password) {
+    public void setPassword(String password) {
         String data = TextUtils.INSTANCE.encodeStringWithSHA(password);
         preferences().edit().putString(Globals.USER_PASSWORD, data).apply();
     }
 
-    public static String pendingJob() {
+    public String pendingJob() {
         return preferences().getString(Globals.PENDING_JOB, "");
     }
-    public static void setPendingJob(String jobData) {
+    public void setPendingJob(String jobData) {
         preferences().edit().putString(Globals.PENDING_JOB, jobData).apply();
     }
 
     /**
      * preferences storing data necessary for background fb login
      */
-    public static String fbLoginUid() {
+    public String fbLoginUid() {
         return preferences().getString(Globals.BACKGROUND_FB_LOGIN_UID, "");
     }
-    public static void setFbLoginUid(String fbLoginUid) {
+    public void setFbLoginUid(String fbLoginUid) {
         preferences().edit().putString(Globals.BACKGROUND_FB_LOGIN_UID, fbLoginUid).apply();
     }
 
-    public static String fbLoginEmail() {
+    public String fbLoginEmail() {
         return preferences().getString(Globals.BACKGROUND_FB_LOGIN_EMAIL, "");
     }
-    public static void setFbLoginEmail(String fbLoginEmail) {
+    public void setFbLoginEmail(String fbLoginEmail) {
         preferences().edit().putString(Globals.BACKGROUND_FB_LOGIN_EMAIL, fbLoginEmail).apply();
     }
 
-    public static String fbLoginPassword() {
+    public String fbLoginPassword() {
         String data = preferences().getString(Globals.BACKGROUND_FB_LOGIN_PASSW, "");
         return TextUtils.INSTANCE.decodeString(data);
     }
-    public static void setFbLoginPassword(String password) {
+    public void setFbLoginPassword(String password) {
         String data = TextUtils.INSTANCE.encodeStringWithSHA(password);
         preferences().edit().putString(Globals.BACKGROUND_FB_LOGIN_PASSW, data).apply();
     }

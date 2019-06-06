@@ -2,29 +2,34 @@ package org.foundation101.karatel.scheduler
 
 import android.util.Log
 import com.evernote.android.job.Job
+import org.foundation101.karatel.KaratelApplication
 import org.foundation101.karatel.activity.MainActivity
 import org.foundation101.karatel.activity.MainActivity.SignOutSender.buildResponseString
 import org.foundation101.karatel.activity.MainActivity.SignOutSender.logoutPossible
 import org.foundation101.karatel.activity.TipsActivity
 import org.foundation101.karatel.manager.KaratelPreferences
 import org.json.JSONObject
+import javax.inject.Inject
 
 class TokenExchangeJob: Job() {
     companion object {
         const val TAG = "TokenExchangeJob"
     }
 
+    @Inject internal lateinit var preferences: KaratelPreferences
+
     override fun onRunJob(params: Params): Result {
         Log.d(TAG, "onRunJob ${this}")
+        KaratelApplication.dagger().inject(this)
 
         synchronized (KaratelPreferences.TAG) {
             //Part 1 - send login request with new push token
-            val newGcmToken = KaratelPreferences.newPushToken()
+            val newGcmToken = preferences.newPushToken()
             if (newGcmToken.isNotEmpty()) {
-                val email = KaratelPreferences.lastLoginEmail()
-                val passw = KaratelPreferences.password()
+                val email = preferences.lastLoginEmail()
+                val passw = preferences.password()
                 if (passw.isEmpty()) { //the data is lost, no need to retry
-                    KaratelPreferences.setPendingJob(null)
+                    preferences.setPendingJob(null)
                     return Job.Result.SUCCESS
                 }
                 val loggedWithFb = email.isEmpty()
@@ -41,12 +46,12 @@ class TokenExchangeJob: Job() {
                     if (json.getString("status") == "success") {
                         val newSessionToken = json.getJSONObject("data").getString("token")
 
-                        KaratelPreferences.setOldSessionToken(KaratelPreferences.sessionToken())
-                        KaratelPreferences.setSessionToken(newSessionToken)
+                        preferences.setOldSessionToken(preferences.sessionToken())
+                        preferences.setSessionToken(newSessionToken)
 
-                        KaratelPreferences.setOldPushToken(KaratelPreferences.pushToken())
-                        KaratelPreferences.setPushToken(newGcmToken)
-                        KaratelPreferences.setNewPushToken(null)
+                        preferences.setOldPushToken(preferences.pushToken())
+                        preferences.setPushToken(newGcmToken)
+                        preferences.setNewPushToken(null)
                     } else {
                         return Job.Result.RESCHEDULE
                     }
@@ -57,23 +62,23 @@ class TokenExchangeJob: Job() {
             }
 
             //Part 2 - destroy the session with old push token
-            val oldSessionToken = KaratelPreferences.oldSessionToken()
-            val oldPushToken = KaratelPreferences.oldPushToken()
+            val oldSessionToken = preferences.oldSessionToken()
+            val oldPushToken = preferences.oldPushToken()
 
             //check conditions when we don't need signout
             if ((oldSessionToken.isEmpty()) ||
-                (oldPushToken == KaratelPreferences.pushToken() && oldSessionToken == KaratelPreferences.sessionToken())) {
+                (oldPushToken == preferences.pushToken() && oldSessionToken == preferences.sessionToken())) {
                 //the data is lost, no need to retry
-                KaratelPreferences.setPendingJob(null)
+                preferences.setPendingJob(null)
                 return Job.Result.SUCCESS
             }
 
             return try {
                 val json = MainActivity.SignOutSender.performSignOutRequest(oldSessionToken, oldPushToken)
                 if (logoutPossible(buildResponseString(json))) {
-                    KaratelPreferences.setOldSessionToken(null)
-                    KaratelPreferences.setOldPushToken(null)
-                    KaratelPreferences.setPendingJob(null)
+                    preferences.setOldSessionToken(null)
+                    preferences.setOldPushToken(null)
+                    preferences.setPendingJob(null)
                     Job.Result.SUCCESS
                 } else Job.Result.RESCHEDULE
             } catch (e: Exception) {

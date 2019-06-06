@@ -36,6 +36,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.inject.Inject;
+
 public class TipsActivity extends Activity {
     static final String TAG = "LoginActivity";
     EditText editTextLoginEmail, editTextLoginPassword;
@@ -44,9 +46,13 @@ public class TipsActivity extends Activity {
     // facebook part
     private CallbackManager fbCallbackManager;
 
+    @Inject KaratelPreferences preferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        KaratelApplication.dagger().inject(this);
+
 
         // facebook part
         //FacebookSdk.sdkInitialize(getApplicationContext());
@@ -61,11 +67,11 @@ public class TipsActivity extends Activity {
         editTextLoginEmail = findViewById(R.id.editTextLoginEmail);
         editTextLoginPassword = findViewById(R.id.editTextLoginPassword);
 
-        if (KaratelPreferences.loggedIn()){
+        if (preferences.loggedIn()){
             startActivity(new Intent(this, MainActivity.class));
         }
 
-        String lastLoginEmail = KaratelPreferences.lastLoginEmail();
+        String lastLoginEmail = preferences.lastLoginEmail();
         if (!lastLoginEmail.isEmpty()) {
             editTextLoginEmail.setText(lastLoginEmail);
             editTextLoginPassword.requestFocus();
@@ -76,15 +82,15 @@ public class TipsActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        String fbLoginEmail = KaratelPreferences.fbLoginEmail();
-        String fbLoginPassword = KaratelPreferences.fbLoginPassword();
+        String fbLoginEmail = preferences.fbLoginEmail();
+        String fbLoginPassword = preferences.fbLoginPassword();
 
         if (View.GONE == progressBar.getVisibility() //progressBar is visible when the login process is in progress
-                && !KaratelPreferences.fbLoginUid().isEmpty()
+                && !preferences.fbLoginUid().isEmpty()
                 && !fbLoginEmail                   .isEmpty()
                 && !fbLoginPassword                .isEmpty()) {
 
-            String gcmToken = KaratelPreferences.pushToken();
+            String gcmToken = preferences.pushToken();
 
             new LoginSender(this, fbLoginEmail, fbLoginPassword, gcmToken).execute();
         }
@@ -92,18 +98,18 @@ public class TipsActivity extends Activity {
 
     public void login(View view) {
         //we want to login with password so previously stored fb uid is no longer needed
-        KaratelPreferences.remove(Globals.BACKGROUND_FB_LOGIN_UID);
+        preferences.remove(Globals.BACKGROUND_FB_LOGIN_UID);
 
         String email = editTextLoginEmail.getText().toString();
         String passw = editTextLoginPassword.getText().toString();
-        String gcmToken = KaratelPreferences.pushToken();
+        String gcmToken = preferences.pushToken();
 
         new LoginSender(this, email, passw, gcmToken).execute();
     }
 
     public void signUp(View view) {
         //we want to create a new user so previously stored fb uid is no longer needed
-        KaratelPreferences.remove(Globals.BACKGROUND_FB_LOGIN_UID);
+        preferences.remove(Globals.BACKGROUND_FB_LOGIN_UID);
 
         startActivity(new Intent(this, SignUpActivity.class));
     }
@@ -139,7 +145,7 @@ public class TipsActivity extends Activity {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
                     final AccessToken accessToken = loginResult.getAccessToken();
-                    String gcmToken = KaratelPreferences.pushToken();
+                    String gcmToken = preferences.pushToken();
                     String uid = accessToken.getUserId();
 
                     new LoginSender(TipsActivity.this, uid, gcmToken).execute();
@@ -161,6 +167,8 @@ public class TipsActivity extends Activity {
     }
 
     public static class LoginSender extends AsyncTask<Void, Void, String> {
+        @Inject KaratelPreferences preferences;
+
         Activity activity;
         View progressBar;
         boolean viaFacebook;
@@ -196,6 +204,7 @@ public class TipsActivity extends Activity {
         protected void onPreExecute() {
             super.onPreExecute();
             progressBar.setVisibility(View.VISIBLE);
+            KaratelApplication.dagger().inject(this);
         }
 
         @Override
@@ -219,11 +228,11 @@ public class TipsActivity extends Activity {
                     JSONObject dataJSON = json.getJSONObject("data");
                     //if we've got token without catching an exception -> login successful!
                     if (viaFacebook) {
-                        KaratelPreferences.setPassword(uid);
-                        KaratelPreferences.setLastLoginEmail(null);
+                        preferences.setPassword(uid);
+                        preferences.setLastLoginEmail(null);
                     } else {
-                        KaratelPreferences.setPassword(password);
-                        KaratelPreferences.setLastLoginEmail(email);
+                        preferences.setPassword(password);
+                        preferences.setLastLoginEmail(email);
                     }
 
                     //get user data
@@ -242,8 +251,8 @@ public class TipsActivity extends Activity {
                      .withAvatar(avatarUrl);
                     //Globals.user.id = userJSON.getInt("id");
 
-                    KaratelPreferences.setSessionToken(dataJSON.getString("token"));
-                    KaratelPreferences.saveUser(user);
+                    preferences.setSessionToken(dataJSON.getString("token"));
+                    preferences.saveUser(user);
 
                     if (avatarUrl != null && !avatarUrl.isEmpty()) {
                         new AvatarGetter(activity).execute(avatarUrl);
@@ -255,7 +264,7 @@ public class TipsActivity extends Activity {
                         errorMessage = json.getString("error");
                         if ("Прив’яжіть аккаунт до соціальної мережі у налаштуваннях профілю".equals(errorMessage)) {
                             errorMessage = "";
-                            KaratelPreferences.setFbLoginUid(uid);
+                            preferences.setFbLoginUid(uid);
                             Intent intent = new Intent(activity, SignUpActivity.class);
                             activity.startActivity(intent);
                         }
@@ -292,7 +301,7 @@ public class TipsActivity extends Activity {
     }
 
     public static class AvatarGetter extends AsyncTask<String, Void, Void>{
-
+        @Inject KaratelPreferences preferences;
         Activity context;
 
         public void setViewToSet(ImageView viewToSet) {
@@ -303,6 +312,7 @@ public class TipsActivity extends Activity {
 
         public AvatarGetter(Activity context){
             this.context = context;
+            KaratelApplication.dagger().inject(this);
         }
 
         @Override
@@ -313,7 +323,7 @@ public class TipsActivity extends Activity {
 
         @Override
         protected Void doInBackground(String... params) {
-            KaratelPreferences.setUserAvatar("");
+            preferences.setUserAvatar("");
 
             try {
                 String avatarFileName = FileUtils.INSTANCE.avatarFileName(false);
@@ -324,7 +334,7 @@ public class TipsActivity extends Activity {
                 bmp.compress(Bitmap.CompressFormat.PNG, 100, fos);
                 fos.close();
 
-                KaratelPreferences.setUserAvatar(avatarFileName);
+                preferences.setUserAvatar(avatarFileName);
             } catch (final Exception e){
                 Globals.showError(R.string.cannot_connect_server, e);
             }
@@ -335,7 +345,7 @@ public class TipsActivity extends Activity {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             if (context instanceof  MainActivity && viewToSet != null)
-                ((MainActivity) context).setAvatarImageView(viewToSet, KaratelPreferences.userAvatar());
+                ((MainActivity) context).setAvatarImageView(viewToSet, preferences.userAvatar());
         }
     }
 }

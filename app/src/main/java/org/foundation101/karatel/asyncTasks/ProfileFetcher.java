@@ -3,6 +3,7 @@ package org.foundation101.karatel.asyncTasks;
 import android.os.AsyncTask;
 
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.manager.HttpHelper;
@@ -12,13 +13,18 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
+
 public class ProfileFetcher extends AsyncTask<Integer, Void, String> {
     public static final String TAG = "ProfileFetcher"; //also used in ProfileFragment for synchronization when cancelling task
 
     private AsyncTaskAction<Void, Void, ?> actions;
 
+    @Inject KaratelPreferences preferences;
+
     public ProfileFetcher(AsyncTaskAction<Void, Void, ?> a){
         this.actions = a;
+        KaratelApplication.dagger().inject(this);
     }
 
     @Override
@@ -60,7 +66,7 @@ public class ProfileFetcher extends AsyncTask<Integer, Void, String> {
                     ).withId(dataJSON.getInt("id"))
                      .withAvatar(avatarUrl);
 
-                    KaratelPreferences.saveUser(user);
+                    preferences.saveUser(user);
                 } else {
                     String errorMessage;
                     if (json.getString("status").equals("error")) {

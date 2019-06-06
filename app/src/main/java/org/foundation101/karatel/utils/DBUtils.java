@@ -86,7 +86,7 @@ public class DBUtils {
         String table = DBHelper.COMPLAINS_TABLE;
         String[] columns = {DBHelper._ID};
         String where = "user_id=?";
-        String[] selectionArgs = {"" + KaratelPreferences.userId()};
+        String[] selectionArgs = {"" + new KaratelPreferences().userId()};
         Cursor cursor = db.query(table, columns, where, selectionArgs, null, null, null);
         int result = cursor.getCount();
         cursor.close();

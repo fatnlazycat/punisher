@@ -7,6 +7,7 @@ import com.splunk.mint.Mint;
 
 import org.foundation101.karatel.Const;
 import org.foundation101.karatel.Globals;
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.manager.HttpHelper;
@@ -21,8 +22,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import javax.inject.Inject;
+
 public class ProfileSaver extends AsyncTask<Void, Void, String> {
     private static final String TAG = "ProfileSaver";
+
+    @Inject KaratelPreferences preferences;
 
     private AsyncTaskAction<Void, String, ?> actions;
     private String avatarFileName;
@@ -35,7 +40,9 @@ public class ProfileSaver extends AsyncTask<Void, Void, String> {
         this.userToSave = user;
         this.avatarFileName = avatarFileName;
 
-        String avatarFromPreferences = KaratelPreferences.userAvatar();
+        KaratelApplication.dagger().inject(this);
+
+        String avatarFromPreferences = preferences.userAvatar();
         this.swapFileName = avatarFromPreferences.isEmpty() ?
                 FileUtils.INSTANCE.avatarFileName(false) : avatarFromPreferences;
     }
@@ -53,7 +60,7 @@ public class ProfileSaver extends AsyncTask<Void, Void, String> {
             int tries = 0;
             final int MAX_TRIES = 2;
             while (tries++ < MAX_TRIES) try {
-                String requestUrl = Const.SERVER_URL + "users/" + KaratelPreferences.userId();
+                String requestUrl = Const.SERVER_URL + "users/" + preferences.userId();
                 MultipartUtility multipart = new MultipartUtility(requestUrl, "UTF-8", "PUT");
                 //multipart.addFormField("user[email]", Globals.user.email);
                 multipart.addFormField("user[firstname]", userToSave.name);
@@ -103,12 +110,12 @@ public class ProfileSaver extends AsyncTask<Void, Void, String> {
                 case Globals.SERVER_SUCCESS : {
                     Globals.showMessage(R.string.profile_changes_saved);
 
-                    PunisherUser user = KaratelPreferences.user();
+                    PunisherUser user = preferences.user();
                     user.name = userToSave.name;
                     user.surname = userToSave.surname;
                     user.secondName = userToSave.secondName;
                     user.phone = userToSave.phone;
-                    KaratelPreferences.saveUser(user);
+                    preferences.saveUser(user);
 
                     if (avatarFileName != null) {
                         String fileToDelete;
@@ -124,7 +131,7 @@ public class ProfileSaver extends AsyncTask<Void, Void, String> {
                                 new Exception("помилка операції з файлом"));
                     }
 
-                    KaratelPreferences.saveUserWithAvatar
+                    preferences.saveUserWithAvatar
                             (userToSave.surname, userToSave.name,
                                     userToSave.secondName, userToSave.phone, swapFileName);
                     break;

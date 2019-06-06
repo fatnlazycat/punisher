@@ -18,16 +18,21 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.LinkedHashMap;
 
+import javax.inject.Inject;
+
 /**
  * Created by Dima on 17.05.2016.
  */
 public class HttpHelper {
+    @Inject KaratelPreferences preferences;
+
     public static final String ERROR_JSON = "{\"status\": \"error\", \"error\": \"no Internet connection\"}";
 
     final String fixed;
 
     public HttpHelper(String prefix){
         this.fixed = prefix;
+        KaratelApplication.dagger().inject(this);
     }
 
     public String makeRequestString(String[] args){
@@ -88,7 +93,7 @@ public class HttpHelper {
                     break;
                 }//default is GET
             }
-            if (authorizationRequired) urlConnection.setRequestProperty("Authorization", KaratelPreferences.sessionToken());
+            if (authorizationRequired) urlConnection.setRequestProperty("Authorization", new KaratelPreferences().sessionToken());
 
             if  (!request.isEmpty() && !method.equals("DELETE")) {
                 OutputStream os = urlConnection.getOutputStream();

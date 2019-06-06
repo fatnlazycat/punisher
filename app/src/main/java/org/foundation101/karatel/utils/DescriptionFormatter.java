@@ -1,6 +1,6 @@
 package org.foundation101.karatel.utils;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.util.Map;
 import java.util.Set;

@@ -5,15 +5,20 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.manager.KaratelPreferences;
 
+import javax.inject.Inject;
+
 public class ForgotPassword2Activity extends Activity {
+    @Inject KaratelPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_password2);
+        KaratelApplication.dagger().inject(this);
     }
 
     public void proceedWithPasswordRenovation(View view) {
@@ -23,7 +28,7 @@ public class ForgotPassword2Activity extends Activity {
             startActivity(Intent.createChooser(intent, getString(R.string.chooseEmailClient)));
         }
 
-        if (KaratelPreferences.loggedIn()){
+        if (preferences.loggedIn()){
             new MainActivity.SignOutSender(ForgotPassword2Activity.this).execute();
             /*KaratelPreferences.setAppClosed();
 

@@ -9,7 +9,7 @@ import java.io.File
 object FileUtils {
     fun avatarFileName(temporary: Boolean = false): String {
         val temp = if (temporary) "temp" else ""
-        return "" + KaratelApplication.getInstance().filesDir + "avatar" + KaratelPreferences.userId() + temp + CameraManager.PNG
+        return "" + KaratelApplication.getInstance().filesDir + "avatar" + KaratelPreferences().userId() + temp + CameraManager.PNG
     }
 
     fun swapRename(name1: String, name2: String): Boolean {

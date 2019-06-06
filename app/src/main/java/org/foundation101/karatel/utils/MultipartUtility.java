@@ -17,7 +17,10 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.manager.KaratelPreferences;
+
+import javax.inject.Inject;
 
 public class MultipartUtility {
     private final String boundary;
@@ -27,6 +30,8 @@ public class MultipartUtility {
     private OutputStream outputStream;
     BufferedOutputStream bos;
     private PrintWriter writer;
+
+    @Inject KaratelPreferences preferences;
 
     public MultipartUtility(String requestURL, String charset) throws IOException {
         this(requestURL, charset, "POST");
@@ -41,6 +46,7 @@ public class MultipartUtility {
      * @throws IOException
      */
     public MultipartUtility(String requestURL, String charset, String method) throws IOException {
+        KaratelApplication.dagger().inject(this);
 
         // creates a unique boundary based on time stamp
         boundary = "===" + System.currentTimeMillis() + "===";
@@ -54,7 +60,7 @@ public class MultipartUtility {
         httpConn.setDoInput(true);
         httpConn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
         httpConn.setRequestProperty( "Accept-Encoding", "" );
-        httpConn.setRequestProperty("Authorization", KaratelPreferences.sessionToken());
+        httpConn.setRequestProperty("Authorization", preferences.sessionToken());
         outputStream = httpConn.getOutputStream();
         bos = new BufferedOutputStream(outputStream, 4096);
         writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);

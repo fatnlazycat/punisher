@@ -2,7 +2,7 @@ package org.foundation101.karatel.service;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -17,11 +17,16 @@ import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.scheduler.TokenExchangeJob;
 import org.foundation101.karatel.utils.JobUtils;
 
+import javax.inject.Inject;
+
 public class RegistrationIntentService extends IntentService {
     private static final String TAG = "RegIntentService";
 
+    @Inject KaratelPreferences preferences;
+
     public RegistrationIntentService() {
         super(TAG);
+        KaratelApplication.dagger().inject(this);
     }
 
     @Override
@@ -30,25 +35,25 @@ public class RegistrationIntentService extends IntentService {
 
         synchronized (KaratelPreferences.TAG) {
 
-            String oldToken = KaratelPreferences.pushToken();
+            String oldToken = preferences.pushToken();
             try {
                 String token = obtainGCMToken();
 
-                if (/*!oldToken.equals("") && */!oldToken.equals(token) && KaratelPreferences.loggedIn()) {
+                if (/*!oldToken.equals("") && */!oldToken.equals(token) && preferences.loggedIn()) {
                     Mint.logException(oldToken, token, new Exception("logoutToChangeToken"));
 
-                    if (KaratelPreferences.password().isEmpty()) {
+                    if (preferences.password().isEmpty()) {
                         Intent logoutIntent = new Intent(MainActivity.BROADCAST_RECEIVER_TAG);
                         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(logoutIntent);
                         return;
                     } else {
                         //JobManager.instance().cancelAll();
-                        KaratelPreferences.setNewPushToken(token);
+                        preferences.setNewPushToken(token);
                         JobUtils.INSTANCE.schedule(TokenExchangeJob.TAG);
                     }
 
                 } else {
-                    KaratelPreferences.setPushToken(token);
+                    preferences.setPushToken(token);
 
                 /*Intent registrationComplete = new Intent(Globals.REGISTRATION_COMPLETE);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(registrationComplete);*/

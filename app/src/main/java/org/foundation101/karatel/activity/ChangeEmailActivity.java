@@ -3,10 +3,10 @@ package org.foundation101.karatel.activity;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -30,6 +30,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
+
 
 public class ChangeEmailActivity extends AppCompatActivity {
     static final String TAG = "ChangeEmail";
@@ -42,10 +44,13 @@ public class ChangeEmailActivity extends AppCompatActivity {
     AlertDialog promptDialog  = null;
     AlertDialog successDialog = null;
 
+    @Inject KaratelPreferences preferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_email);
+        KaratelApplication.dagger().inject(this);
 
         //Google Analytics part
         ((KaratelApplication)getApplication()).sendScreenName(TAG);
@@ -191,7 +196,7 @@ public class ChangeEmailActivity extends AppCompatActivity {
             try {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals(Globals.SERVER_SUCCESS)){
-                    KaratelPreferences.setUserEmail(email);
+                    preferences.setUserEmail(email);
                     showSuccessDialog();
                 } else {
                     if (s.equals(HttpHelper.ERROR_JSON)) {

@@ -5,7 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.support.v4.content.ContextCompat;
+import androidx.core.content.ContextCompat;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,12 +19,15 @@ import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.manager.KaratelPreferences;
 
+import javax.inject.Inject;
+
 import static org.foundation101.karatel.utils.LayoutUtils.dpToPx;
 
 /**
  * Created by Dima on 04.05.2016.
  */
 public class DrawerAdapter extends BaseAdapter {
+
     public static String[] content;
 
     @Override
@@ -128,7 +131,7 @@ public class DrawerAdapter extends BaseAdapter {
         String table = DBHelper.VIOLATIONS_TABLE;
         String[] columns = {DBHelper._ID, DBHelper.TYPE};
         String where = "user_id=?";
-        String[] selectionArgs = {"" + KaratelPreferences.userId()};
+        String[] selectionArgs = {"" + new KaratelPreferences().userId()};
         Cursor cursor = db.query(table, columns, where, selectionArgs, null, null, null);
         int result = cursor.getCount();
         cursor.close();

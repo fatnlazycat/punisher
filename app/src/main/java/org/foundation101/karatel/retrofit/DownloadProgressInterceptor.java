@@ -1,5 +1,5 @@
 package org.foundation101.karatel.retrofit;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import org.foundation101.karatel.manager.CameraManager;
 import org.greenrobot.eventbus.EventBus;

@@ -10,14 +10,14 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.fragment.app.Fragment;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,8 +36,12 @@ import org.foundation101.karatel.utils.DBUtils;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 public class ComplainDraftsFragment extends Fragment {
     static final String TAG = "Drafts";
+
+    @Inject KaratelPreferences preferences;
 
     View mainView;
     RecyclerView recycler;
@@ -53,6 +57,7 @@ public class ComplainDraftsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        KaratelApplication.dagger().inject(this);
         db = new DBHelper(getContext(), DBHelper.DATABASE, DBHelper.DB_VERSION).getReadableDatabase();
 
         //Google Analytics part
@@ -116,7 +121,7 @@ public class ComplainDraftsFragment extends Fragment {
         String table = DBHelper.COMPLAINS_TABLE;
         String[] columns = null;
         String where = "user_id=?";
-        String[] selectionArgs = {Integer.toString(KaratelPreferences.userId())};
+        String[] selectionArgs = {Integer.toString(preferences.userId())};
         Cursor cursor = db.query(table, columns, where, selectionArgs, null, null, null);
         while (cursor.moveToNext()){
             ComplainRequest request = new ComplainRequest();

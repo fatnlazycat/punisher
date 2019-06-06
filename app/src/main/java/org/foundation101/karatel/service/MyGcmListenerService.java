@@ -9,11 +9,12 @@ import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
+import androidx.core.app.NotificationCompat;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GcmListenerService;
 
+import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.manager.KaratelPreferences;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.activity.MainActivity;
@@ -22,10 +23,14 @@ import org.foundation101.karatel.activity.TipsActivity;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 public class MyGcmListenerService extends GcmListenerService {
 
     private static final String TAG = "MyGcmListenerService";
     public static  final String REQUEST_NUMBER = "REQUEST_NUMBER";
+
+    @Inject KaratelPreferences preferences;
 
     /**
      * Called when message is received.
@@ -37,6 +42,8 @@ public class MyGcmListenerService extends GcmListenerService {
     // [START receive_message]
     @Override
     public void onMessageReceived(String from, Bundle data) {
+        KaratelApplication.dagger().inject(this);
+
         String message = data.getString("message");
         message = message == null ? "" : message;
         Log.d(TAG, "From: " + from);
@@ -114,7 +121,7 @@ public class MyGcmListenerService extends GcmListenerService {
     }
 
     boolean loggedIn(){
-        return KaratelPreferences.loggedIn();
+        return preferences.loggedIn();
     }
 }
 

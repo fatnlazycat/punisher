@@ -10,16 +10,17 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.core.view.GravityCompat;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -46,6 +47,7 @@ import org.foundation101.karatel.Globals;
 import org.foundation101.karatel.KaratelApplication;
 import org.foundation101.karatel.R;
 import org.foundation101.karatel.adapter.DrawerAdapter;
+import org.foundation101.karatel.dagger.DaggerDaggerComponent;
 import org.foundation101.karatel.entity.PunisherUser;
 import org.foundation101.karatel.fragment.AboutFragment;
 import org.foundation101.karatel.fragment.ComplainDraftsFragment;
@@ -74,6 +76,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -95,6 +99,8 @@ public class MainActivity extends AppCompatActivity {
 
     //facebook part
     CallbackManager fbCallbackManager;
+
+    @Inject KaratelPreferences preferences;
 
     private final BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -126,6 +132,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        KaratelApplication.dagger().inject(this);
 
         JobUtils.INSTANCE.scheduleRequestFetch();
 
@@ -172,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
 
         drawerListView.setOnItemClickListener(new ListView.OnItemClickListener(){
             public void onItemClick(AdapterView parent, View view, int position, long id){
-                drawerLayout.closeDrawer(Gravity.START);
+                drawerLayout.closeDrawer(GravityCompat.START);
                 if (currentFragment == position) {//do not create duplicates
                     return;
                 }
@@ -324,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .registerReceiver(myBroadcastReceiver, new IntentFilter(BROADCAST_RECEIVER_TAG));
 
-        String fbUid = KaratelPreferences.fbLoginUid();
+        String fbUid = preferences.fbLoginUid();
         if (!fbUid.isEmpty()) sendBindRequest(fbUid);
     }
 
@@ -345,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(Gravity.START)) drawerLayout.closeDrawer(Gravity.START);
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) drawerLayout.closeDrawer(GravityCompat.START);
         else {
             int entryNumber = fManager.getBackStackEntryCount() - 2;
             if (entryNumber >= 0) {
@@ -430,7 +438,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     boolean loggedIn(){
-        return KaratelPreferences.loggedIn();
+        return preferences.loggedIn();
     }
 
     public void startTutorial(View view) {
@@ -456,7 +464,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void openProfile(View view) {
-        drawerLayout.closeDrawer(Gravity.START);
+        drawerLayout.closeDrawer(GravityCompat.START);
 
         if (currentFragment == Globals.MAIN_ACTIVITY_PROFILE_FRAGMENT) {//do not create duplicates
             return;
@@ -544,7 +552,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initDrawerHeader(){
-        PunisherUser user = KaratelPreferences.user();
+        PunisherUser user = preferences.user();
         if (user.id == 0) finish(); //0 is the default value, means we've got empty preferences
         String userName = user.name + " " + user.surname;
         avatarTextView.setText(userName);
@@ -595,16 +603,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void exitApp(View view) {
-        drawerLayout.closeDrawer(Gravity.START);
+        drawerLayout.closeDrawer(GravityCompat.START);
         new SignOutSender(this).execute();
     }
 
 
-    static class FacebookBinder extends AsyncTask<String, Void, String> {
+    public static class FacebookBinder extends AsyncTask<String, Void, String> {
+        @Inject KaratelPreferences preferences;
         String fbUserId;
 
         FacebookBinder(String fbUserId) {
             this.fbUserId = fbUserId;
+            KaratelApplication.dagger().inject(this);
         }
 
         @Override
@@ -628,9 +638,9 @@ public class MainActivity extends AppCompatActivity {
             try {
                 JSONObject json = new JSONObject(s);
                 if (json.getString("status").equals("success")){
-                    KaratelPreferences.remove(Globals.BACKGROUND_FB_LOGIN_UID);
-                    KaratelPreferences.remove(Globals.BACKGROUND_FB_LOGIN_PASSW);
-                    KaratelPreferences.remove(Globals.BACKGROUND_FB_LOGIN_EMAIL);
+                    preferences.remove(Globals.BACKGROUND_FB_LOGIN_UID);
+                    preferences.remove(Globals.BACKGROUND_FB_LOGIN_PASSW);
+                    preferences.remove(Globals.BACKGROUND_FB_LOGIN_EMAIL);
 
                     message = KaratelApplication.getInstance().getResources().getString(R.string.facebook_profile_binded);
                 } else message = json.getString("error");
@@ -642,6 +652,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public static class SignOutSender extends AsyncTask<Void, Void, String>{
+        @Inject KaratelPreferences preferences;
         static final String TAG = "Logout";
         static final String BANNED = "banned";
 
@@ -650,6 +661,8 @@ public class MainActivity extends AppCompatActivity {
             try {
                 this.progressBar = (View) activity.getClass().getDeclaredField("progressBar").get(activity);
             } catch (Exception ignored) { /*progressBar not instantiated, it's null*/ }
+
+            KaratelApplication.dagger().inject(this);
         }
 
         Activity activity;
@@ -680,7 +693,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     if (HttpHelper.internetConnected()) {
                         Response<String> json = performSignOutRequest(
-                                KaratelPreferences.sessionToken(), KaratelPreferences.pushToken());
+                                preferences.sessionToken(), preferences.pushToken());
                         result = buildResponseString(json);
                     } else return HttpHelper.ERROR_JSON;
 
@@ -715,17 +728,17 @@ public class MainActivity extends AppCompatActivity {
 
             //saving required sharedPreferences for later use
             synchronized (KaratelPreferences.TAG) {
-                String oldSessionToken = KaratelPreferences.oldSessionToken();
-                String oldPushToken = KaratelPreferences.oldPushToken();
+                String oldSessionToken = preferences.oldSessionToken();
+                String oldPushToken = preferences.oldPushToken();
                 //boolean appClosed = KaratelPreferences.appClosed();
-                KaratelPreferences.clearAll();
+                preferences.clearAll();
                 KaratelApplication.getInstance().requests.clear();
                 /*if (appClosed) {
                     KaratelPreferences.setAppClosed();
                 }*/
                 if (!oldSessionToken.isEmpty())
-                    KaratelPreferences.setOldSessionToken(oldSessionToken);
-                if (!oldPushToken.isEmpty()) KaratelPreferences.setOldPushToken(oldPushToken);
+                    preferences.setOldSessionToken(oldSessionToken);
+                if (!oldPushToken.isEmpty()) preferences.setOldPushToken(oldPushToken);
             }
 
             //Google Analytics part
@@ -769,8 +782,8 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
-        private static boolean doNotCancel(String jobTag) {
-            return TokenExchangeJob.TAG.equals(jobTag) && KaratelPreferences.newPushToken().isEmpty();
+        private boolean doNotCancel(String jobTag) {
+            return TokenExchangeJob.TAG.equals(jobTag) && preferences.newPushToken().isEmpty();
         }
 
         private void logAndMint(String message) {
@@ -778,8 +791,8 @@ public class MainActivity extends AppCompatActivity {
 
             HashMap<String, Object> logData = new HashMap<>();
             logData.put("result", resultData);
-            logData.put("sessionToken",  KaratelPreferences.sessionToken());
-            logData.put("gcmToken", KaratelPreferences.pushToken());
+            logData.put("sessionToken",  preferences.sessionToken());
+            logData.put("gcmToken", preferences.pushToken());
             Mint.logException(logData, new Exception("signoffFailed"));
         }
     }

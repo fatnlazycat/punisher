@@ -13,12 +13,12 @@ import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentManager;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -95,6 +95,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 import io.github.lizhangqu.coreprogress.ProgressHelper;
 import io.github.lizhangqu.coreprogress.ProgressListener;
@@ -179,6 +181,8 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
     KaratelLocationManager lManager;
 
+    @Inject KaratelPreferences preferences;
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -237,6 +241,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_violation);
+        KaratelApplication.dagger().inject(this);
 
         Intent intent = this.getIntent();
         mode = intent.getIntExtra(Globals.VIOLATION_ACTIVITY_MODE, MODE_EDIT);
@@ -739,7 +744,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
             cv.put("status", status);
             cv.put(DBHelper.ID_SERVER, idOnServer);
             cv.put(DBHelper.ID_NUMBER_SERVER, id_number_server);
-            cv.put(DBHelper.USER_ID, KaratelPreferences.userId());
+            cv.put(DBHelper.USER_ID, preferences.userId());
 
             for (int i = 0; i < requisitesAdapter.getCount(); i++) {
                 ViolationRequisite thisRequisite = (ViolationRequisite) requisitesAdapter.getItem(i);
@@ -1110,7 +1115,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
                     requestParameters.add(str);
                     switch (str) {
                         case "user_id" : {
-                            requestParameters.add("" + KaratelPreferences.userId()); break;
+                            requestParameters.add("" + preferences.userId()); break;
                         }
                         case "id_number" : {
                             requestParameters.add(idInDbString); break;
@@ -1175,7 +1180,7 @@ public class ViolationActivity extends AppCompatActivity implements Formular {
 
                     RetrofitMultipartUploader api = KaratelApplication.getClient().create(RetrofitMultipartUploader.class);
                     Call<CreationResponse> call = api.uploadComplain(
-                            KaratelPreferences.sessionToken(), typeServerSuffix, rb);
+                            preferences.sessionToken(), typeServerSuffix, rb);
                     Response<CreationResponse> json = call.execute();
                     if (json.isSuccessful()) {
                         result = json.body();
